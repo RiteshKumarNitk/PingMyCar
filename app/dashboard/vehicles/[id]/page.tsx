@@ -2,10 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { qrSvgMarkup, publicVehicleUrl } from "@/lib/qr";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { VehicleForm } from "@/components/vehicles/VehicleForm";
 import { DeleteVehicleButton } from "@/components/vehicles/DeleteVehicleButton";
+import { QrCodeCard } from "@/components/vehicles/QrCodeCard";
 
 export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -44,6 +46,22 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           <Button asChild variant="outline" size="sm">
             <Link href={`/dashboard/vehicles/${vehicle.id}/profile`}>Edit contact profile</Link>
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">QR code</CardTitle>
+          <CardDescription>Print this and place it on your vehicle.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <QrCodeCard
+            vehicleId={vehicle.id}
+            vehicleName={vehicle.name}
+            publicUrl={publicVehicleUrl(vehicle.publicToken)}
+            svgMarkup={qrSvgMarkup(publicVehicleUrl(vehicle.publicToken))}
+            qrActive={vehicle.qrActive}
+          />
         </CardContent>
       </Card>
 

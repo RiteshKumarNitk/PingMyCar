@@ -39,6 +39,8 @@ export const updateVehicleSchema = z.object({
   registrationNumber,
   photoUrl,
   qrActive: z.boolean().optional(),
+  /** Rotates publicToken; old sticker URLs 404 afterward. */
+  regenerateToken: z.boolean().optional(),
 });
 
 export type CreateVehicleInput = z.infer<typeof createVehicleSchema>;

@@ -1,38 +1,8 @@
 import Link from "next/link";
-import { create as createQr } from "qrcode";
-import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { qrSvgMarkup } from "@/lib/qr/matrix";
 
 const STICKER_URL = "https://pingmycar.app/v/X7K92P8Q";
-
-/** Server-rendered QR matrix — no client JS, crisp at any size. */
-function Matrix({ text, cell = 7 }: { text: string; cell?: number }) {
-  const qr = createQr(text, { errorCorrectionLevel: "M" });
-  const size = qr.modules.size;
-  const data = qr.modules.data;
-  const cells: ReactNode[] = [];
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
-      if (data[r * size + c]) {
-        cells.push(
-          <rect key={`${r}-${c}`} x={c * cell} y={r * cell} width={cell} height={cell} />
-        );
-      }
-    }
-  }
-  return (
-    <svg
-      role="img"
-      aria-label="Example QR code sticker"
-      viewBox={`0 0 ${size * cell} ${size * cell}`}
-      className="h-auto w-full"
-      shapeRendering="crispEdges"
-    >
-      <rect width={size * cell} height={size * cell} fill="#ffffff" />
-      <g fill="#16222c">{cells}</g>
-    </svg>
-  );
-}
 
 export function StickerPreview() {
   return (
@@ -63,9 +33,12 @@ export function StickerPreview() {
               <div className="rounded-xl bg-slate-900 px-3 py-2 text-[11px] font-semibold tracking-wide text-slate-100">
                 NEED TO CONTACT ME?
               </div>
-              <div className="mx-auto mt-4 w-full max-w-[180px] rounded-lg border border-slate-200 p-2">
-                <Matrix text={STICKER_URL} />
-              </div>
+              <div
+                className="mx-auto mt-4 aspect-square w-full max-w-[180px] rounded-lg border border-slate-200 p-2"
+                role="img"
+                aria-label="Example QR code sticker"
+                dangerouslySetInnerHTML={{ __html: qrSvgMarkup(STICKER_URL, 7) }}
+              />
               <p className="mt-3 text-sm font-medium text-slate-800">
                 Scan to send a message
               </p>
