@@ -1,0 +1,91 @@
+import { Car, MessageCircle } from "lucide-react";
+import { visibleReasons, type ContactFlags } from "@/types";
+import { VEHICLE_TYPE_LABELS, VEHICLE_TYPES } from "@/lib/validation/vehicle";
+
+export type VehiclePublicCardProps = {
+  vehicleName: string | null;
+  vehicleType: (typeof VEHICLE_TYPES)[number] | null;
+  vehiclePhotoUrl: string | null;
+  registrationNumber: string | null;
+  ownerDisplayName: string | null;
+  ownerPhotoUrl: string | null;
+  contactFlags: ContactFlags;
+};
+
+export function VehiclePublicCard({
+  vehicleName,
+  vehicleType,
+  vehiclePhotoUrl,
+  registrationNumber,
+  ownerDisplayName,
+  ownerPhotoUrl,
+  contactFlags,
+}: VehiclePublicCardProps) {
+  const reasons = visibleReasons(contactFlags);
+  const showsUrgentReason = reasons.some((r) => r.id === "URGENT" || r.id === "SECURITY");
+
+  return (
+    <div className="mx-auto w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <div className="flex flex-col items-center text-center">
+        {vehiclePhotoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={vehiclePhotoUrl}
+            alt={vehicleName ?? "Vehicle"}
+            className="h-20 w-20 rounded-xl object-cover"
+          />
+        ) : (
+          <span className="flex h-20 w-20 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Car className="h-9 w-9" aria-hidden />
+          </span>
+        )}
+
+        {vehicleName && <p className="mt-4 text-lg font-semibold">{vehicleName}</p>}
+        {vehicleType && <p className="text-sm text-muted-foreground">{VEHICLE_TYPE_LABELS[vehicleType]}</p>}
+        {registrationNumber && (
+          <p className="mt-2 rounded-full border border-border px-3 py-1 text-xs font-medium tracking-wide">
+            {registrationNumber}
+          </p>
+        )}
+
+        {ownerDisplayName && (
+          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+            {ownerPhotoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={ownerPhotoUrl} alt={ownerDisplayName} className="h-6 w-6 rounded-full object-cover" />
+            )}
+            <span>{ownerDisplayName}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 border-t border-border pt-5">
+        {reasons.length === 0 ? (
+          <p className="text-center text-sm text-muted-foreground">
+            This vehicle isn&apos;t accepting messages right now.
+          </p>
+        ) : (
+          <>
+            <p className="text-sm font-medium">Need to contact the owner?</p>
+            <div className="mt-3 space-y-2">
+              {reasons.map((reason) => (
+                <div
+                  key={reason.id}
+                  className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground"
+                >
+                  <MessageCircle className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+                  {reason.label}
+                </div>
+              ))}
+            </div>
+            {showsUrgentReason && (
+              <p className="mt-4 text-center text-xs text-muted-foreground">
+                For real emergencies, contact local emergency services.
+              </p>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

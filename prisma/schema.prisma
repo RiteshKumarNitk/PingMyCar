@@ -1,0 +1,208 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Better Auth tables (required by the Prisma adapter)
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  /// Owner phone for OTP login. Never shown on public profiles.
+  phoneNumber         String?   @unique
+  phoneNumberVerified Boolean   @default(false)
+  preferredName String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  vehicles Vehicle[]
+  devices  Device[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @default(now()) @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@index([identifier])
+}
+
+// ---------------------------------------------------------------------------
+// Domain
+// ---------------------------------------------------------------------------
+
+enum VehicleType {
+  CAR
+  BIKE
+  SCOOTER
+  TRUCK
+  VAN
+  OTHER
+}
+
+enum ContactReason {
+  LIGHTS_ON
+  MOVE_VEHICLE
+  DOOR_OPEN
+  VEHICLE_ISSUE
+  DAMAGE
+  SECURITY
+  URGENT
+  OTHER
+}
+
+enum ConversationStatus {
+  OPEN
+  CLOSED
+  BLOCKED
+}
+
+enum SenderType {
+  VISITOR
+  OWNER
+}
+
+enum DevicePlatform {
+  WEB
+  ANDROID
+  IOS
+}
+
+model Vehicle {
+  id                 String       @id @default(uuid())
+  ownerId            String
+  type               VehicleType?
+  name               String
+  /// Private unless VehicleProfile.showRegistrationNumber is true.
+  registrationNumber String?
+  photoUrl           String?
+  /// QR encodes NEXT_PUBLIC_APP_URL/v/<publicToken> only.
+  publicToken        String       @unique
+  qrActive           Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @default(now()) @updatedAt
+
+  owner         User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  profile       VehicleProfile?
+  conversations Conversation[]
+
+  @@index([ownerId])
+}
+
+model VehicleProfile {
+  id     String @id @default(uuid())
+  vehicleId String @unique
+
+  showVehicleName         Boolean @default(true)
+  showVehicleType         Boolean @default(true)
+  showVehiclePhoto        Boolean @default(true)
+  showRegistrationNumber  Boolean @default(false)
+  showOwnerName           Boolean @default(false)
+  showOwnerPhoto          Boolean @default(false)
+  showPreferredName       Boolean @default(false)
+
+  allowMessages           Boolean @default(true)
+  allowParkingAlerts      Boolean @default(true)
+  allowVehicleIssues      Boolean @default(true)
+  allowDamageReports      Boolean @default(true)
+  allowEmergencyAlerts    Boolean @default(true)
+  /// Stored for later. Not implemented in MVP.
+  allowCallRequest        Boolean @default(false)
+  allowWhatsApp           Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id               String             @id @default(uuid())
+  vehicleId        String
+  /// SHA-256 of the visitor URL token. Raw token is never stored.
+  visitorTokenHash String             @unique
+  reason           ContactReason
+  status           ConversationStatus @default(OPEN)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @default(now()) @updatedAt
+  expiresAt        DateTime
+
+  vehicle  Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([vehicleId, createdAt])
+}
+
+model Message {
+  id             String         @id @default(uuid())
+  conversationId String
+  senderType     SenderType
+  reason         ContactReason?
+  body           String
+  createdAt      DateTime       @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+model Device {
+  id        String         @id @default(uuid())
+  userId    String
+  fcmToken  String         @unique
+  platform  DevicePlatform @default(WEB)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @default(now()) @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
