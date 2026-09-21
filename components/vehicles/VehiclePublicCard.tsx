@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Car, MessageCircle } from "lucide-react";
 import { visibleReasons, type ContactFlags } from "@/types";
 import { VEHICLE_TYPE_LABELS, VEHICLE_TYPES } from "@/lib/validation/vehicle";
@@ -10,6 +11,12 @@ export type VehiclePublicCardProps = {
   ownerDisplayName: string | null;
   ownerPhotoUrl: string | null;
   contactFlags: ContactFlags;
+  /**
+   * Replaces the static reason list with an interactive one (e.g. the real
+   * public page's message composer). Defaults to the read-only preview list,
+   * which is what the owner-side contact profile builder uses.
+   */
+  contactSection?: ReactNode;
 };
 
 export function VehiclePublicCard({
@@ -20,6 +27,7 @@ export function VehiclePublicCard({
   ownerDisplayName,
   ownerPhotoUrl,
   contactFlags,
+  contactSection,
 }: VehiclePublicCardProps) {
   const reasons = visibleReasons(contactFlags);
   const showsUrgentReason = reasons.some((r) => r.id === "URGENT" || r.id === "SECURITY");
@@ -60,7 +68,9 @@ export function VehiclePublicCard({
       </div>
 
       <div className="mt-6 border-t border-border pt-5">
-        {reasons.length === 0 ? (
+        {contactSection ? (
+          contactSection
+        ) : reasons.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground">
             This vehicle isn&apos;t accepting messages right now.
           </p>

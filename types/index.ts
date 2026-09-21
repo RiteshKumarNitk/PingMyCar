@@ -1,3 +1,5 @@
+import type { VEHICLE_TYPES } from "@/lib/validation/vehicle";
+
 export const CONTACT_REASONS = [
   { id: "LIGHTS_ON", label: "Lights are on" },
   { id: "MOVE_VEHICLE", label: "Please move the vehicle" },
@@ -45,7 +47,7 @@ export function visibleReasons(flags: ContactFlags): typeof CONTACT_REASONS[numb
 export type PublicVehicleView = {
   publicToken: string;
   vehicleName: string | null;
-  vehicleType: string | null;
+  vehicleType: (typeof VEHICLE_TYPES)[number] | null;
   vehiclePhotoUrl: string | null;
   registrationNumber: string | null;
   ownerName: string | null;
