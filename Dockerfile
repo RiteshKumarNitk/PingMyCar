@@ -6,6 +6,9 @@ RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
 FROM base AS deps
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+# `pnpm install` runs the `postinstall` script (`prisma generate`), which
+# needs the schema to already be present.
+COPY prisma ./prisma
 RUN pnpm install --frozen-lockfile
 
 FROM base AS build

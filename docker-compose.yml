@@ -16,19 +16,53 @@ services:
       timeout: 3s
       retries: 10
 
+  # One-off: applies pending migrations before `web` starts. Uses the `build`
+  # stage (not the slim `runner` image `web` uses) because that's the one
+  # with the full node_modules, including the prisma CLI.
+  migrate:
+    build:
+      context: .
+      target: build
+    environment:
+      DATABASE_URL: postgresql://vehicle:vehicle@postgres:5432/vehiclecontact?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["pnpm", "exec", "prisma", "migrate", "deploy"]
+
   web:
     build: .
     restart: unless-stopped
     ports:
       - "3100:3000"
     environment:
+      # Next's standalone server.js binds to $HOSTNAME if set. Docker always
+      # injects HOSTNAME=<container id>, which isn't a bindable address — pin
+      # it to 0.0.0.0 or the server only accepts connections on the
+      # container's own IP, not 127.0.0.1 (breaks the healthcheck below).
+      HOSTNAME: "0.0.0.0"
       DATABASE_URL: postgresql://vehicle:vehicle@postgres:5432/vehiclecontact?schema=public
       AUTH_SECRET: ${AUTH_SECRET}
       BETTER_AUTH_SECRET: ${AUTH_SECRET}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3100}
+      MESSAGE_MAX_CHARS: ${MESSAGE_MAX_CHARS:-500}
+      RATE_LIMIT_VISITOR_PER_MINUTE: ${RATE_LIMIT_VISITOR_PER_MINUTE:-5}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      ALERT_EMAIL_FROM: ${ALERT_EMAIL_FROM:-}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   nginx:
     image: nginx:1.27-alpine
@@ -39,7 +73,8 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - web
+      web:
+        condition: service_healthy
 
 volumes:
   postgres_data:

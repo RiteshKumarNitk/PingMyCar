@@ -4,12 +4,6 @@ packages:
 # Skip pnpm's pre-run dependency verification — it intermittently crashes on this machine.
 verifyDepsBeforeRun: false
 
-allowBuilds:
-  '@prisma/client': set this to true or false
-  '@prisma/engines': set this to true or false
-  esbuild: set this to true or false
-  prisma: set this to true or false
-
 onlyBuiltDependencies:
   - "@prisma/client"
   - "@prisma/engines"
@@ -17,3 +11,9 @@ onlyBuiltDependencies:
   - "esbuild"
   - "sharp"
   - "@tailwindcss/oxide"
+
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  esbuild: true
+  prisma: true

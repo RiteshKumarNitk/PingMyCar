@@ -10,7 +10,7 @@ Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · shadcn/ui · Prisma 
 
 ## Phase status
 
-Phase 1 (foundation) is in progress. Owner auth, vehicles, public QR, and messaging are **not** implemented yet.
+Phases 1–13 are done: landing page, phone-OTP auth, vehicle management, contact-profile builder with live preview, QR generate/download/activate, the public vehicle page, anonymous visitor messaging, the owner inbox, email/browser-push notifications, and report/block. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full phase table. Flutter (Phase 15) is out of scope until the web MVP is stable.
 
 ## Local development
 
@@ -32,15 +32,33 @@ Copy `.env.example` to `.env` and set `AUTH_SECRET` (and matching `BETTER_AUTH_S
 
 ```bash
 docker compose up -d postgres
-# production-style stack (app + postgres):
+# full stack (postgres + migrations + app):
 # docker compose up --build
 ```
+
+`migrate` runs `prisma migrate deploy` once and exits before `web` starts — `web` won't start until it succeeds. It re-runs safely on every `up` (no-op if there's nothing pending).
 
 Nginx sits in front of the app when you enable the `prod` profile:
 
 ```bash
 docker compose --profile prod up --build
 ```
+
+### Production environment variables
+
+Set these in the shell (or an `.env` file `docker compose` reads) before `docker compose up`:
+
+| Variable | Required | Notes |
+|---|---|---|
+| `AUTH_SECRET` | yes | `openssl rand -base64 32`. Used for both `AUTH_SECRET` and `BETTER_AUTH_SECRET`. |
+| `NEXT_PUBLIC_APP_URL` | yes | The real public origin — this is what gets encoded into every QR sticker. Get it right before printing any. |
+| `RESEND_API_KEY` / `ALERT_EMAIL_FROM` | no | Without these, owner notifications log to the container's stdout instead of sending. |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | no | Browser push is inert without these. Generate your own with `npx web-push generate-vapid-keys` — don't reuse the dev pair in `.env.example`. |
+| `MESSAGE_MAX_CHARS` / `RATE_LIMIT_VISITOR_PER_MINUTE` | no | Defaults to `500` / `5`. |
+
+### TLS
+
+`nginx/nginx.conf` is HTTP-only — it expects TLS to be terminated in front of it (a cloud load balancer, Cloudflare, or a certbot-managed proxy). This wasn't built or tested here since it needs a real public domain to issue a certificate against. If you're terminating TLS on this same box, the common path is `certbot --nginx` against this config, or fronting it with a managed load balancer that already speaks HTTPS.
 
 ## Product principle
 
