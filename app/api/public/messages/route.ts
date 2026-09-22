@@ -4,7 +4,8 @@ import { generateVisitorToken, hashVisitorToken } from "@/lib/security/tokens";
 import { hashedIp } from "@/lib/security/ip";
 import { rateLimit, visitorMessageLimit } from "@/lib/security/rate-limit";
 import { startConversationSchema } from "@/lib/validation/publicMessage";
-import { visibleReasons, type ContactReasonId } from "@/types";
+import { visibleReasons, CONTACT_REASONS, type ContactReasonId } from "@/types";
+import { notifyOwner } from "@/lib/notifications";
 
 const CONVERSATION_TTL_DAYS = 30;
 
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
   const visitorTokenHash = hashVisitorToken(visitorToken);
   const expiresAt = new Date(Date.now() + CONVERSATION_TTL_DAYS * 24 * 60 * 60 * 1000);
 
-  await prisma.conversation.create({
+  const conversation = await prisma.conversation.create({
     data: {
       vehicleId: vehicle.id,
       visitorTokenHash,
@@ -52,6 +53,15 @@ export async function POST(request: NextRequest) {
         create: { senderType: "VISITOR", reason: reason as ContactReasonId, body: messageBody },
       },
     },
+  });
+
+  const reasonLabel = CONTACT_REASONS.find((r) => r.id === reason)?.label ?? reason;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3100";
+  await notifyOwner({
+    userId: vehicle.ownerId,
+    title: `New message about ${vehicle.name}`,
+    body: `${reasonLabel}: ${messageBody}`,
+    url: `${appUrl}/dashboard/messages/${conversation.id}`,
   });
 
   return NextResponse.json({ visitorToken }, { status: 201 });

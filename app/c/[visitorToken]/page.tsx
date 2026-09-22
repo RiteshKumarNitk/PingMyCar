@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { hashVisitorToken } from "@/lib/security/tokens";
-import { ConversationThread } from "@/components/public/ConversationThread";
+import { MessageThread } from "@/components/messages/MessageThread";
+import { ReportConversationLink } from "@/components/public/ReportConversationLink";
 
 export default async function ConversationPage({ params }: { params: Promise<{ visitorToken: string }> }) {
   const { visitorToken } = await params;
@@ -28,12 +29,17 @@ export default async function ConversationPage({ params }: { params: Promise<{ v
       </p>
 
       <div className="mt-6">
-        <ConversationThread
-          visitorToken={visitorToken}
+        <MessageThread
+          submitUrl={`/api/public/conversations/${visitorToken}`}
+          viewerRole="VISITOR"
           messages={conversation.messages}
           closed={closed}
           maxChars={maxChars}
         />
+      </div>
+
+      <div className="mt-6">
+        <ReportConversationLink visitorToken={visitorToken} />
       </div>
     </div>
   );

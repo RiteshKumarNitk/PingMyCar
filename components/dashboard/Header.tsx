@@ -17,6 +17,9 @@ export function DashboardHeader() {
           <Link href="/dashboard/vehicles" className="hover:text-foreground">
             Vehicles
           </Link>
+          <Link href="/dashboard/messages" className="hover:text-foreground">
+            Messages
+          </Link>
         </nav>
 
         <LogoutButton />

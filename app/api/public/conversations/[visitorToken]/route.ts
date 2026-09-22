@@ -4,6 +4,7 @@ import { hashVisitorToken } from "@/lib/security/tokens";
 import { hashedIp } from "@/lib/security/ip";
 import { rateLimit, visitorMessageLimit } from "@/lib/security/rate-limit";
 import { replyMessageSchema } from "@/lib/validation/publicMessage";
+import { notifyOwner } from "@/lib/notifications";
 
 type RouteContext = { params: Promise<{ visitorToken: string }> };
 
@@ -11,7 +12,7 @@ async function findConversation(visitorToken: string) {
   const visitorTokenHash = hashVisitorToken(visitorToken);
   return prisma.conversation.findUnique({
     where: { visitorTokenHash },
-    include: { vehicle: { select: { name: true } }, messages: { orderBy: { createdAt: "asc" } } },
+    include: { vehicle: { select: { id: true, name: true, ownerId: true } }, messages: { orderBy: { createdAt: "asc" } } },
   });
 }
 
@@ -57,6 +58,16 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
   await prisma.message.create({
     data: { conversationId: conversation.id, senderType: "VISITOR", body: parsed.data.body },
+  });
+  // Bump updatedAt so the owner's inbox sorts by most recent activity.
+  await prisma.conversation.update({ where: { id: conversation.id }, data: {} });
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3100";
+  await notifyOwner({
+    userId: conversation.vehicle.ownerId,
+    title: `New reply about ${conversation.vehicle.name}`,
+    body: parsed.data.body,
+    url: `${appUrl}/dashboard/messages/${conversation.id}`,
   });
 
   return NextResponse.json({ ok: true }, { status: 201 });

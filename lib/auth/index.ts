@@ -3,6 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { phoneNumber } from "better-auth/plugins/phone-number";
 import { prisma } from "../db";
+import { tempEmailFor } from "./tempEmail";
 
 /**
  * No SMS provider is wired up yet (dev fallback per ARCHITECTURE.md).
@@ -48,7 +49,7 @@ export const auth = betterAuth({
       allowedAttempts: 3,
       phoneNumberValidator: (phoneNumber) => /^\+?[1-9]\d{7,14}$/.test(phoneNumber),
       signUpOnVerification: {
-        getTempEmail: (phoneNumber) => `${phoneNumber.replace(/[^0-9]/g, "")}@phone.pingmycar.invalid`,
+        getTempEmail: tempEmailFor,
         getTempName: (phoneNumber) => phoneNumber,
       },
     }),
