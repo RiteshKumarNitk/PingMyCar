@@ -28,6 +28,7 @@ model User {
   sessions Session[]
   vehicles Vehicle[]
   devices  Device[]
+  notifications Notification[]
 }
 
 model Session {
@@ -127,6 +128,11 @@ model Vehicle {
   /// QR encodes NEXT_PUBLIC_APP_URL/v/<publicToken> only.
   publicToken        String       @unique
   qrActive           Boolean      @default(true)
+  /// Vehicle color — shown on the vehicle's public page only if the owner
+  /// enables showVehicleColor. Not collected anywhere else.
+  color              String?
+  /// Incremented when a visitor opens the public vehicle page.
+  scanCount          Int          @default(0)
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @default(now()) @updatedAt
 
@@ -180,6 +186,10 @@ model Conversation {
   reports  Report[]
 
   @@index([vehicleId, createdAt])
+  /// Inbox ordering: an owner's conversations, most recently active first.
+  @@index([vehicleId, updatedAt])
+  /// Owner inbox filter: unread threads include unseen VISITOR messages.
+  @@index([vehicleId, status])
 }
 
 model Report {
@@ -200,10 +210,34 @@ model Message {
   reason         ContactReason?
   body           String
   createdAt      DateTime       @default(now())
+  /// When the owner first viewed this message in the dashboard.
+  readAt         DateTime?
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId, createdAt])
+  /// Unread badges: count VISITOR messages where readAt IS NULL without a
+  /// table scan as message volume grows.
+  @@index([conversationId, senderType, readAt])
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  userId     String
+  /// The conversation whose activity raised this notification (null for
+  /// account-level notices).
+  messageId  String?
+  type       String
+  /// Payload snapshot shown in a future in-app notification list.
+  title      String
+  body       String
+  url        String?
+  readAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
 }
 
 model Device {

@@ -1,14 +1,15 @@
-import { Benefits } from "@/components/site/Benefits";
+import { Hero } from "@/components/site/Hero";
+import { TrustStatement } from "@/components/site/TrustStatement";
+import { ProblemSection } from "@/components/site/ProblemSection";
+import { SolutionSection } from "@/components/site/SolutionSection";
+import { HowItWorks } from "@/components/site/HowItWorks";
+import { VisitorExperience } from "@/components/site/VisitorExperience";
+import { ExampleMessages } from "@/components/site/ExampleMessages";
+import { Privacy } from "@/components/site/Privacy";
+import { ForOwners } from "@/components/site/ForOwners";
+import { StickerShowcase } from "@/components/site/StickerShowcase";
 import { Faq } from "@/components/site/Faq";
 import { FinalCta } from "@/components/site/FinalCta";
-import { Footer } from "@/components/site/Footer";
-import { Hero } from "@/components/site/Hero";
-import { HowItWorks } from "@/components/site/HowItWorks";
-import { Navbar } from "@/components/site/Navbar";
-import { Privacy } from "@/components/site/Privacy";
-import { StickerPreview } from "@/components/site/StickerPreview";
-import { TrustStatement } from "@/components/site/TrustStatement";
-import { UseCases } from "@/components/site/UseCases";
 
 const faqJsonLd = {
   "@context": "https://schema.org",
@@ -57,26 +58,25 @@ const faqJsonLd = {
   ],
 };
 
-export default function Home() {
+export default function HomePage() {
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
-      <Navbar />
-      <main>
-        <Hero />
-        <TrustStatement />
-        <HowItWorks />
-        <UseCases />
-        <Privacy />
-        <StickerPreview />
-        <Benefits />
-        <Faq />
-        <FinalCta />
-      </main>
-      <Footer />
+      <Hero />
+      <TrustStatement />
+      <ProblemSection />
+      <SolutionSection />
+      <HowItWorks />
+      <VisitorExperience />
+      <ExampleMessages />
+      <Privacy />
+      <ForOwners />
+      <StickerShowcase />
+      <Faq />
+      <FinalCta />
     </>
   );
 }

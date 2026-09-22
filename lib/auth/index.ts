@@ -22,6 +22,10 @@ async function sendOTP({ phoneNumber, code }: { phoneNumber: string; code: strin
 export const auth = betterAuth({
   secret: process.env.AUTH_SECRET,
   baseURL: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3100",
+  // The dev server is reachable as both localhost and 127.0.0.1; trust both
+  // origins so auth requests never fail the origin check on either hostname.
+  // (The production origin comes from NEXT_PUBLIC_APP_URL via baseURL.)
+  trustedOrigins: ["http://localhost:3100", "http://127.0.0.1:3100"],
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   emailAndPassword: {
     enabled: true,

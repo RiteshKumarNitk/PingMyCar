@@ -26,6 +26,8 @@ test.describe("auth & onboarding", () => {
 
   test("hard navigation to any dashboard route bounces an unonboarded user to /onboarding", async ({ page }) => {
     await page.goto("/signup");
+    // Phone OTP is the collapsed fallback under Google-first auth.
+    await page.click('summary:has-text("Continue with phone instead")');
     await page.fill("#phoneNumber", phone);
     await Promise.all([
       page.waitForResponse((r) => r.url().includes("/phone-number/send-otp")),

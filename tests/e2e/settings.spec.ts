@@ -20,9 +20,9 @@ test.describe("settings", () => {
   test("identity, email, and phone changes all persist across a reload", async ({ page }) => {
     await signUpAndOnboard(page, { phone, name: "Alex Owner", vehicleName: "Honda City" });
 
-    await page.goto("/dashboard/settings");
+    // Identity lives on Profile; email/phone live on Settings.
+    await page.goto("/dashboard/profile");
     await expect(page.locator("#settingsName")).toHaveValue("Alex Owner");
-    await expect(page.locator("#settingsEmail")).toHaveValue("");
 
     await page.fill("#settingsPreferredName", "AO");
     await Promise.all([
@@ -31,6 +31,9 @@ test.describe("settings", () => {
     ]);
     await page.reload();
     await expect(page.locator("#settingsPreferredName")).toHaveValue("AO");
+
+    await page.goto("/dashboard/settings");
+    await expect(page.locator("#settingsEmail")).toHaveValue("");
 
     await page.fill("#settingsEmail", "alex.e2e@example.com");
     await Promise.all([
@@ -57,7 +60,7 @@ test.describe("settings", () => {
     await expect(page.locator("body")).toContainText(secondPhone);
   });
 
-  test("contact profile shows read-only identity with a link to Settings, not editable inputs", async ({ page }) => {
+  test("contact profile shows read-only identity with a link to Profile, not editable inputs", async ({ page }) => {
     await signUpAndOnboard(page, { phone, name: "Alex Owner", vehicleName: "Honda City" });
     await page.goto("/dashboard/vehicles");
     await page.getByRole("link", { name: /Honda City/ }).click();

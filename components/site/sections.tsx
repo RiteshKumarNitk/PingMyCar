@@ -1,0 +1,12 @@
+export { Hero } from "./Hero";
+export { TrustStatement } from "./TrustStatement";
+export { ProblemSection } from "./ProblemSection";
+export { SolutionSection } from "./SolutionSection";
+export { HowItWorks } from "./HowItWorks";
+export { VisitorExperience } from "./VisitorExperience";
+export { ExampleMessages } from "./ExampleMessages";
+export { Privacy } from "./Privacy";
+export { ForOwners } from "./ForOwners";
+export { StickerShowcase } from "./StickerShowcase";
+export { Faq } from "./Faq";
+export { FinalCta } from "./FinalCta";

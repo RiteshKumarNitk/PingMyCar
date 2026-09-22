@@ -75,8 +75,13 @@ test.describe("messaging", () => {
 
     await page.goto("/dashboard/vehicles");
     await page.getByRole("link", { name: /Honda City/ }).click();
-    await page.click('button:has-text("Deactivate")');
-    await page.waitForSelector('button:has-text("Activate")');
+    await page.click('a:has-text("Open QR Page")');
+    await page.click('button:has-text("Deactivate QR")');
+    await page.getByRole("dialog").locator('button:has-text("Deactivate")').click();
+    // The badge now renders from refreshed server state, so seeing "Activate
+    // QR" means the PATCH has committed — no DB poll needed.
+    await page.waitForSelector('button:has-text("Activate QR")');
+    await expect(page.locator("text=Inactive")).toBeVisible();
 
     const resp = await visitorPage.goto(`/v/${publicToken}`);
     expect(resp?.status()).toBe(200);
@@ -105,7 +110,7 @@ test.describe("messaging", () => {
     await visitorPage.waitForURL(/\/c\/[A-Za-z0-9_-]+$/);
     const visitorToken = visitorPage.url().split("/").pop()!;
 
-    await visitorPage.click('button:has-text("Report this conversation")');
+    await visitorPage.click('button:has-text("Report it")');
     await Promise.all([
       visitorPage.waitForResponse((r) => r.url().includes("/report")),
       visitorPage.click('button:has-text("Submit report")'),

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 type Message = { senderType: "VISITOR" | "OWNER"; body: string; createdAt: string | Date };
 
@@ -13,6 +14,7 @@ export function MessageThread({
   closed,
   closedLabel = "This conversation has ended.",
   maxChars,
+  pollMs = 15000,
 }: {
   /** Where a new reply is POSTed — the public visitor route or the owner route. */
   submitUrl: string;
@@ -22,11 +24,23 @@ export function MessageThread({
   closed: boolean;
   closedLabel?: string;
   maxChars: number;
+  /** How often to refresh while the page is open (0 disables). */
+  pollMs?: number;
 }) {
   const router = useRouter();
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+
+  // Light polling: picks up replies without any websocket machinery.
+  // Paused while the tab is hidden — background polls are wasted requests.
+  useEffect(() => {
+    if (!pollMs || closed) return;
+    const id = setInterval(() => {
+      if (!document.hidden) router.refresh();
+    }, pollMs);
+    return () => clearInterval(id);
+  }, [pollMs, closed, router]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -57,24 +71,32 @@ export function MessageThread({
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.senderType === viewerRole ? "justify-end" : "justify-start"}`}>
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
+              className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
                 m.senderType === viewerRole
                   ? "bg-primary text-primary-foreground"
                   : "border border-border bg-card"
               }`}
             >
-              {m.body}
+              <p className="whitespace-pre-wrap">{m.body}</p>
+              <p
+                className={`mt-1 text-[10px] ${
+                  m.senderType === viewerRole ? "text-primary-foreground/60" : "text-muted-foreground"
+                }`}
+              >
+                {new Date(m.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+              </p>
             </div>
           </div>
         ))}
       </div>
 
       {closed ? (
-        <p className="text-center text-sm text-muted-foreground">{closedLabel}</p>
+        <p className="rounded-lg border border-border bg-muted px-4 py-3 text-center text-sm text-muted-foreground">
+          {closedLabel}
+        </p>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-2">
-          <textarea
-            className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
+          <Textarea
             rows={3}
             placeholder="Write a reply"
             value={body}
