@@ -3,16 +3,20 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { phoneNumber } from "better-auth/plugins/phone-number";
 import { prisma } from "../db";
-import { tempEmailFor } from "./tempEmail";
+import { tempEmailFor, isTempEmail } from "./tempEmail";
+import { sendEmail } from "@/lib/notifications/email";
+import { setLastOtp } from "./otpStore";
 
 /**
  * No SMS provider is wired up yet (dev fallback per ARCHITECTURE.md).
  * The OTP is logged to the server console so the phone-OTP flow can be
- * exercised end-to-end locally. Swap this for a real SMS send (Twilio, etc.)
+ * exercised end-to-end locally, and stashed in-memory for the e2e suite to
+ * read via /api/test/last-otp. Swap this for a real SMS send (Twilio, etc.)
  * before production.
  */
 async function sendOTP({ phoneNumber, code }: { phoneNumber: string; code: string }) {
   console.log(`[dev OTP] ${phoneNumber} -> ${code}`);
+  setLastOtp(phoneNumber, code);
 }
 
 export const auth = betterAuth({
@@ -33,11 +37,48 @@ export const auth = betterAuth({
   advanced: {
     useSecureCookies: process.env.NODE_ENV === "production",
   },
+  // changeEmail's "no verification needed for an unverified current email"
+  // fast path still requires this base capability to be configured, even
+  // though we never trigger it automatically (sendOnSignUp/sendOnSignIn: false).
+  emailVerification: {
+    sendVerificationEmail: async ({ user, url }) => {
+      if (isTempEmail(user.email)) return;
+      await sendEmail({
+        to: user.email,
+        subject: "Verify your PingMyCar email",
+        text: `Confirm this email address: ${url}`,
+      });
+    },
+    sendOnSignUp: false,
+    sendOnSignIn: false,
+  },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+    },
+  },
   user: {
     additionalFields: {
       preferredName: {
         type: "string",
         required: false,
+      },
+    },
+    changeEmail: {
+      enabled: true,
+      // Phone-signup accounts have a temp, never-verified email — apply the
+      // change immediately instead of requiring a click-through on the new one.
+      updateEmailWithoutVerification: true,
+      // The temp placeholder email (phone-only signups) was never verified,
+      // so there's nothing meaningful to notify — skip it silently.
+      sendChangeEmailConfirmation: async ({ user, newEmail }) => {
+        if (isTempEmail(user.email)) return;
+        await sendEmail({
+          to: user.email,
+          subject: "Your PingMyCar email was changed",
+          text: `Your account email was changed to ${newEmail}. If this wasn't you, contact support immediately.`,
+        });
       },
     },
   },

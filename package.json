@@ -12,7 +12,10 @@
     "db:up": "docker compose up -d postgres",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "test:unit": "playwright test --config=playwright.unit.config.ts",
+    "test:e2e": "playwright test --config=playwright.config.ts",
+    "test": "pnpm test:unit && pnpm test:e2e"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -34,6 +37,7 @@
     "zod": "^3.25.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.1.0",
     "@types/node": "^24.0.0",
     "@types/qrcode": "^1.5.5",

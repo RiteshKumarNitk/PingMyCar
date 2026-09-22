@@ -20,6 +20,9 @@ export function DashboardHeader() {
           <Link href="/dashboard/messages" className="hover:text-foreground">
             Messages
           </Link>
+          <Link href="/dashboard/settings" className="hover:text-foreground">
+            Settings
+          </Link>
         </nav>
 
         <LogoutButton />

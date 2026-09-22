@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, type FormEvent, type ReactNode } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { VehiclePublicCard } from "@/components/vehicles/VehiclePublicCard";
+import { hasRealName } from "@/lib/auth/identity";
 import type { VEHICLE_TYPES } from "@/lib/validation/vehicle";
 
 type ToggleKey =
@@ -97,19 +96,19 @@ export function VehicleProfileForm({
 }) {
   const router = useRouter();
   const [toggles, setToggles] = useState<Toggles>(initialToggles);
-  const [displayName, setDisplayName] = useState(owner.name === owner.phoneNumber ? "" : owner.name);
-  const [preferredName, setPreferredName] = useState(owner.preferredName ?? "");
-  const [photoUrl, setPhotoUrl] = useState(owner.image ?? "");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  const ownerHasRealName = hasRealName(owner.name, owner.phoneNumber);
+  const displayName = ownerHasRealName ? owner.name : "";
+  const preferredName = owner.preferredName ?? "";
+  const photoUrl = owner.image ?? "";
 
   const set = (key: ToggleKey) => (checked: boolean) => {
     setToggles((t) => ({ ...t, [key]: checked }));
     setSaved(false);
   };
-
-  const nameNotSet = !displayName.trim();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -122,23 +121,11 @@ export function VehicleProfileForm({
       body: JSON.stringify(toggles),
     });
 
-    if (!profileRes.ok) {
-      setSaving(false);
-      const data = await profileRes.json().catch(() => null);
-      setError(data?.error ?? "Couldn't save your contact profile. Try again.");
-      return;
-    }
-
-    const { error: identityError } = await authClient.updateUser({
-      name: displayName.trim() || owner.phoneNumber || owner.name,
-      preferredName: preferredName.trim() || undefined,
-      image: photoUrl.trim() || undefined,
-    });
-
     setSaving(false);
 
-    if (identityError) {
-      setError(identityError.message ?? "Couldn't save your details. Try again.");
+    if (!profileRes.ok) {
+      const data = await profileRes.json().catch(() => null);
+      setError(data?.error ?? "Couldn't save your contact profile. Try again.");
       return;
     }
 
@@ -162,48 +149,34 @@ export function VehicleProfileForm({
         </Section>
 
         <Section title="Your identity">
-          <div className="space-y-4 py-3">
-            <div className="space-y-2">
-              <Label htmlFor="displayName">Your name</Label>
-              <Input
-                id="displayName"
-                placeholder="Add your name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="preferredName">Preferred name (optional)</Label>
-              <Input
-                id="preferredName"
-                placeholder="e.g. a nickname visitors can use"
-                value={preferredName}
-                onChange={(e) => setPreferredName(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ownerPhotoUrl">Photo URL (optional)</Label>
-              <Input
-                id="ownerPhotoUrl"
-                placeholder="https://…"
-                value={photoUrl}
-                onChange={(e) => setPhotoUrl(e.target.value)}
-              />
-            </div>
+          <div className="flex items-center justify-between gap-4 py-3">
+            <p className="text-sm text-muted-foreground">
+              {ownerHasRealName ? (
+                <>
+                  Name: <span className="text-foreground">{displayName}</span>
+                  {preferredName && <> · Preferred: <span className="text-foreground">{preferredName}</span></>}
+                </>
+              ) : (
+                "You haven't set your name yet."
+              )}
+            </p>
+            <Link href="/dashboard/settings" className="shrink-0 text-sm text-primary underline-offset-4 hover:underline">
+              Edit in Settings
+            </Link>
           </div>
           <ToggleRow
             label="Show your name"
             checked={toggles.showOwnerName}
             onChange={set("showOwnerName")}
-            disabled={nameNotSet}
-            disabledReason={nameNotSet ? "Add your name above first." : undefined}
+            disabled={!ownerHasRealName}
+            disabledReason={!ownerHasRealName ? "Add your name in Settings first." : undefined}
           />
           <ToggleRow
             label="Show your preferred name instead"
             checked={toggles.showPreferredName}
             onChange={set("showPreferredName")}
             disabled={!preferredName.trim()}
-            disabledReason={!preferredName.trim() ? "Add a preferred name above first." : undefined}
+            disabledReason={!preferredName.trim() ? "Add a preferred name in Settings first." : undefined}
           />
           <ToggleRow label="Show your photo" checked={toggles.showOwnerPhoto} onChange={set("showOwnerPhoto")} />
         </Section>

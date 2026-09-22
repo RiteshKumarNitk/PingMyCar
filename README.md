@@ -28,6 +28,24 @@ Copy `.env.example` to `.env` and set `AUTH_SECRET` (and matching `BETTER_AUTH_S
 
 `NEXT_PUBLIC_APP_URL` must be the real public origin **before printing stickers**.
 
+## Testing
+
+```bash
+pnpm test:unit   # pure logic — no browser, no dev server, no DB (~2s)
+pnpm test:e2e    # full browser flows against a real dev server + Postgres
+pnpm test        # both, in order
+```
+
+`test:e2e` starts its own `pnpm dev` if one isn't already running on :3100 (reuses
+it otherwise) and talks to whatever Postgres `DATABASE_URL` points at — same DB
+as local dev. Each test creates its own uniquely-numbered phone/user and cleans
+up after itself in `afterEach`, but it's still the dev DB: don't point `test:e2e`
+at a database with data you care about.
+
+OTP codes are read via `GET /api/test/last-otp?phoneNumber=...`, a dev-only
+route (404s when `NODE_ENV=production`) that reflects whatever the console-log
+dev fallback last sent — no need to scrape server output.
+
 ## Docker
 
 ```bash
