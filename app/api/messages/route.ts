@@ -1,10 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 
-export async function GET() {
+export const GET = async (req: NextRequest) => {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const cursor = req.nextUrl.searchParams.get("cursor");
+  const limitRaw = Number(req.nextUrl.searchParams.get("limit"));
+  const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 50) : 20;
 
   const conversations = await prisma.conversation.findMany({
     where: { vehicle: { ownerId: session.user.id } },
@@ -12,11 +16,16 @@ export async function GET() {
       vehicle: { select: { id: true, name: true } },
       messages: { orderBy: { createdAt: "desc" }, take: 1 },
     },
-    orderBy: { updatedAt: "desc" },
+    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+    take: limit + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   });
 
+  const hasMore = conversations.length > limit;
+  const page = hasMore ? conversations.slice(0, limit) : conversations;
+
   return NextResponse.json({
-    conversations: conversations.map((c) => ({
+    conversations: page.map((c) => ({
       id: c.id,
       vehicleId: c.vehicle.id,
       vehicleName: c.vehicle.name,
@@ -27,5 +36,6 @@ export async function GET() {
         : null,
       updatedAt: c.updatedAt,
     })),
+    nextCursor: hasMore ? page[page.length - 1].id : null,
   });
-}
+};

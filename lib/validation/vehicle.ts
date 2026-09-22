@@ -18,6 +18,13 @@ const registrationNumber = z
   .optional()
   .transform((v) => (v ? v : undefined));
 
+const color = z
+  .string()
+  .trim()
+  .max(30)
+  .optional()
+  .transform((v) => (v ? v : undefined));
+
 const photoUrl = z
   .string()
   .trim()
@@ -31,12 +38,14 @@ export const createVehicleSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(80),
   type: z.enum(VEHICLE_TYPES).optional(),
   registrationNumber,
+  color,
 });
 
 export const updateVehicleSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(80).optional(),
   type: z.enum(VEHICLE_TYPES).optional(),
   registrationNumber,
+  color,
   photoUrl,
   qrActive: z.boolean().optional(),
   /** Rotates publicToken; old sticker URLs 404 afterward. */

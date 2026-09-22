@@ -4,25 +4,62 @@ import { useState } from "react";
 import { authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 
-/** Renders nothing (button + divider) until GOOGLE_CLIENT_ID is actually configured. */
-export function GoogleSignInSection() {
-  const [loading, setLoading] = useState(false);
+/** Google's four-color "G", inline so no external image request is needed. */
+function GoogleG() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
+      <path
+        fill="#4285F4"
+        d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.57 5.57 0 0 1-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09A11.99 11.99 0 0 0 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.27 14.29A7.2 7.2 0 0 1 4.89 12c0-.8.14-1.57.38-2.29V6.62H1.29a12 12 0 0 0 0 10.76l3.98-3.09z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42A11.97 11.97 0 0 0 12 0 11.99 11.99 0 0 0 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75z"
+      />
+    </svg>
+  );
+}
 
-  if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) return null;
+/**
+ * The primary auth action. Renders a configuration notice instead of a dead
+ * button when Google OAuth env vars are absent on this deployment.
+ */
+export function GoogleSignInSection({ label = "Continue with Google" }: { label?: string }) {
+  const [loading, setLoading] = useState(false);
+  const configured = Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
+
+  if (!configured) {
+    return (
+      <div className="rounded-lg border border-warning/30 bg-warning-bg px-4 py-3 text-sm text-warning">
+        Google sign-in isn&apos;t configured on this deployment yet. Use the phone
+        fallback below, or set <code>NEXT_PUBLIC_GOOGLE_CLIENT_ID</code> and the
+        server-side Google credentials to enable it.
+      </div>
+    );
+  }
 
   return (
-    <div className="mb-5 space-y-5">
+    <div className="space-y-5">
       <Button
         type="button"
         variant="outline"
-        className="w-full"
+        className="h-12 w-full text-base font-medium"
         disabled={loading}
         onClick={() => {
           setLoading(true);
           authClient.signIn.social({ provider: "google", callbackURL: "/dashboard" });
         }}
       >
-        {loading ? "Redirecting…" : "Continue with Google"}
+        <GoogleG />
+        {loading ? "Redirecting to Google…" : label}
       </Button>
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
         <span className="h-px flex-1 bg-border" />

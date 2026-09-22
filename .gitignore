@@ -24,6 +24,8 @@ next-env.d.ts
 
 # env files — never commit real secrets
 .env
+.env.local
+.env.production
 .env*.local
 
 # local data / logs

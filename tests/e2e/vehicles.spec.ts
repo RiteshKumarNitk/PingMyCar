@@ -52,25 +52,29 @@ test.describe("vehicles", () => {
     await expect(toggleFor("Vehicle issues")).not.toBeChecked();
   });
 
-  test("QR code deactivates, reactivates, and regenerates to a new URL", async ({ page }) => {
+  test("QR code deactivates, reactivates, and regenerates to a new URL (on the QR page)", async ({ page }) => {
     await page.goto("/dashboard/vehicles");
     await page.getByRole("link", { name: /Honda City/ }).click();
+    await page.click('a:has-text("Open QR Page")');
 
-    const urlBadge = page.locator("text=/https?:\\/\\/.*\\/v\\//");
+    const urlBadge = page.locator("text=/https?:\\/\\/.*\\/v\\//").first();
     await expect(urlBadge).toBeVisible();
     const originalUrl = await urlBadge.innerText();
 
-    await page.click('button:has-text("Deactivate")');
-    await page.waitForSelector('button:has-text("Activate")');
+    // Deactivate goes through the confirmation modal.
+    await page.click('button:has-text("Deactivate QR")');
+    await page.getByRole("dialog").locator('button:has-text("Deactivate")').click();
+    await page.waitForSelector('button:has-text("Activate QR")');
     await expect(page.locator("text=Inactive")).toBeVisible();
 
-    await page.click('button:has-text("Activate")');
-    await page.waitForSelector('button:has-text("Deactivate")');
+    await page.click('button:has-text("Activate QR")');
+    await page.waitForSelector('button:has-text("Deactivate QR")');
 
-    await page.click('button:has-text("Regenerate QR code")');
+    // Regenerate rotates the token; the sticker downloads live on this page too.
+    await page.click('button:has-text("Regenerate QR")');
     await Promise.all([
       page.waitForResponse((r) => r.url().includes("/api/vehicles/") && r.request().method() === "PATCH"),
-      page.click('button:has-text("Yes, regenerate")'),
+      page.getByRole("dialog").locator('button:has-text("Regenerate")').click(),
     ]);
     await page.reload();
     await expect(urlBadge).not.toHaveText(originalUrl);

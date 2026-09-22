@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,11 +10,10 @@ import { Label } from "@/components/ui/label";
 
 type Step = "phone" | "otp";
 
-const submitLabel = {
-  login: "Log in",
-  signup: "Create account",
-} as const;
-
+/**
+ * Phone-OTP fallback auth. Deliberately secondary: Google is the primary
+ * flow, this stays collapsed behind a disclosure so it never competes with it.
+ */
 export function PhoneOtpForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("phone");
@@ -100,27 +100,33 @@ export function PhoneOtpForm({ mode }: { mode: "login" | "signup" }) {
   }
 
   return (
-    <form onSubmit={handleSendCode} className="space-y-5">
-      <div className="space-y-2">
-        <Label htmlFor="phoneNumber">Phone number</Label>
-        <Input
-          id="phoneNumber"
-          type="tel"
-          autoComplete="tel"
-          placeholder="+1 555 123 4567"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          required
-          autoFocus
-        />
-        <p className="text-xs text-muted-foreground">Include your country code.</p>
-      </div>
+    <details className="group">
+      <summary className="flex cursor-pointer list-none items-center justify-center gap-1.5 text-sm text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
+        Continue with phone instead
+        <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden />
+      </summary>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      <form onSubmit={handleSendCode} className="mt-4 space-y-5">
+        <div className="space-y-2">
+          <Label htmlFor="phoneNumber">Phone number</Label>
+          <Input
+            id="phoneNumber"
+            type="tel"
+            autoComplete="tel"
+            placeholder="+1 555 123 4567"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            required
+          />
+          <p className="text-xs text-muted-foreground">Include your country code.</p>
+        </div>
 
-      <Button type="submit" className="w-full" disabled={loading || phoneNumber.trim().length < 8}>
-        {loading ? "Sending…" : submitLabel[mode]}
-      </Button>
-    </form>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+
+        <Button type="submit" variant="outline" className="w-full" disabled={loading || phoneNumber.trim().length < 8}>
+          {loading ? "Sending…" : mode === "login" ? "Log in with code" : "Create account with code"}
+        </Button>
+      </form>
+    </details>
   );
 }

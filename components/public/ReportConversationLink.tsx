@@ -9,7 +9,11 @@ export function ReportConversationLink({ visitorToken }: { visitorToken: string 
   const [done, setDone] = useState(false);
 
   if (done) {
-    return <p className="text-center text-xs text-muted-foreground">Reported. Thank you for letting us know.</p>;
+    return (
+      <p className="rounded-lg border border-success/30 bg-success-bg px-3 py-2 text-center text-xs font-medium text-success">
+        Reported. Thank you for letting us know.
+      </p>
+    );
   }
 
   if (!open) {
@@ -19,7 +23,7 @@ export function ReportConversationLink({ visitorToken }: { visitorToken: string 
         className="mx-auto block text-xs text-muted-foreground underline-offset-4 hover:underline"
         onClick={() => setOpen(true)}
       >
-        Report this conversation
+        Something wrong with this conversation? Report it
       </button>
     );
   }

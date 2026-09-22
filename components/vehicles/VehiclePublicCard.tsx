@@ -32,8 +32,15 @@ export function VehiclePublicCard({
   const reasons = visibleReasons(contactFlags);
   const showsUrgentReason = reasons.some((r) => r.id === "URGENT" || r.id === "SECURITY");
 
+  // When the page header already shows the vehicle identity (and the owner
+  // opted out of showing their own), the card carries no media at all.
+  const hasIdentity = Boolean(
+    vehicleName || vehicleType || vehiclePhotoUrl || registrationNumber || ownerDisplayName
+  );
+
   return (
     <div className="mx-auto w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-sm">
+      {!hasIdentity ? null : (
       <div className="flex flex-col items-center text-center">
         {vehiclePhotoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -66,8 +73,9 @@ export function VehiclePublicCard({
           </div>
         )}
       </div>
+      )}
 
-      <div className="mt-6 border-t border-border pt-5">
+      <div className={!hasIdentity ? "" : "mt-6 border-t border-border pt-5"}>
         {contactSection ? (
           contactSection
         ) : reasons.length === 0 ? (

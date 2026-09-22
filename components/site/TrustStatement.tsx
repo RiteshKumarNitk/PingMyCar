@@ -1,22 +1,17 @@
-import { ShieldCheck } from "lucide-react";
+import { Lock } from "lucide-react";
 
 export function TrustStatement() {
   return (
-    <section className="border-y border-border bg-card">
-      <div className="mx-auto flex max-w-4xl flex-col items-center gap-5 px-4 py-10 text-center sm:flex-row sm:px-6 sm:text-left">
-        <span
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
-          aria-hidden
-        >
-          <ShieldCheck className="h-6 w-6" />
+    <section className="border-y border-border bg-accent/50">
+      <div className="mx-auto flex max-w-4xl flex-col items-center gap-3 px-4 py-8 text-center sm:px-6">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Lock className="h-5 w-5" aria-hidden />
         </span>
-        <div>
-          <p className="font-semibold">Your number stays private.</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Messages are delivered through our platform. Your personal contact
-            information is never shown to the person contacting your vehicle.
-          </p>
-        </div>
+        <p className="text-lg font-semibold">Your number stays private.</p>
+        <p className="max-w-2xl text-sm text-muted-foreground">
+          Messages are delivered through our platform. Your personal contact information
+          is never shown to the person contacting your vehicle.
+        </p>
       </div>
     </section>
   );

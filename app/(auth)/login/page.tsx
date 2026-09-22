@@ -1,27 +1,40 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth/session";
+import { needsOnboarding } from "@/lib/onboarding";
 import { PhoneOtpForm } from "@/components/auth/PhoneOtpForm";
 import { GoogleSignInSection } from "@/components/auth/GoogleSignInSection";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
-export const metadata = { title: "Log In" };
+export const metadata: Metadata = { title: "Log In" };
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const session = await getSession();
+  if (session) {
+    // Already signed in: straight to the dashboard (or onboarding if the
+    // account still needs its first vehicle).
+    redirect((await needsOnboarding(session.user)) ? "/onboarding" : "/dashboard");
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">Log in</CardTitle>
-        <CardDescription>Enter your phone number and we&apos;ll text you a code.</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div className="text-center">
+      <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Contact your vehicle. Keep your number private.
+      </p>
+
+      <div className="mt-8 text-left">
         <GoogleSignInSection />
         <PhoneOtpForm mode="login" />
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          New to PingMyCar?{" "}
-          <Link href="/signup" className="font-medium text-foreground underline-offset-4 hover:underline">
-            Get your QR
-          </Link>
-        </p>
-      </CardContent>
-    </Card>
+      </div>
+
+      <div className="mt-8 border-t border-border pt-6">
+        <p className="text-sm text-muted-foreground">New to PingMyCar?</p>
+        <Button asChild variant="outline" className="mt-3 w-full">
+          <Link href="/signup">Get Your Free QR</Link>
+        </Button>
+      </div>
+    </div>
   );
 }

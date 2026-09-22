@@ -1,29 +1,51 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth/session";
+import { needsOnboarding } from "@/lib/onboarding";
 import { PhoneOtpForm } from "@/components/auth/PhoneOtpForm";
 import { GoogleSignInSection } from "@/components/auth/GoogleSignInSection";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const metadata = { title: "Get Your QR" };
+export const metadata: Metadata = { title: "Get Your Free QR" };
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  const session = await getSession();
+  if (session) {
+    redirect((await needsOnboarding(session.user)) ? "/onboarding" : "/dashboard");
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">Get your QR</CardTitle>
-        <CardDescription>
-          Enter your phone number to create your PingMyCar account. No password needed.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <GoogleSignInSection />
+    <div className="text-center">
+      <h1 className="text-2xl font-bold tracking-tight">
+        Create your free PingMyCar account
+      </h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Your vehicle can have its own private contact channel.
+      </p>
+
+      <div className="mt-8 text-left">
+        <GoogleSignInSection label="Get Your Free QR" />
         <PhoneOtpForm mode="signup" />
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link href="/login" className="font-medium text-foreground underline-offset-4 hover:underline">
-            Log in
-          </Link>
-        </p>
-      </CardContent>
-    </Card>
+      </div>
+
+      <p className="mt-6 text-xs leading-relaxed text-muted-foreground">
+        By continuing, you agree to the{" "}
+        <Link href="/terms" className="underline underline-offset-4 hover:text-foreground">
+          Terms of Service
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy-policy" className="underline underline-offset-4 hover:text-foreground">
+          Privacy Policy
+        </Link>
+        .
+      </p>
+
+      <p className="mt-4 text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <Link href="/login" className="font-medium text-primary underline-offset-4 hover:underline">
+          Log in
+        </Link>
+      </p>
+    </div>
   );
 }

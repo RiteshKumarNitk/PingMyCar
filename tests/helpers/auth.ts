@@ -16,6 +16,9 @@ export async function signUpAndOnboard(
   opts: { phone: string; name: string; vehicleName: string }
 ) {
   await page.goto("/signup");
+  // Google is the primary flow; the phone-OTP fallback lives inside a
+  // collapsed disclosure. Open it before interacting with the phone field.
+  await page.click('summary:has-text("Continue with phone instead")');
   await page.fill("#phoneNumber", opts.phone);
   await Promise.all([
     page.waitForResponse((r) => r.url().includes("/phone-number/send-otp")),
@@ -34,8 +37,12 @@ export async function signUpAndOnboard(
     await page.fill("#vehicleName", opts.vehicleName);
     await Promise.all([
       page.waitForResponse((r) => r.url().includes("/api/vehicles") && r.request().method() === "POST"),
-      page.click('button:has-text("Continue")'),
+      page.click('button:has-text("Generate My Free QR")'),
     ]);
-    await page.waitForURL(/\/dashboard/);
+    // Creating the vehicle lands on the "vehicle is ready" step; the owner is
+    // fully onboarded at that point, so the dashboard gate passes.
+    await page.waitForURL(/\/onboarding\/ready/);
+    await page.goto("/dashboard");
   }
+  await page.waitForURL(/\/dashboard/);
 }

@@ -11,6 +11,14 @@ export const CONTACT_REASONS = [
   { id: "OTHER", label: "Other" },
 ] as const;
 
+/**
+ * Human label for a reason id; falls back to the raw id for unknown values.
+ * Single owner for every dashboard/inbox rendering of a conversation reason.
+ */
+export function reasonLabel(id: string): string {
+  return CONTACT_REASONS.find((r) => r.id === id)?.label ?? id;
+}
+
 export type ContactReasonId = (typeof CONTACT_REASONS)[number]["id"];
 
 export type ContactFlags = {

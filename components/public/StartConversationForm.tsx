@@ -2,9 +2,11 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle } from "lucide-react";
+import { Lock, Send } from "lucide-react";
 import { visibleReasons, type ContactFlags, type ContactReasonId } from "@/types";
+import { REASON_ICONS } from "@/components/public/reasonIcons";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 export function StartConversationForm({
   publicToken,
@@ -53,50 +55,71 @@ export function StartConversationForm({
     }
 
     const { visitorToken } = await res.json();
+    // One-shot flag: the conversation page shows the "message sent" success
+    // state exactly once, right after this navigation.
+    try {
+      sessionStorage.setItem("pmc-just-sent", visitorToken);
+    } catch {
+      // storage unavailable — the banner is cosmetic, don't block the send
+    }
     router.push(`/c/${visitorToken}`);
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <p className="text-sm font-medium">Need to contact the owner?</p>
+        <p className="text-sm font-medium">How can we help?</p>
         <div className="mt-3 grid gap-2">
-          {reasons.map((reason) => (
-            <button
-              key={reason.id}
-              type="button"
-              onClick={() => setSelectedReason(reason.id)}
-              className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
-                selectedReason === reason.id
-                  ? "border-primary bg-primary/5 text-foreground"
-                  : "border-border text-muted-foreground hover:border-primary/40"
-              }`}
-            >
-              <MessageCircle className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-              {reason.label}
-            </button>
-          ))}
+          {reasons.map((reason) => {
+            const Icon = REASON_ICONS[reason.id];
+            return (
+              <button
+                key={reason.id}
+                type="button"
+                onClick={() => setSelectedReason(reason.id)}
+                aria-pressed={selectedReason === reason.id}
+                className={`flex items-center gap-2.5 rounded-lg border px-3.5 py-2.5 text-left text-sm transition-colors ${
+                  selectedReason === reason.id
+                    ? "border-primary bg-primary/5 font-medium text-foreground"
+                    : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+                {reason.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {selectedReason && (
-        <textarea
-          className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
-          rows={4}
-          placeholder="Add a message"
-          value={messageBody}
-          onChange={(e) => setMessageBody(e.target.value)}
-          maxLength={maxChars}
-          required
-          autoFocus
-        />
+        <div className="space-y-1.5">
+          <label htmlFor="visitorMessage" className="text-sm font-medium">
+            {selectedReason === "OTHER" ? "Your message" : "Add a note (optional)"}
+          </label>
+          <Textarea
+            id="visitorMessage"
+            rows={4}
+            placeholder={
+              selectedReason === "OTHER"
+                ? "Tell the owner what's going on…"
+                : "Anything else they should know? (optional)"
+            }
+            value={messageBody}
+            onChange={(e) => setMessageBody(e.target.value)}
+            maxLength={maxChars}
+            required={selectedReason === "OTHER"}
+            autoFocus
+          />
+        </div>
       )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {selectedReason && (
-        <Button type="submit" className="w-full" disabled={sending || !messageBody.trim()}>
-          {sending ? "Sending…" : "Send message"}
+        <Button type="submit" size="lg" className="w-full" disabled={sending || (selectedReason === "OTHER" && !messageBody.trim())}>
+          <Send className="h-4 w-4" aria-hidden />
+          {sending ? "Sending…" : "Send Message"}
         </Button>
       )}
 

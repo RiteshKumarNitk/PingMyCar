@@ -1,53 +1,67 @@
-import { Bell, Car, QrCode } from "lucide-react";
+import Link from "next/link";
+import { UserRoundPlus, CarFront, QrCode, Sticker, BellRing } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-const steps = [
+const STEPS = [
+  {
+    icon: UserRoundPlus,
+    title: "Create your account",
+    text: "Create your free PingMyCar account with your phone or Google.",
+  },
+  {
+    icon: CarFront,
+    title: "Add your vehicle",
+    text: "Add your vehicle details — a nickname is all it takes to start.",
+  },
   {
     icon: QrCode,
-    title: "Create your vehicle QR",
-    body: "Add your vehicle and generate your unique QR code.",
+    title: "Get your QR",
+    text: "Generate your vehicle's unique QR code instantly.",
   },
   {
-    icon: Car,
-    title: "Place it on your vehicle",
-    body: "Print the QR sticker and place it somewhere visible.",
+    icon: Sticker,
+    title: "Place the sticker",
+    text: "Print it or use a PingMyCar sticker and place it somewhere visible.",
   },
   {
-    icon: Bell,
+    icon: BellRing,
     title: "Receive private messages",
-    body: "Someone scans the QR and sends you a message. You receive it without revealing your phone number.",
+    text: "Someone scans the QR and contacts you through PingMyCar — your number stays yours.",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="scroll-mt-20 px-4 py-16 sm:px-6 sm:py-24">
-      <div className="mx-auto max-w-6xl">
-        <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          How it works
-        </h2>
-        <p
-          className="mt-3 font-mono text-xs tracking-[0.3em] text-muted-foreground"
-          aria-hidden
-        >
-          CREATE&nbsp;&nbsp;↓&nbsp;&nbsp;STICK&nbsp;&nbsp;↓&nbsp;&nbsp;CONNECT
-        </p>
+    <section id="how-it-works" className="border-y border-border bg-muted/40">
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="eyebrow">How it works</p>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+            From signup to your first message in minutes.
+          </h2>
+        </div>
 
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
-          {steps.map(({ icon: Icon, title, body }, i) => (
-            <div key={title} className="relative rounded-2xl border border-border bg-card p-6">
-              <span
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground"
-                aria-hidden
-              >
-                {i + 1}
-              </span>
-              <Icon className="absolute right-6 top-6 h-5 w-5 text-muted-foreground/60" aria-hidden />
-              <h3 className="mt-4 text-lg font-semibold">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {body}
-              </p>
-            </div>
+        <ol className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+          {STEPS.map(({ icon: Icon, title, text }, i) => (
+            <li key={title} className="relative rounded-xl border border-border bg-card p-5">
+              <div className="flex items-center justify-between">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Icon className="h-5 w-5" aria-hidden />
+                </span>
+                <span className="font-mono text-sm font-semibold text-primary/60">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </div>
+              <h3 className="mt-4 font-semibold">{title}</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">{text}</p>
+            </li>
           ))}
+        </ol>
+
+        <div className="mt-10 text-center">
+          <Button asChild size="lg">
+            <Link href="/signup">Get Your Free QR</Link>
+          </Button>
         </div>
       </div>
     </section>
