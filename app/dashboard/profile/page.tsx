@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/auth/session";
-import { isTempEmail } from "@/lib/auth/tempEmail";
 import { hasRealName } from "@/lib/onboarding";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,6 @@ export const metadata = { title: "Profile" };
 export default async function ProfilePage() {
   const session = await requireSession();
   const { user } = session;
-  const hasRealEmail = !isTempEmail(user.email);
   const displayName = hasRealName(user.name, user.phoneNumber) ? user.name : "";
 
   return (

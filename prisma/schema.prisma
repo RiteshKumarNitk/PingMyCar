@@ -11,24 +11,49 @@ datasource db {
 // Better Auth tables (required by the Prisma adapter)
 // ---------------------------------------------------------------------------
 
-model User {
-  id            String    @id @default(uuid())
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?
-  /// Owner phone for OTP login. Never shown on public profiles.
-  phoneNumber         String?   @unique
-  phoneNumberVerified Boolean   @default(false)
-  preferredName String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
+enum AdminRole {
+  USER
+  SUPPORT
+  MODERATOR
+  OPERATIONS
+  ANALYST
+  ADMIN
+  SUPER_ADMIN
+}
 
-  accounts Account[]
-  sessions Session[]
-  vehicles Vehicle[]
-  devices  Device[]
+enum AuditResult {
+  SUCCESS
+  FAILURE
+  DENIED
+}
+
+enum AuditSeverity {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+model User {
+  id                  String   @id @default(uuid())
+  name                String
+  email               String   @unique
+  emailVerified       Boolean  @default(false)
+  image               String?
+  /// Owner phone for OTP login. Never shown on public profiles.
+  phoneNumber         String?  @unique
+  phoneNumberVerified Boolean  @default(false)
+  preferredName       String?
+  adminRole           AdminRole @default(USER)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @default(now()) @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  vehicles      Vehicle[]
+  devices       Device[]
   notifications Notification[]
+  adminActions  AuditLog[] @relation("AdminActor")
 }
 
 model Session {
@@ -136,7 +161,7 @@ model Vehicle {
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @default(now()) @updatedAt
 
-  owner         User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner         User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   profile       VehicleProfile?
   conversations Conversation[]
 
@@ -144,25 +169,25 @@ model Vehicle {
 }
 
 model VehicleProfile {
-  id     String @id @default(uuid())
+  id        String @id @default(uuid())
   vehicleId String @unique
 
-  showVehicleName         Boolean @default(true)
-  showVehicleType         Boolean @default(true)
-  showVehiclePhoto        Boolean @default(true)
-  showRegistrationNumber  Boolean @default(false)
-  showOwnerName           Boolean @default(false)
-  showOwnerPhoto          Boolean @default(false)
-  showPreferredName       Boolean @default(false)
+  showVehicleName        Boolean @default(true)
+  showVehicleType        Boolean @default(true)
+  showVehiclePhoto       Boolean @default(true)
+  showRegistrationNumber Boolean @default(false)
+  showOwnerName          Boolean @default(false)
+  showOwnerPhoto         Boolean @default(false)
+  showPreferredName      Boolean @default(false)
 
-  allowMessages           Boolean @default(true)
-  allowParkingAlerts      Boolean @default(true)
-  allowVehicleIssues      Boolean @default(true)
-  allowDamageReports      Boolean @default(true)
-  allowEmergencyAlerts    Boolean @default(true)
+  allowMessages        Boolean @default(true)
+  allowParkingAlerts   Boolean @default(true)
+  allowVehicleIssues   Boolean @default(true)
+  allowDamageReports   Boolean @default(true)
+  allowEmergencyAlerts Boolean @default(true)
   /// Stored for later. Not implemented in MVP.
-  allowCallRequest        Boolean @default(false)
-  allowWhatsApp           Boolean @default(false)
+  allowCallRequest     Boolean @default(false)
+  allowWhatsApp        Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -222,18 +247,18 @@ model Message {
 }
 
 model Notification {
-  id         String   @id @default(uuid())
-  userId     String
+  id        String    @id @default(uuid())
+  userId    String
   /// The conversation whose activity raised this notification (null for
   /// account-level notices).
-  messageId  String?
-  type       String
+  messageId String?
+  type      String
   /// Payload snapshot shown in a future in-app notification list.
-  title      String
-  body       String
-  url        String?
-  readAt     DateTime?
-  createdAt  DateTime @default(now())
+  title     String
+  body      String
+  url       String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -251,4 +276,42 @@ model Device {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model AuditLog {
+  id           String    @id @default(uuid())
+  createdAt    DateTime  @default(now())
+
+  actorId      String?
+  actorType    String
+
+  action       String
+  category     String
+  severity     AuditSeverity
+  result       AuditResult
+
+  resourceType String?
+  resourceId   String?
+
+  ipAddress    String?
+  userAgent    String?
+  requestId    String?
+
+  /// Optional justification captured for sensitive admin actions.
+  reason       String?
+
+  /// Structured, non-sensitive context only. Never stores secrets, tokens,
+  /// PII, or raw visitor identifiers.
+  metadata     BigInt?
+
+  actor   User?   @relation("AdminActor", fields: [actorId], references: [id])
+  report  Report?
+
+  @@index([createdAt])
+  @@index([actorId])
+  @@index([action])
+  @@index([category])
+  @@index([severity])
+  @@index([resourceType, resourceId])
+  @@index([result])
 }
