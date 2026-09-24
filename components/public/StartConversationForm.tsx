@@ -78,13 +78,13 @@ export function StartConversationForm({
                 type="button"
                 onClick={() => setSelectedReason(reason.id)}
                 aria-pressed={selectedReason === reason.id}
-                className={`flex items-center gap-2.5 rounded-lg border px-3.5 py-2.5 text-left text-sm transition-colors ${
+                className={`flex min-h-14 items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-base transition-colors ${
                   selectedReason === reason.id
                     ? "border-primary bg-primary/5 font-medium text-foreground"
                     : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
                 }`}
               >
-                <Icon className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+                <Icon className="h-5 w-5 shrink-0 text-primary" aria-hidden />
                 {reason.label}
               </button>
             );
@@ -99,7 +99,8 @@ export function StartConversationForm({
           </label>
           <Textarea
             id="visitorMessage"
-            rows={4}
+            rows={3}
+            className="min-h-24 text-base"
             placeholder={
               selectedReason === "OTHER"
                 ? "Tell the owner what's going on…"
@@ -117,15 +118,15 @@ export function StartConversationForm({
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {selectedReason && (
-        <Button type="submit" size="lg" className="w-full" disabled={sending || (selectedReason === "OTHER" && !messageBody.trim())}>
+        <Button type="submit" size="lg" className="h-14 w-full text-base" disabled={sending || (selectedReason === "OTHER" && !messageBody.trim())}>
           <Send className="h-4 w-4" aria-hidden />
           {sending ? "Sending…" : "Send Message"}
         </Button>
       )}
 
       {showsUrgentReason && (
-        <p className="text-center text-xs text-muted-foreground">
-          For real emergencies, contact local emergency services.
+        <p className="text-center text-sm text-muted-foreground">
+          For a real emergency, call local emergency services — not this page.
         </p>
       )}
     </form>

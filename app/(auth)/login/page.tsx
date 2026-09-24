@@ -2,8 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
-import { needsOnboarding } from "@/lib/onboarding";
-import { PhoneOtpForm } from "@/components/auth/PhoneOtpForm";
+import { postLoginPath } from "@/lib/onboarding";
 import { GoogleSignInSection } from "@/components/auth/GoogleSignInSection";
 import { Button } from "@/components/ui/button";
 
@@ -12,9 +11,7 @@ export const metadata: Metadata = { title: "Log In" };
 export default async function LoginPage() {
   const session = await getSession();
   if (session) {
-    // Already signed in: straight to the dashboard (or onboarding if the
-    // account still needs its first vehicle).
-    redirect((await needsOnboarding(session.user)) ? "/onboarding" : "/dashboard");
+    redirect(await postLoginPath(session.user.id));
   }
 
   return (
@@ -26,7 +23,6 @@ export default async function LoginPage() {
 
       <div className="mt-8 text-left">
         <GoogleSignInSection />
-        <PhoneOtpForm mode="login" />
       </div>
 
       <div className="mt-8 border-t border-border pt-6">
@@ -35,6 +31,12 @@ export default async function LoginPage() {
           <Link href="/signup">Get Your Free QR</Link>
         </Button>
       </div>
+
+      <p className="mt-10 text-center text-xs text-muted-foreground">
+        <Link href="/login/staff" className="underline-offset-4 hover:underline">
+          Admin sign-in
+        </Link>
+      </p>
     </div>
   );
 }

@@ -2,20 +2,36 @@ import "dotenv/config";
 import { prisma } from "../lib/db";
 import { generatePublicToken, generateVisitorToken, hashVisitorToken } from "../lib/security/tokens";
 
-const DEMO_MESSAGES = [
-  { senderType: "VISITOR" as const, body: "Your headlights are still on." },
-  { senderType: "OWNER" as const, body: "Thanks for letting me know — on my way!" },
-];
+const DEMO_EMAIL = "demo@pingmycar.test";
+const DEMO_PASSWORD = "demopass123";
+const ADMIN_EMAIL = "admin@pingmycar.test";
+const ADMIN_PASSWORD = "SuperAdmin!234";
+
+async function ensureAccount(email: string, password: string, name: string) {
+  const { auth } = await import("../lib/auth");
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    try {
+      await auth.api.signInEmail({ body: { email, password } });
+    } catch {
+      // Password may have been rotated; keep the existing user row.
+    }
+    return existing;
+  }
+  const created = await auth.api.signUpEmail({
+    body: { email, password, name },
+  });
+  return created.user;
+}
 
 async function main() {
-  const email = "demo@pingmycar.test";
-  const password = "demopass123";
-  const { auth } = await import("../lib/auth");
+  const adminUser = await ensureAccount(ADMIN_EMAIL, ADMIN_PASSWORD, "PingMyCar Super Admin");
+  await prisma.user.update({
+    where: { id: adminUser.id },
+    data: { adminRole: "SUPER_ADMIN", name: "PingMyCar Super Admin" },
+  });
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-  const user = existing
-    ? (await auth.api.signInEmail({ body: { email, password } })).user
-    : (await auth.api.signUpEmail({ body: { email, password, name: "Demo Owner" } })).user;
+  const user = await ensureAccount(DEMO_EMAIL, DEMO_PASSWORD, "Demo Owner");
 
   let vehicle = await prisma.vehicle.findFirst({
     where: { ownerId: user.id },
@@ -38,8 +54,6 @@ async function main() {
     await prisma.vehicleProfile.create({ data: { vehicleId: vehicle.id } });
   }
 
-  // Two demo conversations so the dashboard inbox and overview aren't empty.
-  // One read (older), one unread (fresh).
   const existingConversations = await prisma.conversation.count({
     where: { vehicleId: vehicle.id },
   });
@@ -92,7 +106,9 @@ async function main() {
 
   const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3100";
   console.log(`QR page: ${base}/v/${vehicle.publicToken}`);
-  console.log(`Owner login: ${email} / ${password}`);
+  console.log(`Owner login:    ${DEMO_EMAIL} / ${DEMO_PASSWORD}`);
+  console.log(`Superadmin:     ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
+  console.log(`Admin console:  ${base}/admin`);
 }
 
 main()

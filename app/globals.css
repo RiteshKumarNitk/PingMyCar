@@ -111,8 +111,12 @@
 
 /* Print: only the sticker sheet should come out of the printer */
 @media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
   body {
-    background: white;
+    background: white !important;
   }
   .no-print {
     display: none !important;

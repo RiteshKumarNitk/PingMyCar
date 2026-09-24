@@ -67,7 +67,8 @@ export function StickerShowcase() {
               <Glass tint="light" />
               <StickerSvg
                 publicUrl="https://pingmycar.app/v/EXAMPLE1"
-                className="relative w-24 max-w-none"
+                variant="round"
+                className="relative w-28 max-w-none"
               />
             </div>
           </PlacementCard>

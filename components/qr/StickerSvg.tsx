@@ -1,12 +1,6 @@
-import { stickerSvgMarkup } from "@/lib/qr/sticker";
 import type { VehicleType } from "@prisma/client";
+import { stickerSvgMarkup, type StickerVariant } from "@/lib/qr/sticker";
 
-/**
- * Renders a PingMyCar sticker inline. Server component — the SVG markup is
- * generated on the server and embedded directly (no client JS, no image).
- * The generated SVG carries fixed width/height attributes, so the wrapper
- * forces it to scale responsively.
- */
 export function StickerSvg({
   publicUrl,
   variant = "square",
@@ -14,7 +8,7 @@ export function StickerSvg({
   className = "w-full max-w-[320px]",
 }: {
   publicUrl: string;
-  variant?: "square" | "wide";
+  variant?: StickerVariant;
   vehicleType?: VehicleType | null;
   className?: string;
 }) {
@@ -22,7 +16,7 @@ export function StickerSvg({
     <div
       role="img"
       aria-label="PingMyCar QR sticker"
-      className={`${className} [&>svg]:h-auto [&>svg]:w-full`}
+      className={`${className} [&>svg]:h-auto [&>svg]:w-full drop-shadow-md`}
       dangerouslySetInnerHTML={{ __html: stickerSvgMarkup(publicUrl, variant, vehicleType) }}
     />
   );

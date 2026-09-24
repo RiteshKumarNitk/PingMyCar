@@ -36,11 +36,12 @@ function isActive(href: string, pathname: string, match?: (p: string) => boolean
   return match ? match(pathname) : pathname === href;
 }
 
-export function DashboardSidebarNav() {
+export function DashboardSidebarNav({ adminHref }: { adminHref?: string }) {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Dashboard" className="space-y-1">
+    <nav aria-label="Dashboard" className="flex h-full flex-col">
+      <div className="space-y-1">
       {DASHBOARD_NAV.map(({ href, label, icon: Icon, match }) => (
         <Link
           key={href}
@@ -75,6 +76,16 @@ export function DashboardSidebarNav() {
           {label}
         </Link>
       ))}
+      </div>
+
+      {adminHref && (
+        <Link
+          href={adminHref}
+          className="mt-auto flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+        >
+          Admin console
+        </Link>
+      )}
     </nav>
   );
 }

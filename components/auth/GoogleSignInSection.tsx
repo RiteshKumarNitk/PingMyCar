@@ -39,9 +39,9 @@ export function GoogleSignInSection({ label = "Continue with Google" }: { label?
   if (!configured) {
     return (
       <div className="rounded-lg border border-warning/30 bg-warning-bg px-4 py-3 text-sm text-warning">
-        Google sign-in isn&apos;t configured on this deployment yet. Use the phone
-        fallback below, or set <code>NEXT_PUBLIC_GOOGLE_CLIENT_ID</code> and the
-        server-side Google credentials to enable it.
+        Google sign-in isn&apos;t configured on this deployment yet. Set{" "}
+        <code>NEXT_PUBLIC_GOOGLE_CLIENT_ID</code> and the server-side Google
+        credentials to enable it.
       </div>
     );
   }
@@ -55,17 +55,12 @@ export function GoogleSignInSection({ label = "Continue with Google" }: { label?
         disabled={loading}
         onClick={() => {
           setLoading(true);
-          authClient.signIn.social({ provider: "google", callbackURL: "/dashboard" });
+          authClient.signIn.social({ provider: "google", callbackURL: "/post-login" });
         }}
       >
         <GoogleG />
         {loading ? "Redirecting to Google…" : label}
       </Button>
-      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <span className="h-px flex-1 bg-border" />
-        or
-        <span className="h-px flex-1 bg-border" />
-      </div>
     </div>
   );
 }
