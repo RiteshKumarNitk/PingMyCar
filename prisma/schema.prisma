@@ -304,7 +304,12 @@ model AuditLog {
   /// PII, or raw visitor identifiers.
   metadata Json?
 
+<<<<<<< HEAD
   actor User? @relation("AdminActor", fields: [actorId], references: [id])
+=======
+  actor   User?   @relation("AdminActor", fields: [actorId], references: [id])
+
+>>>>>>> 8ad69b1d7c1a470875c70e416c0a92537fd367ba
 
   @@index([createdAt])
   @@index([actorId])
