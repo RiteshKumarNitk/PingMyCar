@@ -305,7 +305,7 @@ model AuditLog {
   metadata     BigInt?
 
   actor   User?   @relation("AdminActor", fields: [actorId], references: [id])
-  report  Report?
+
 
   @@index([createdAt])
   @@index([actorId])
