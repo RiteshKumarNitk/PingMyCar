@@ -16,9 +16,14 @@ type SearchParams = Promise<{
   action?: string;
   category?: string;
   severity?: string;
+  result?: string;
+  actor?: string;
+  range?: string;
 }>;
 
 const SEVERITIES = ["INFO", "WARNING", "ERROR", "CRITICAL"] as const;
+const RESULTS = ["SUCCESS", "FAILURE", "DENIED"] as const;
+const RANGES = ["today", "7d", "30d"] as const;
 const CATEGORIES = [
   "AUTH",
   "USER",
@@ -31,6 +36,18 @@ const CATEGORIES = [
   "SYSTEM",
 ] as const;
 
+function rangeStart(range: string | undefined): Date | undefined {
+  const now = new Date();
+  if (range === "today") {
+    const d = new Date(now);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+  if (range === "7d") return new Date(now.getTime() - 7 * 24 * 3600 * 1000);
+  if (range === "30d") return new Date(now.getTime() - 30 * 24 * 3600 * 1000);
+  return undefined;
+}
+
 export default async function AdminActivityPage({ searchParams }: { searchParams: SearchParams }) {
   await requirePermission("AUDIT_LOG_READ");
   const params = await searchParams;
@@ -42,6 +59,11 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
     ...(params.severity
       ? { severity: params.severity as (typeof SEVERITIES)[number] }
       : {}),
+    ...(params.result
+      ? { result: params.result as (typeof RESULTS)[number] }
+      : {}),
+    ...(params.actor ? { actorId: params.actor } : {}),
+    ...(rangeStart(params.range) ? { createdAt: { gte: rangeStart(params.range) } } : {}),
   };
 
   const [logs, total] = await Promise.all([
@@ -119,6 +141,44 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
             {SEVERITIES.map((s) => (
               <option key={s} value={s}>{s}</option>
             ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="result" className="mb-1 block text-xs font-medium text-muted-foreground">
+            Result
+          </label>
+          <select
+            id="result"
+            name="result"
+            defaultValue={params.result ?? ""}
+            className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+          >
+            <option value="">All</option>
+            {RESULTS.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="actor" className="mb-1 block text-xs font-medium text-muted-foreground">
+            Actor ID
+          </label>
+          <Input id="actor" name="actor" placeholder="user uuid" defaultValue={params.actor ?? ""} className="w-44" />
+        </div>
+        <div>
+          <label htmlFor="range" className="mb-1 block text-xs font-medium text-muted-foreground">
+            Date range
+          </label>
+          <select
+            id="range"
+            name="range"
+            defaultValue={params.range ?? ""}
+            className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+          >
+            <option value="">All time</option>
+            <option value="today">Today</option>
+            <option value="7d">7 Days</option>
+            <option value="30d">30 Days</option>
           </select>
         </div>
         <Button type="submit" variant="secondary">Filter</Button>

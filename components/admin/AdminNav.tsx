@@ -34,13 +34,13 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
   { href: "/admin/users", label: "Users", icon: Users, permission: "USER_READ" },
   { href: "/admin/vehicles", label: "Vehicles", icon: Car, permission: "VEHICLE_READ" },
   { href: "/admin/messages", label: "Messages", icon: MessageSquare, permission: "MESSAGE_READ_METADATA" },
-  { href: "/admin/reports", label: "Reports", icon: Flag, permission: "REPORT_READ", disabled: true },
-  { href: "/admin/stickers", label: "Stickers", icon: Sticker, permission: "STICKER_READ" },
+  { href: "/admin/reports", label: "Reports", icon: Flag, permission: "REPORT_READ" },
+  { href: "/admin/stickers", label: "Stickers", icon: Sticker, permission: "STICKER_READ", disabled: true },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag, permission: "ORDER_READ", disabled: true },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3, permission: "ANALYTICS_READ", disabled: true },
   { href: "/admin/activity", label: "Activity Logs", icon: ScrollText, permission: "AUDIT_LOG_READ" },
-  { href: "/admin/security", label: "Security", icon: ShieldAlert, permission: "SECURITY_READ", disabled: true },
-  { href: "/admin/admin-users", label: "Admin Users", icon: UserCog, permission: "ADMIN_USER_MANAGE", disabled: true },
+  { href: "/admin/security", label: "Security", icon: ShieldAlert, permission: "SECURITY_READ" },
+  { href: "/admin/admin-users", label: "Admin Users", icon: UserCog, permission: "ADMIN_USER_MANAGE" },
 ];
 
 export function AdminSidebarNav({ permissions }: { permissions: readonly Permission[] }) {

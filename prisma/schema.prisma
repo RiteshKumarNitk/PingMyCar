@@ -21,6 +21,13 @@ enum AdminRole {
   SUPER_ADMIN
 }
 
+enum ReportStatus {
+  NEW
+  INVESTIGATING
+  RESOLVED
+  DISMISSED
+}
+
 enum AuditResult {
   SUCCESS
   FAILURE
@@ -45,15 +52,19 @@ model User {
   phoneNumberVerified Boolean   @default(false)
   preferredName       String?
   adminRole           AdminRole @default(USER)
+  /// Set when an admin suspends the account. Null = active. Suspension
+  /// blocks owner operations server-side but never deletes data.
+  suspendedAt         DateTime?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @default(now()) @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  vehicles      Vehicle[]
-  devices       Device[]
-  notifications Notification[]
-  adminActions  AuditLog[]     @relation("AdminActor")
+  accounts        Account[]
+  sessions        Session[]
+  vehicles        Vehicle[]
+  devices         Device[]
+  notifications   Notification[]
+  adminActions    AuditLog[]     @relation("AdminActor")
+  assignedReports Report[]       @relation("ReportAssignee")
 }
 
 model Session {
@@ -218,14 +229,22 @@ model Conversation {
 }
 
 model Report {
-  id             String   @id @default(uuid())
-  conversationId String
-  reason         String?
-  createdAt      DateTime @default(now())
+  id              String       @id @default(uuid())
+  conversationId  String
+  reason          String?
+  /// Moderation lifecycle; NEW until an admin acts on it.
+  status          ReportStatus @default(NEW)
+  /// Admin notes for investigation/resolution — internal only.
+  adminNotes      String?
+  assignedAdminId String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @default(now()) @updatedAt
 
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversation  Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  assignedAdmin User?        @relation("ReportAssignee", fields: [assignedAdminId], references: [id])
 
   @@index([conversationId])
+  @@index([status, createdAt])
 }
 
 model Message {
@@ -304,12 +323,7 @@ model AuditLog {
   /// PII, or raw visitor identifiers.
   metadata Json?
 
-<<<<<<< HEAD
   actor User? @relation("AdminActor", fields: [actorId], references: [id])
-=======
-  actor   User?   @relation("AdminActor", fields: [actorId], references: [id])
-
->>>>>>> 8ad69b1d7c1a470875c70e416c0a92537fd367ba
 
   @@index([createdAt])
   @@index([actorId])

@@ -3,9 +3,11 @@ import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/admin/auth";
 import { roleHasPermission } from "@/lib/admin/permissions";
 import { writeAudit } from "@/lib/admin/audit";
+import { setUserSuspended } from "@/lib/admin/actions";
 import { prisma } from "@/lib/db";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
+import { AdminActionDialog } from "@/components/admin/AdminActionDialog";
 import { publicVehicleUrl } from "@/lib/qr";
 
 export const metadata = { title: "Owner detail — Admin" };
@@ -88,10 +90,41 @@ export default async function AdminUserDetailPage({
           <dd className="mt-1 text-sm">{user.preferredName ?? "—"}</dd>
         </div>
         <div>
+          <dt className="text-xs uppercase text-muted-foreground">Status</dt>
+          <dd className="mt-1">
+            <Badge variant={user.suspendedAt ? "danger" : "success"}>
+              {user.suspendedAt ? "Suspended" : "Active"}
+            </Badge>
+          </dd>
+        </div>
+        <div>
           <dt className="text-xs uppercase text-muted-foreground">User id</dt>
           <dd className="mt-1 font-mono text-xs text-muted-foreground">{user.id}</dd>
         </div>
       </dl>
+
+      {roleHasPermission(admin.role, "USER_SUSPEND") && user.adminRole === "USER" && (
+        <div className="flex flex-wrap gap-3">
+          {user.suspendedAt ? (
+            <AdminActionDialog
+              label="Reactivate User"
+              title="Reactivate this user?"
+              description="The user will regain access to their PingMyCar dashboard and vehicle operations."
+              confirmLabel="Reactivate User"
+              action={(reason) => setUserSuspended(user.id, false, reason)}
+            />
+          ) : (
+            <AdminActionDialog
+              label="Suspend User"
+              title="Suspend this user?"
+              description="The user will no longer be able to add vehicles or reply to messages. Their vehicles, QR codes, and message history are preserved."
+              confirmLabel="Suspend User"
+              destructive
+              action={(reason) => setUserSuspended(user.id, true, reason)}
+            />
+          )}
+        </div>
+      )}
 
       {user.vehicles.length === 0 ? (
         <p className="text-sm text-muted-foreground">This owner has not added a vehicle yet.</p>
