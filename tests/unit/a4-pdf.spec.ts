@@ -91,4 +91,14 @@ test.describe("a4 sticker pack PDF", () => {
       expect(/[\u2300-\u23FF]/.test(label)).toBe(false); // no ⌀-style technical chars
     }
   });
+
+  test("vehicle names outside WinAnsi (emoji, Devanagari) do not kill the PDF", async () => {
+    // pdf-lib's Helvetica throws on any non-CP1252 character; real vehicle
+    // names are free text, so the builder must sanitize them.
+    const bytes = await buildA4StickerPackPdf("🚗 होंडा सिटी – Wagen", [
+      { variant: "square", bytes: TINY_PNG },
+    ]);
+    const pdf = await PDFDocument.load(bytes);
+    expect(pdf.getPages().length).toBe(1);
+  });
 });

@@ -22,24 +22,27 @@ export function parseVariantScanParam(value: string | null | undefined): Sticker
 /**
  * Record one scan of a specific sticker variant. Fire-and-forget: callers
  * should not await this on the visitor's critical path.
+ *
+ * Atomic single-statement increment (jsonb_set + CASE) — a read-modify-write
+ * here would lose increments when several visitors scan concurrently, and
+ * this mirrors the atomic scanCount increment beside it.
  */
 export async function recordVariantScan(vehicleId: string, variant: StickerVariant): Promise<void> {
-  const vehicle = await prisma.vehicle.findUnique({
-    where: { id: vehicleId },
-    select: { variantScanCounts: true },
-  });
-  if (!vehicle) return;
-
-  const current = (vehicle.variantScanCounts ?? {}) as Prisma.JsonObject;
-  const next: Prisma.JsonObject = {
-    ...Object.fromEntries(STICKER_VARIANTS.map((v) => [v.id, 0]).filter(([k]) => !(k in current))),
-    ...current,
-    [variant]: typeof current[variant] === "number" ? (current[variant] as number) + 1 : 1,
-  };
-  await prisma.vehicle.update({
-    where: { id: vehicleId },
-    data: { variantScanCounts: next },
-  });
+  await prisma.$executeRaw`
+    UPDATE "Vehicle"
+    SET "variantScanCounts" = jsonb_set(
+      COALESCE("variantScanCounts", '{}'::jsonb),
+      ARRAY[${variant}]::text[],
+      to_jsonb(
+        CASE
+          WHEN jsonb_typeof(COALESCE("variantScanCounts", '{}'::jsonb) -> ${variant}) = 'number'
+          THEN (COALESCE("variantScanCounts", '{}'::jsonb) ->> ${variant})::int + 1
+          ELSE 1
+        END
+      )
+    )
+    WHERE "id" = ${vehicleId}
+  `;
 }
 
 /** Typed per-variant counts for dashboards — always includes all five variants. */

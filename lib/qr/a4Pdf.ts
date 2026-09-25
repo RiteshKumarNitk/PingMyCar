@@ -70,6 +70,29 @@ async function drawStickerWithMarks(
   }
 }
 
+/**
+ * WinAnsi-safe text: pdf-lib's built-in fonts throw on any character outside
+ * CP1252 (emoji, Devanagari, CJK…), which would kill the whole PDF download
+ * for perfectly legal vehicle names. Map common typographic punctuation,
+ * then drop anything else rather than fail.
+ */
+const WINANSI_EXTRA: Record<string, string> = {
+  "—": "-", "–": "-", "\u2018": "'", "\u2019": "'",
+  "\u201C": '"', "\u201D": '"', "…": "...", "€": "EUR",
+};
+
+function toWinAnsi(text: string): string {
+  let out = "";
+  for (const ch of text) {
+    if (WINANSI_EXTRA[ch]) {
+      out += WINANSI_EXTRA[ch];
+    } else if (ch.codePointAt(0)! <= 0xff) {
+      out += ch;
+    } // else: unencodable — skipped
+  }
+  return out;
+}
+
 function drawInstructions(
   page: PDFPage,
   fonts: { bold: PDFFont; regular: PDFFont },
@@ -87,7 +110,7 @@ function drawInstructions(
     color: NAVY,
   });
   y -= 6 * MM;
-  page.drawText(vehicleName.slice(0, 60), { x: left, y, size: 10, font: regular, color: GREY });
+  page.drawText(toWinAnsi(vehicleName.slice(0, 60)), { x: left, y, size: 10, font: regular, color: GREY });
   y -= 8 * MM;
 
   page.drawText("PRINT AT 100% / ACTUAL SIZE", { x: left, y, size: 12, font: bold, color: BLUE });
