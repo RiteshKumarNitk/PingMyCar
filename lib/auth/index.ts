@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { phoneNumber } from "better-auth/plugins/phone-number";
+import { bearer } from "better-auth/plugins/bearer";
 import { prisma } from "../db";
 import { tempEmailFor, isTempEmail } from "./tempEmail";
 import { sendEmail } from "@/lib/notifications/email";
@@ -98,6 +99,12 @@ export const auth = betterAuth({
         getTempName: (phoneNumber) => phoneNumber,
       },
     }),
+    // Lets the Flutter owner app authenticate with the SAME session system:
+    // the mobile sign-in response carries the session token in a
+    // `set-auth-token` response header, which the app echoes back as
+    // `Authorization: Bearer <token>` on every API call. Same User/Session
+    // tables, same 30-day expiry — no second auth mechanism.
+    bearer(),
     nextCookies(),
   ],
 });

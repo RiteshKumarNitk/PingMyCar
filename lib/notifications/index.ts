@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { isTempEmail } from "@/lib/auth/tempEmail";
 import { sendEmail } from "./email";
 import { sendPushToUser } from "./push";
+import { sendFcmToUser } from "./fcm";
 
 /**
  * Best-effort owner notification over every channel that's configured
@@ -13,7 +14,7 @@ export async function notifyOwner(input: { userId: string; title: string; body: 
 
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
 
-  const tasks: Promise<unknown>[] = [sendPushToUser(userId, { title, body, url })];
+  const tasks: Promise<unknown>[] = [sendPushToUser(userId, { title, body, url }), sendFcmToUser(userId, { title, body, url })];
   if (user && !isTempEmail(user.email)) {
     tasks.push(sendEmail({ to: user.email, subject: title, text: url ? `${body}\n\n${url}` : body }));
   }
