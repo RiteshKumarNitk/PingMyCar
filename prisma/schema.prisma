@@ -169,6 +169,11 @@ model Vehicle {
   color              String?
   /// Incremented when a visitor opens the public vehicle page.
   scanCount          Int          @default(0)
+  /// Per-sticker-variant scans, keyed "square"|"wide"|"plate"|"round"|"arrow".
+  /// Bare /v/<token> visits without a sticker tag are NOT counted here.
+  variantScanCounts  Json?
+  /// Last time any visitor opened this vehicle's public page.
+  lastScanAt         DateTime?
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @default(now()) @updatedAt
 
