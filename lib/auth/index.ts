@@ -25,7 +25,11 @@ const appUrl =
   process.env.NEXT_PUBLIC_APP_URL ||
   (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined) ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
-  "http://localhost:3100";
+  (process.env.NODE_ENV === "production" ? "https://ping-my-car.vercel.app" : "http://localhost:3100");
+
+if (process.env.NODE_ENV === "production" && (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET)) {
+  console.warn("[auth] Google OAuth is not fully configured for production. Social sign-in will fail until GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set.");
+}
 
 const trustedOrigins = [
   "http://localhost:3100",

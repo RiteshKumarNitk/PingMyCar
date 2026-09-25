@@ -4,6 +4,39 @@ import { useState } from "react";
 import { authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 
+function getGoogleAuthProblemMessage(error: unknown): string {
+  const message =
+    typeof error === "string"
+      ? error
+      : error && typeof error === "object" && "message" in error && typeof error.message === "string"
+        ? error.message
+        : "Google sign-in failed.";
+
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("cancel") || normalized.includes("closed")) {
+    return "Google sign-in was cancelled.";
+  }
+
+  if (normalized.includes("fetch") || normalized.includes("network") || normalized.includes("failed to fetch")) {
+    return "Network error while signing in. Please try again.";
+  }
+
+  if (normalized.includes("configuration") || normalized.includes("oauth") || normalized.includes("provider")) {
+    return "Google sign-in isn’t configured correctly on this deployment.";
+  }
+
+  if (normalized.includes("unauthorized") || normalized.includes("denied")) {
+    return "Your account isn’t authorized to use Google sign-in.";
+  }
+
+  if (normalized.includes("backend") || normalized.includes("server")) {
+    return "The backend rejected the Google login. Please try again.";
+  }
+
+  return "Google sign-in failed. Please try again.";
+}
+
 /** Google's four-color "G", inline so no external image request is needed. */
 function GoogleG() {
   return (
@@ -62,12 +95,28 @@ export function GoogleSignInSection({ label = "Continue with Google" }: { label?
               provider: "google",
               callbackURL: "/post-login",
             });
+
             if (res?.error) {
-              setError(res.error.message || "Failed to sign in with Google. Please try again.");
+              const errorPayload = {
+                provider: "google",
+                endpoint: "/api/auth/sign-in/social",
+                errorCode: "code" in res.error && typeof res.error.code === "string" ? res.error.code : null,
+                errorMessage: "message" in res.error && typeof res.error.message === "string" ? res.error.message : null,
+                status: "status" in res.error && typeof res.error.status === "number" ? res.error.status : null,
+              };
+
+              console.error("[auth] Google sign-in failed", errorPayload);
+              setError(getGoogleAuthProblemMessage(res.error));
               setLoading(false);
             }
           } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "An unexpected error occurred during Google sign-in.");
+            console.error("[auth] Google sign-in threw an unexpected error", {
+              provider: "google",
+              endpoint: "/api/auth/sign-in/social",
+              name: err instanceof Error ? err.name : "UnknownError",
+              message: err instanceof Error ? err.message : "Unknown error",
+            });
+            setError(getGoogleAuthProblemMessage(err));
             setLoading(false);
           }
         }}

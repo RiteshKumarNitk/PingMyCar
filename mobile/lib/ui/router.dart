@@ -17,6 +17,8 @@ import 'screens/settings/settings_screen.dart';
 import 'screens/settings/notifications_screen.dart';
 import 'screens/settings/privacy_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/splash_screen.dart';
+import 'screens/welcome_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -60,17 +62,26 @@ class _DeepLinkBinding {
 final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/home',
+    initialLocation: '/splash',
     refreshListenable: _AuthListenable(ref),
     redirect: (context, state) {
       final status = ref.read(authControllerProvider).status;
-      final loggingIn = state.matchedLocation == '/login';
-      if (status == AuthStatus.unknown) return loggingIn ? '/login' : null;
-      if (status == AuthStatus.unauthenticated) return loggingIn ? null : '/login';
-      if (status == AuthStatus.authenticated && loggingIn) return '/home';
+      final location = state.matchedLocation;
+
+      if (location == '/splash' || location == '/welcome' || location == '/login') {
+        if (status == AuthStatus.authenticated) return '/home';
+        if (status == AuthStatus.unknown) return null;
+        return null;
+      }
+
+      if (status == AuthStatus.unknown) return '/splash';
+      if (status == AuthStatus.unauthenticated) return '/welcome';
+      if (status == AuthStatus.authenticated && location == '/login') return '/home';
       return null;
     },
     routes: [
+      GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
+      GoRoute(path: '/welcome', builder: (context, state) => const WelcomeScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,

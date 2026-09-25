@@ -12,7 +12,7 @@ class AppConfig {
   /// host machine as 10.0.2.2.
   static const apiBaseUrl = String.fromEnvironment(
     'PINGMYCAR_API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:3100',
+    defaultValue: 'https://ping-my-car.vercel.app',
   );
 
   /// Google OAuth client ID for the mobile app. Public value.
@@ -34,7 +34,7 @@ class AppConfig {
   ///   flutter run --dart-define=PINGMYCAR_GOOGLE_CLIENT_ID=YOUR_WEB_CLIENT_ID.apps.googleusercontent.com
   static const googleClientId = String.fromEnvironment(
     'PINGMYCAR_GOOGLE_CLIENT_ID',
-    defaultValue: '',
+    defaultValue: '25207232577-vbc5imdg1jfi7eorjrpo3g5tt0q63bmh.apps.googleusercontent.com',
   );
 
   /// Deep-link scheme, e.g. `pingmycar://dashboard/messages/some-id`

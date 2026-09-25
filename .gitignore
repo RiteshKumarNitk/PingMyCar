@@ -28,6 +28,9 @@ next-env.d.ts
 .env.production
 .env*.local
 
+# Firebase / mobile local config
+/mobile/android/app/google-services.json
+
 # local data / logs
 *.log
 
