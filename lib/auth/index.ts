@@ -19,13 +19,30 @@ async function sendOTP({ phoneNumber, code }: { phoneNumber: string; code: strin
   setLastOtp(phoneNumber, code);
 }
 
+const appUrl =
+  process.env.BETTER_AUTH_URL ||
+  process.env.NEXT_PUBLIC_APP_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined) ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
+  "http://localhost:3100";
+
+const trustedOrigins = [
+  "http://localhost:3100",
+  "http://127.0.0.1:3100",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "https://ping-my-car.vercel.app",
+  "https://*.vercel.app",
+  ...(process.env.NEXT_PUBLIC_APP_URL ? [process.env.NEXT_PUBLIC_APP_URL] : []),
+  ...(process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : []),
+  ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+  ...(process.env.VERCEL_PROJECT_PRODUCTION_URL ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`] : []),
+];
+
 export const auth = betterAuth({
-  secret: process.env.AUTH_SECRET,
-  baseURL: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3100",
-  // The dev server is reachable as both localhost and 127.0.0.1; trust both
-  // origins so auth requests never fail the origin check on either hostname.
-  // (The production origin comes from NEXT_PUBLIC_APP_URL via baseURL.)
-  trustedOrigins: ["http://localhost:3100", "http://127.0.0.1:3100"],
+  secret: process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET,
+  baseURL: appUrl,
+  trustedOrigins: Array.from(new Set(trustedOrigins.filter(Boolean))),
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   emailAndPassword: {
     enabled: true,

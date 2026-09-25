@@ -1,12 +1,19 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { buildPublicVehicleView } from "@/lib/publicVehicleView";
+import { parseVariantScanParam, recordVariantScan } from "@/lib/qr/scanAnalytics";
 import { Logo } from "@/components/shared/Logo";
 import { VehiclePublicCard } from "@/components/vehicles/VehiclePublicCard";
 import { StartConversationForm } from "@/components/public/StartConversationForm";
 import type { VehicleType } from "@prisma/client";
 
-export async function PublicVehicleScreen({ token }: { token: string }) {
+export async function PublicVehicleScreen({
+  token,
+  variantParam,
+}: {
+  token: string;
+  variantParam?: string | string[];
+}) {
   const vehicle = await prisma.vehicle.findUnique({
     where: { publicToken: token },
     include: {
@@ -32,8 +39,15 @@ export async function PublicVehicleScreen({ token }: { token: string }) {
   }
 
   prisma.vehicle
-    .update({ where: { id: vehicle.id }, data: { scanCount: { increment: 1 } } })
+    .update({ where: { id: vehicle.id }, data: { scanCount: { increment: 1 }, lastScanAt: new Date() } })
     .catch(() => {});
+
+  // Per-sticker analytics: only visits that arrived from a sticker's tagged
+  // QR (?s=<variant>) count here — bare scans stay anonymous.
+  const variant = parseVariantScanParam(Array.isArray(variantParam) ? variantParam[0] : variantParam);
+  if (variant) {
+    recordVariantScan(vehicle.id, variant).catch(() => {});
+  }
 
   const view = buildPublicVehicleView(vehicle, vehicle.profile, vehicle.owner);
   const maxChars = Number(process.env.MESSAGE_MAX_CHARS ?? 500);

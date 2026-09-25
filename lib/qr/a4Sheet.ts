@@ -8,6 +8,19 @@ import {
 
 const ALL_VARIANTS: StickerVariant[] = ["square", "wide", "plate", "round", "arrow"];
 
+/**
+ * Sticker positions on the A4 sheet, millimetres from the top-left corner.
+ * Exported so the scannability test can crop each sticker's region — the
+ * builder and the test can never drift apart.
+ */
+export const A4_SHEET_LAYOUT: { variant: StickerVariant; xMm: number; yMm: number; captionDyMm: number }[] = [
+  { variant: "square", xMm: 18, yMm: 40, captionDyMm: 6 },
+  { variant: "wide", xMm: 80, yMm: 44, captionDyMm: 4.5 },
+  { variant: "plate", xMm: 80, yMm: 88, captionDyMm: 5.5 },
+  { variant: "round", xMm: 80, yMm: 133, captionDyMm: 5.5 },
+  { variant: "arrow", xMm: 140, yMm: 133, captionDyMm: 5.5 },
+];
+
 function cropMarks(x: number, y: number, w: number, h: number, len = 3): string {
   const m = 1.2;
   const lines = [
@@ -47,6 +60,22 @@ export function a4StickerSheetSvg(
     ALL_VARIANTS.map((v) => [v, stickerSvgMarkup(publicUrl, v, vehicleType)] as const)
   );
 
+  const stickers = A4_SHEET_LAYOUT.map(({ variant, xMm, yMm, captionDyMm }) => {
+    const mm = STICKER_PRINT_MM[variant];
+    const captionSuffix =
+      variant === "square"
+        ? " · rear windshield"
+        : variant === "wide"
+          ? " · bumper"
+          : variant === "plate"
+            ? " · plate style"
+            : variant === "round"
+              ? " · side window"
+              : " · scan arrow";
+    return `  ${embedSticker(svgs.get(variant)!, variant, xMm, yMm)}
+  <text x="${xMm}" y="${yMm + mm.h + captionDyMm}" font-family="${FONT}" font-size="2.8" fill="#333">${mm.label}${captionSuffix}</text>`;
+  }).join("\n\n");
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 210 297">
   <rect width="210" height="297" fill="#ffffff"/>
@@ -55,20 +84,7 @@ export function a4StickerSheetSvg(
   <text x="15" y="29" font-family="${FONT}" font-size="3.2" font-weight="700" fill="#2563eb">PRINT AT 100% / ACTUAL SIZE. Do not “fit to page”.</text>
   <text x="15" y="35" font-family="${FONT}" font-size="3" fill="#555">Cut on the dashed vinyl edge. Crop marks show the finished size.</text>
 
-  ${embedSticker(svgs.get("square")!, "square", 18, 40)}
-  <text x="18" y="124" font-family="${FONT}" font-size="2.8" fill="#333">${STICKER_PRINT_MM.square.label} · rear windshield</text>
-
-  ${embedSticker(svgs.get("wide")!, "wide", 80, 44)}
-  <text x="80" y="83.5" font-family="${FONT}" font-size="2.8" fill="#333">${STICKER_PRINT_MM.wide.label} · bumper</text>
-
-  ${embedSticker(svgs.get("plate")!, "plate", 80, 88)}
-  <text x="80" y="128.5" font-family="${FONT}" font-size="2.8" fill="#333">${STICKER_PRINT_MM.plate.label} · plate style</text>
-
-  ${embedSticker(svgs.get("round")!, "round", 80, 133)}
-  <text x="80" y="188.5" font-family="${FONT}" font-size="2.8" fill="#333">${STICKER_PRINT_MM.round.label} · side window</text>
-
-  ${embedSticker(svgs.get("arrow")!, "arrow", 140, 133)}
-  <text x="140" y="188.5" font-family="${FONT}" font-size="2.8" fill="#333">${STICKER_PRINT_MM.arrow.label} · scan arrow</text>
+${stickers}
 
   <line x1="15" y1="196" x2="195" y2="196" stroke="#ddd" stroke-width="0.3"/>
   <text x="15" y="204" font-family="${FONT}" font-size="4" font-weight="800" fill="#0d1926">Place it here</text>

@@ -89,10 +89,13 @@ function styleFor(variant: Exclude<StickerVariant, "round" | "plate" | "arrow">)
  * The module cell is derived from the INNER white area so the grid always
  * fits its panel exactly, whatever the variant's panel size.
  */
-function qrPanelMarkup(publicUrl: string, panel: number, pad: number): string {
+function qrPanelMarkup(qrUrl: string, panel: number, pad: number): string {
   const inner = panel - pad * 2;
-  const size = create(publicUrl, { errorCorrectionLevel: "M" }).modules.size;
-  const modules = qrModuleRects(publicUrl, inner / size, 0.22);
+  const size = create(qrUrl, { errorCorrectionLevel: "M" }).modules.size;
+  // Modules must be SHARP: rounded corners (esp. on the finder patterns)
+  // measurably break camera/decoder detection of the printed QR. The white
+  // panel provides the quiet zone; styling lives in the frame around it.
+  const modules = qrModuleRects(qrUrl, inner / size, 0);
   return `<rect width="${panel}" height="${panel}" rx="14" fill="${LIGHT_BLUE}"/>
   <rect x="${pad}" y="${pad}" width="${inner}" height="${inner}" rx="9" fill="#ffffff"/>
   <g transform="translate(${pad},${pad})" fill="${NAVY}">${modules}</g>`;
@@ -110,6 +113,12 @@ export function stickerSvgMarkup(
   const titleWeight = "font-weight=\"800\" letter-spacing=\"0.12em\"";
   const bodyLine = "Send a private message to the vehicle owner.";
 
+  // Each sticker's QR encodes the visitor URL tagged with its own variant
+  // (?s=plate) — that's how per-sticker scan analytics work. Old stickers
+  // printed without the tag keep working; they just count as plain scans.
+  const sep = publicUrl.includes("?") ? "&" : "?";
+  const qrUrl = `${publicUrl}${sep}s=${variant}`;
+
   if (variant === "round") {
     const S = 420;
     const cx = S / 2;
@@ -120,7 +129,7 @@ export function stickerSvgMarkup(
   <circle cx="${cx}" cy="${cx}" r="188" fill="none" stroke="${NAVY}" stroke-opacity="0.28" stroke-width="1.5" stroke-dasharray="5 4"/>
   <text x="${cx}" y="72" text-anchor="middle" font-family="${font}" font-size="15" font-weight="800" letter-spacing="0.18em" fill="${NAVY}">NEED TO REACH ME?</text>
   <g transform="translate(${(S - qr) / 2}, 88)">
-    ${qrPanelMarkup(publicUrl, qr, 10)}
+    ${qrPanelMarkup(qrUrl, qr, 10)}
   </g>
   <text x="${cx}" y="318" text-anchor="middle" font-family="${font}" font-size="16" font-weight="700" letter-spacing="0.3em" fill="${BLUE}">SCAN HERE</text>
   ${typeLine ? `<text x="${cx}" y="340" text-anchor="middle" font-family="${font}" font-size="12" fill="${NAVY}" fill-opacity="0.8">${esc(typeLine)}</text>` : ""}
@@ -142,7 +151,7 @@ export function stickerSvgMarkup(
   <text x="${cx}" y="76" text-anchor="middle" font-family="${font}" font-size="13.5" font-weight="800" letter-spacing="0.12em" fill="${NAVY}">NEED TO CONTACT THE OWNER?</text>
   <path d="M 58 148 L 116 191 L 58 234" fill="none" stroke="${BLUE}" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
   <g transform="translate(146, 102)">
-    ${qrPanelMarkup(publicUrl, qr, 10)}
+    ${qrPanelMarkup(qrUrl, qr, 10)}
   </g>
   <text x="${cx}" y="328" text-anchor="middle" font-family="${font}" font-size="16" font-weight="700" letter-spacing="0.3em" fill="${BLUE}">SCAN HERE</text>
   ${typeLine ? `<text x="${cx}" y="349" text-anchor="middle" font-family="${font}" font-size="12" fill="${NAVY}" fill-opacity="0.8">${esc(typeLine)}</text>` : ""}
@@ -167,7 +176,7 @@ export function stickerSvgMarkup(
   <circle cx="38" cy="${H - 46}" r="7" fill="#ffffff" fill-opacity="0.9"/>
   <text x="38" y="${H / 2 + 6}" text-anchor="middle" font-family="${font}" font-size="17" font-weight="900" fill="#ffffff" transform="rotate(-90 38 ${H / 2})">PMC</text>
   <g transform="translate(88, ${qrY})">
-    ${qrPanelMarkup(publicUrl, qr, 9)}
+    ${qrPanelMarkup(qrUrl, qr, 9)}
   </g>
   <text x="262" y="${qrY + 62}" font-family="${font}" font-size="46" font-weight="900" letter-spacing="0.06em" fill="${NAVY}">SCAN ME</text>
   <text x="262" y="${qrY + 94}" font-family="${font}" font-size="13" fill="${NAVY}" fill-opacity="0.75">Point a camera — message the owner.</text>
@@ -192,7 +201,7 @@ export function stickerSvgMarkup(
   <text x="${cx}" y="${s.pad + 24}" text-anchor="middle" font-family="${s.font}" font-size="${s.titleSize}" ${titleWeight} fill="${NAVY}">${s.line1}</text>
   <text x="${cx}" y="${s.pad + 24 + 32}" text-anchor="middle" font-family="${s.font}" font-size="${s.titleSize}" ${titleWeight} fill="${NAVY}">${s.line2}</text>
   <g transform="translate(${(W - s.qr) / 2}, ${s.pad + 66})">
-    ${qrPanelMarkup(publicUrl, s.qr, 12)}
+    ${qrPanelMarkup(qrUrl, s.qr, 12)}
   </g>
   <text x="${cx}" y="${s.pad + 66 + s.qr + 42}" text-anchor="middle" font-family="${s.font}" font-size="${s.scanSize}" font-weight="700" letter-spacing="0.32em" fill="${BLUE}">SCAN HERE</text>
   ${typeLine ? `<text x="${cx}" y="${s.pad + 66 + s.qr + 66}" text-anchor="middle" font-family="${s.font}" font-size="${s.bodySize + 1}" fill="${NAVY}" fill-opacity="0.8">${esc(typeLine)}</text>` : ""}
@@ -212,7 +221,7 @@ export function stickerSvgMarkup(
   <rect x="4" y="4" width="${W - 8}" height="${H - 10}" rx="16" fill="#ffffff"/>
   <rect x="10" y="10" width="${W - 20}" height="${H - 22}" rx="12" fill="none" stroke="${NAVY}" stroke-opacity="0.28" stroke-width="1.5" stroke-dasharray="6 4"/>
   <g transform="translate(${s.pad}, ${qrY})">
-    ${qrPanelMarkup(publicUrl, s.qr, 10)}
+    ${qrPanelMarkup(qrUrl, s.qr, 10)}
   </g>
   <text x="${textX}" y="${qrY + 34}" font-family="${s.font}" font-size="${s.titleSize}" ${titleWeight} fill="${NAVY}">${s.line1}</text>
   <text x="${textX}" y="${qrY + 34 + 30}" font-family="${s.font}" font-size="${s.titleSize}" ${titleWeight} fill="${NAVY}">${s.line2}</text>
