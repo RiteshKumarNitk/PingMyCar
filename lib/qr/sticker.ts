@@ -107,7 +107,7 @@ export function stickerSvgMarkup(
   const esc = (t: string) =>
     t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const typeLine = vehicleType ? VEHICLE_TYPE_LABELS[vehicleType] : null;
-  const titleWeight = "font-weight:800;letter-spacing:0.12em";
+  const titleWeight = "font-weight=\"800\" letter-spacing=\"0.12em\"";
   const bodyLine = "Send a private message to the vehicle owner.";
 
   if (variant === "round") {
