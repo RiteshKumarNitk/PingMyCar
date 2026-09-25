@@ -29,7 +29,7 @@ const appUrl =
   (process.env.NEXT_PUBLIC_APP_URL && (!isProd || !process.env.NEXT_PUBLIC_APP_URL.includes("localhost"))
     ? process.env.NEXT_PUBLIC_APP_URL
     : undefined) ||
-  (isProd ? "https://rajweb-sage.vercel.app" : "http://localhost:3100");
+  (isProd ? "https://ping-my-car.vercel.app" : "http://localhost:3100");
 
 if (isProd && (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET)) {
   console.warn("[auth] Google OAuth is not fully configured for production. Social sign-in will fail until GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set.");
