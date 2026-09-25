@@ -5,24 +5,22 @@ import { Download, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { downloadSvgFile, downloadSvgAsPng, vehicleFileName } from "@/lib/qr/download";
 
-/**
- * Download/print actions for a vehicle's QR and sticker. Pure actions — no
- * state changes — so it can live on the onboarding success page, the QR page,
- * and the vehicle detail page alike.
- */
 export function VehicleQrActions({
   vehicleName,
   qrSvg,
   stickerSvg,
+  stickers,
   compact = false,
 }: {
   vehicleName: string;
   qrSvg: string;
   stickerSvg?: string;
+  stickers?: { suffix: string; svg: string; label: string }[];
   compact?: boolean;
 }) {
   const [pngBusy, setPngBusy] = useState(false);
   const [pngError, setPngError] = useState<string | null>(null);
+  const extras = stickers ?? (stickerSvg ? [{ suffix: "sticker", svg: stickerSvg, label: "Download Sticker" }] : []);
 
   return (
     <div className={compact ? "flex flex-col gap-2" : "flex flex-wrap gap-2"}>
@@ -56,23 +54,22 @@ export function VehicleQrActions({
         {pngBusy ? "Preparing…" : "Download PNG"}
       </Button>
       {pngError && (
-        <p role="alert" className="w-full text-sm text-destructive">{pngError}</p>
+        <p role="alert" className="w-full text-sm text-destructive">
+          {pngError}
+        </p>
       )}
-      {stickerSvg && (
+      {extras.map((item) => (
         <Button
+          key={item.suffix}
           type="button"
           variant="outline"
-          onClick={() => downloadSvgFile(stickerSvg, vehicleFileName(vehicleName, "sticker"))}
+          onClick={() => downloadSvgFile(item.svg, vehicleFileName(vehicleName, item.suffix))}
         >
           <Download className="h-4 w-4" aria-hidden />
-          Download Sticker
+          {item.label}
         </Button>
-      )}
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => window.print()}
-      >
+      ))}
+      <Button type="button" variant="outline" onClick={() => window.print()}>
         <Printer className="h-4 w-4" aria-hidden />
         Print
       </Button>

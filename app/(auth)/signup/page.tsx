@@ -2,8 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
-import { needsOnboarding } from "@/lib/onboarding";
-import { PhoneOtpForm } from "@/components/auth/PhoneOtpForm";
+import { postLoginPath } from "@/lib/onboarding";
 import { GoogleSignInSection } from "@/components/auth/GoogleSignInSection";
 
 export const metadata: Metadata = { title: "Get Your Free QR" };
@@ -11,7 +10,7 @@ export const metadata: Metadata = { title: "Get Your Free QR" };
 export default async function SignupPage() {
   const session = await getSession();
   if (session) {
-    redirect((await needsOnboarding(session.user)) ? "/onboarding" : "/dashboard");
+    redirect(await postLoginPath(session.user.id));
   }
 
   return (
@@ -24,8 +23,7 @@ export default async function SignupPage() {
       </p>
 
       <div className="mt-8 text-left">
-        <GoogleSignInSection label="Get Your Free QR" />
-        <PhoneOtpForm mode="signup" />
+        <GoogleSignInSection label="Continue with Google" />
       </div>
 
       <p className="mt-6 text-xs leading-relaxed text-muted-foreground">

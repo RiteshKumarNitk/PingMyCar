@@ -30,6 +30,15 @@ export async function POST(request: NextRequest) {
   if (!vehicle?.qrActive || !vehicle.profile) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
+  // A suspended owner's vehicle keeps its page but stops accepting new
+  // messages — the owner can't reply while suspended.
+  const owner = await prisma.user.findUnique({
+    where: { id: vehicle.ownerId },
+    select: { suspendedAt: true },
+  });
+  if (owner?.suspendedAt) {
+    return NextResponse.json({ error: "This vehicle isn't accepting messages" }, { status: 403 });
+  }
   if (!vehicle.profile.allowMessages) {
     return NextResponse.json({ error: "This vehicle isn't accepting messages" }, { status: 403 });
   }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
+import { suspendedOwnerGuard } from "@/lib/admin/guards";
 import { prisma } from "@/lib/db";
 import { replyMessageSchema } from "@/lib/validation/publicMessage";
 
@@ -8,6 +9,9 @@ type RouteContext = { params: Promise<{ id: string }> };
 export async function POST(request: NextRequest, { params }: RouteContext) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const suspended = await suspendedOwnerGuard(session.user.id);
+  if (suspended) return suspended;
 
   const { id } = await params;
   const conversation = await prisma.conversation.findFirst({

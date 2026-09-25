@@ -1,17 +1,19 @@
 import { notFound } from "next/navigation";
-import { Car, Lock } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { buildPublicVehicleView } from "@/lib/publicVehicleView";
+import { parseVariantScanParam, recordVariantScan } from "@/lib/qr/scanAnalytics";
 import { Logo } from "@/components/shared/Logo";
 import { VehiclePublicCard } from "@/components/vehicles/VehiclePublicCard";
 import { StartConversationForm } from "@/components/public/StartConversationForm";
+import type { VehicleType } from "@prisma/client";
 
-/**
- * The complete visitor experience for one vehicle. Shared by /v/<token> (what
- * QR stickers encode) and /vehicle/<code> (the spec-named alias). Renders only
- * what the owner's privacy toggles expose — never owner contact details.
- */
-export async function PublicVehicleScreen({ token }: { token: string }) {
+export async function PublicVehicleScreen({
+  token,
+  variantParam,
+}: {
+  token: string;
+  variantParam?: string | string[];
+}) {
   const vehicle = await prisma.vehicle.findUnique({
     where: { publicToken: token },
     include: {
@@ -25,10 +27,10 @@ export async function PublicVehicleScreen({ token }: { token: string }) {
   if (!vehicle.qrActive) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center px-4 text-center">
-        <Logo />
-        <div className="mt-10 w-full max-w-sm rounded-2xl border border-border bg-card p-8">
-          <p className="text-lg font-semibold">This QR code is no longer active.</p>
-          <p className="mt-2 text-sm text-muted-foreground">
+        <Logo linked={false} />
+        <div className="mt-8 w-full max-w-sm rounded-2xl border border-border bg-card p-8">
+          <p className="text-xl font-semibold">This QR is no longer active.</p>
+          <p className="mt-2 text-base text-muted-foreground">
             The owner has turned off contact for this vehicle.
           </p>
         </div>
@@ -36,48 +38,49 @@ export async function PublicVehicleScreen({ token }: { token: string }) {
     );
   }
 
-  // Count the scan (fire-and-forget — never block or fail the page).
   prisma.vehicle
-    .update({ where: { id: vehicle.id }, data: { scanCount: { increment: 1 } } })
+    .update({ where: { id: vehicle.id }, data: { scanCount: { increment: 1 }, lastScanAt: new Date() } })
     .catch(() => {});
+
+  // Per-sticker analytics: only visits that arrived from a sticker's tagged
+  // QR (?s=<variant>) count here — bare scans stay anonymous.
+  const variant = parseVariantScanParam(Array.isArray(variantParam) ? variantParam[0] : variantParam);
+  if (variant) {
+    recordVariantScan(vehicle.id, variant).catch(() => {});
+  }
 
   const view = buildPublicVehicleView(vehicle, vehicle.profile, vehicle.owner);
   const maxChars = Number(process.env.MESSAGE_MAX_CHARS ?? 500);
 
   return (
     <div className="min-h-dvh bg-background">
-      <header className="border-b border-border">
-        <div className="mx-auto flex h-14 max-w-md items-center justify-center px-4">
-          <Logo />
+      <header className="px-4 pt-5">
+        <div className="mx-auto flex max-w-md justify-center">
+          <Logo linked={false} compact />
         </div>
       </header>
 
-      <main className="mx-auto max-w-md px-4 py-8">
-        <div className="text-center">
-          <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Car className="h-8 w-8" aria-hidden />
-          </span>
-          <h1 className="mt-4 text-xl font-bold tracking-tight">
-            You are contacting this vehicle
-          </h1>
-          {(view.vehicleName || view.registrationNumber) && (
-            <p className="mt-1 text-sm text-muted-foreground">
-              {view.vehicleName}
-              {view.vehicleName && view.registrationNumber ? " · " : ""}
-              {view.registrationNumber}
-            </p>
-          )}
+      <main className="mx-auto max-w-md px-4 pb-10 pt-4">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <p className="font-semibold">This is not an emergency service.</p>
+          <p className="mt-1 leading-snug">
+            If someone is hurt or in danger, call your local emergency number now.
+          </p>
         </div>
 
-        <div className="mt-6">
-          {/* Vehicle identity lives in the page header above — the card adds
-              only what the owner opted into beyond that (their name/photo)
-              plus the contact form. */}
+        <h1 className="mt-5 text-center text-2xl font-bold tracking-tight">
+          Contact this vehicle
+        </h1>
+        <p className="mt-1 text-center text-sm text-muted-foreground">
+          No app. No login. The owner will not see your number.
+        </p>
+
+        <div className="mt-5">
           <VehiclePublicCard
-            vehicleName={null}
-            vehicleType={null}
-            vehiclePhotoUrl={null}
-            registrationNumber={null}
+            vehicleName={view.vehicleName}
+            vehicleType={view.vehicleType as VehicleType | null}
+            vehiclePhotoUrl={view.vehiclePhotoUrl}
+            registrationNumber={view.registrationNumber}
             ownerDisplayName={view.ownerName}
             ownerPhotoUrl={view.ownerPhotoUrl}
             contactFlags={view.contact}
@@ -90,11 +93,6 @@ export async function PublicVehicleScreen({ token }: { token: string }) {
             }
           />
         </div>
-
-        <p className="mt-6 flex items-center justify-center gap-2 text-center text-xs text-muted-foreground">
-          <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
-          Your contact information is not shared with the vehicle owner.
-        </p>
       </main>
     </div>
   );

@@ -4,6 +4,8 @@ import { QrCode, MessageSquare, ScanLine } from "lucide-react";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { qrSvgMarkup, publicVehicleUrl } from "@/lib/qr";
+import { STICKER_VARIANTS } from "@/lib/qr/sticker";
+import { variantScanCounts } from "@/lib/qr/scanAnalytics";
 import { QrSvg } from "@/components/qr/QrSvg";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +16,59 @@ import { DeleteVehicleButton } from "@/components/vehicles/DeleteVehicleButton";
 import { VehicleQrActions } from "@/components/vehicles/VehicleQrActions";
 
 export const metadata = { title: "Vehicle" };
+
+/** Server-rendered per-sticker scan breakdown — no client JS. */
+function StickerScanPanel({
+  counts,
+  lastScanAt,
+}: {
+  counts: Record<string, number>;
+  lastScanAt: Date | null;
+}) {
+  const total = Object.values(counts).reduce((n, c) => n + c, 0);
+  const max = Math.max(1, ...Object.values(counts));
+
+  return (
+    <Card className="rounded-xl">
+      <CardHeader>
+        <CardTitle className="text-base">Sticker scans</CardTitle>
+        <CardDescription>
+          Which of your printed stickers people actually scan.
+          {lastScanAt && ` Last scan ${lastScanAt.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}.`}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {total === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No sticker scans yet. Print the pack — each sticker&apos;s QR quietly tags which layout
+            was scanned, so you learn where a sticker earns its place.
+          </p>
+        ) : (
+          STICKER_VARIANTS.map((v) => (
+            <div key={v.id} className="space-y-1">
+              <div className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="font-medium">{v.label}</span>
+                <span className="tabular-nums text-muted-foreground">
+                  {counts[v.id]} {counts[v.id] === 1 ? "scan" : "scans"}
+                </span>
+              </div>
+              <div
+                className="h-2 rounded-full bg-primary/85"
+                style={{ width: `${Math.max(counts[v.id] > 0 ? 4 : 0, (counts[v.id] / max) * 100)}%` }}
+                role="meter"
+                aria-label={`${v.label}: ${counts[v.id]} scans`}
+                aria-valuemin={0}
+                aria-valuemax={max}
+                aria-valuenow={counts[v.id]}
+              />
+              <p className="text-xs text-muted-foreground">{v.placement}</p>
+            </div>
+          ))
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -56,6 +111,11 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
         <StatCard icon={MessageSquare} label="Messages" value={vehicle._count.conversations} />
         <StatCard icon={ScanLine} label="QR Scans" value={vehicle.scanCount} />
       </div>
+
+      <StickerScanPanel
+        counts={variantScanCounts(vehicle.variantScanCounts)}
+        lastScanAt={vehicle.lastScanAt}
+      />
 
       <Card className="rounded-xl">
         <CardHeader>

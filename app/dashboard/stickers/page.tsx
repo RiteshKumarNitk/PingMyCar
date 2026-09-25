@@ -8,16 +8,15 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StickerSvg } from "@/components/qr/StickerSvg";
 import { VehicleQrActions } from "@/components/vehicles/VehicleQrActions";
-import { stickerSvgMarkup } from "@/lib/qr/sticker";
+import { STICKER_VARIANTS, stickerSvgMarkup } from "@/lib/qr/sticker";
 import { publicVehicleUrl, qrSvgMarkup } from "@/lib/qr";
 
 export const metadata = { title: "Stickers" };
 
 const PLACEMENTS = [
-  "Rear windshield",
-  "Rear side window",
-  "Visible bumper area",
-  "Motorcycle/scooter visible area",
+  "Rear windshield — window vinyl",
+  "Bumper or plate surround — strip or license-plate style",
+  "Side window or helmet — round or arrow badge",
 ];
 
 export default async function StickersPage() {
@@ -31,7 +30,12 @@ export default async function StickersPage() {
     <div className="space-y-6">
       <PageHeader
         title="Stickers"
-        description="Download print-ready PingMyCar stickers for each of your vehicles."
+        description="Each vehicle has its own QR. Download the vinyl layouts that look like real car stickers."
+        action={
+          <Button asChild>
+            <Link href="/dashboard/vehicles/new">Add another vehicle QR</Link>
+          </Button>
+        }
       />
 
       {vehicles.length === 0 ? (
@@ -43,30 +47,54 @@ export default async function StickersPage() {
           ctaHref="/dashboard/vehicles/new"
         />
       ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-8">
           {vehicles.map((vehicle) => {
             const publicUrl = publicVehicleUrl(vehicle.publicToken);
-            const stickerSvg = stickerSvgMarkup(publicUrl, "square", vehicle.type);
+            const stickers = STICKER_VARIANTS.map((v) => ({
+              suffix: v.id === "square" ? "sticker" : `sticker-${v.id}`,
+              svg: stickerSvgMarkup(publicUrl, v.id, vehicle.type),
+              label: v.id === "square" ? "Download Sticker" : `Download ${v.label}`,
+            }));
             return (
               <Card key={vehicle.id} className="rounded-xl">
                 <CardHeader>
                   <CardTitle className="text-base">{vehicle.name}</CardTitle>
                   <CardDescription>
-                    Square format · QR large enough to scan reliably
+                    One unique QR · five print cuts · token {vehicle.publicToken}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-center rounded-xl bg-muted/40 p-6">
-                    <StickerSvg publicUrl={publicUrl} vehicleType={vehicle.type} className="w-48 max-w-none" />
+                <CardContent className="space-y-5">
+                  <div className="grid gap-4 lg:grid-cols-3">
+                    {STICKER_VARIANTS.map((v) => (
+                      <div key={v.id} className="space-y-2">
+                        <div className="flex min-h-[280px] items-center justify-center rounded-xl bg-[#1a2330] p-5">
+                          <StickerSvg
+                            publicUrl={publicUrl}
+                            variant={v.id}
+                            vehicleType={vehicle.type}
+                            className={
+                              v.id === "wide" || v.id === "plate" ? "w-full max-w-none" : "w-44 max-w-none"
+                            }
+                          />
+                        </div>
+                        <p className="text-center text-xs font-medium">{v.label}</p>
+                        <p className="text-center text-xs text-muted-foreground">{v.placement}</p>
+                      </div>
+                    ))}
                   </div>
                   <VehicleQrActions
                     vehicleName={vehicle.name}
                     qrSvg={qrSvgMarkup(publicUrl, 8)}
-                    stickerSvg={stickerSvg}
+                    stickers={stickers}
                   />
-                  <Button asChild variant="ghost" size="sm" className="w-full">
-                    <Link href={`/dashboard/vehicles/${vehicle.id}/qr`}>Open QR page</Link>
-                  </Button>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button asChild className="flex-1">
+                      <Link href={`/print/${vehicle.id}`}>Print A4 sticker pack</Link>
+                    </Button>
+                    <Button asChild variant="ghost" size="sm" className="flex-1">
+                      <Link href={`/dashboard/vehicles/${vehicle.id}/qr`}>Open QR page</Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             );

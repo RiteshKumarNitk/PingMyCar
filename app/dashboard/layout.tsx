@@ -1,5 +1,7 @@
 import { requireSession } from "@/lib/auth/session";
-import { needsOnboarding } from "@/lib/onboarding";
+import { needsOnboarding, isStaffRole } from "@/lib/onboarding";
+import { bootstrapSuperAdmin } from "@/lib/admin/bootstrap";
+import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/shared/Logo";
 import { LogoutButton } from "@/components/auth/LogoutButton";
@@ -10,6 +12,14 @@ import {
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSession();
+
+  await bootstrapSuperAdmin({ id: session.user.id, email: session.user.email });
+
+  const me = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { adminRole: true },
+  });
+
   if (await needsOnboarding(session.user)) redirect("/onboarding");
 
   return (
@@ -28,7 +38,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       <div className="mx-auto flex max-w-6xl">
         <aside className="sticky top-16 hidden h-[calc(100dvh-4rem)] w-56 shrink-0 border-r border-border py-6 pr-4 md:block">
-          <DashboardSidebarNav />
+          <DashboardSidebarNav adminHref={isStaffRole(me?.adminRole) ? "/admin" : undefined} />
         </aside>
 
         <div className="min-w-0 flex-1 px-4 pb-28 pt-8 sm:px-6 md:pb-12">{children}</div>

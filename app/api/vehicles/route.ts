@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
+import { suspendedOwnerGuard } from "@/lib/admin/guards";
 import { prisma } from "@/lib/db";
 import { generatePublicToken } from "@/lib/security/tokens";
 import { createVehicleSchema } from "@/lib/validation/vehicle";
@@ -18,6 +19,9 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const suspended = await suspendedOwnerGuard(session.user.id);
+  if (suspended) return suspended;
 
   const body = await request.json().catch(() => null);
   const parsed = createVehicleSchema.safeParse(body);

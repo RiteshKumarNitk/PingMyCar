@@ -78,8 +78,13 @@ export function Footer() {
         </nav>
       </div>
       <div className="border-t border-white/10">
-        <div className="mx-auto max-w-6xl px-4 py-5 text-sm text-slate-400 sm:px-6">
-          © 2026 PingMyCar
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-5 text-sm text-slate-400 sm:px-6">
+          <span>© 2026 PingMyCar</span>
+          {/* Deliberately subtle: staff entry point, not a public CTA. The
+              /admin routes remain fully protected server-side. */}
+          <Link href="/admin" className="text-xs text-slate-500 transition-colors hover:text-slate-300">
+            Admin Login
+          </Link>
         </div>
       </div>
     </footer>

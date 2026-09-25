@@ -45,7 +45,7 @@ export function PhoneOtpForm({ mode }: { mode: "login" | "signup" }) {
       setError(error.message ?? "That code didn't work. Try again.");
       return;
     }
-    router.push("/dashboard");
+    router.push("/post-login");
     router.refresh();
   }
 

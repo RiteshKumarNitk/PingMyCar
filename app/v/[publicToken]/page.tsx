@@ -12,9 +12,12 @@ export const dynamic = "force-dynamic";
 
 export default async function PublicVehiclePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ publicToken: string }>;
+  searchParams: Promise<{ s?: string | string[] }>;
 }) {
   const { publicToken } = await params;
-  return <PublicVehicleScreen token={publicToken} />;
+  const { s } = await searchParams;
+  return <PublicVehicleScreen token={publicToken} variantParam={s} />;
 }

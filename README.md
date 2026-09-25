@@ -28,6 +28,17 @@ Copy `.env.example` to `.env` and set `AUTH_SECRET` (and matching `BETTER_AUTH_S
 
 `NEXT_PUBLIC_APP_URL` must be the real public origin **before printing stickers**.
 
+### Seeded logins (`pnpm db:seed`)
+
+Open `/login` → **Staff / email sign-in**.
+
+| Role | Email | Password |
+|---|---|---|
+| Super admin | `admin@pingmycar.test` | `SuperAdmin!234` |
+| Demo owner | `demo@pingmycar.test` | `demopass123` |
+
+Super admin lands on `/admin` and can open Users, Vehicles, Messages, and Stickers to inspect owner activity. Change this password before any public deploy.
+
 ## Testing
 
 ```bash

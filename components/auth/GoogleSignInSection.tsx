@@ -34,38 +34,48 @@ function GoogleG() {
  */
 export function GoogleSignInSection({ label = "Continue with Google" }: { label?: string }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const configured = Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
 
   if (!configured) {
     return (
       <div className="rounded-lg border border-warning/30 bg-warning-bg px-4 py-3 text-sm text-warning">
-        Google sign-in isn&apos;t configured on this deployment yet. Use the phone
-        fallback below, or set <code>NEXT_PUBLIC_GOOGLE_CLIENT_ID</code> and the
-        server-side Google credentials to enable it.
+        Google sign-in isn&apos;t configured on this deployment yet. Set{" "}
+        <code>NEXT_PUBLIC_GOOGLE_CLIENT_ID</code> and the server-side Google
+        credentials to enable it.
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <Button
         type="button"
         variant="outline"
         className="h-12 w-full text-base font-medium"
         disabled={loading}
-        onClick={() => {
-          setLoading(true);
-          authClient.signIn.social({ provider: "google", callbackURL: "/dashboard" });
+        onClick={async () => {
+          try {
+            setError(null);
+            setLoading(true);
+            const res = await authClient.signIn.social({
+              provider: "google",
+              callbackURL: "/post-login",
+            });
+            if (res?.error) {
+              setError(res.error.message || "Failed to sign in with Google. Please try again.");
+              setLoading(false);
+            }
+          } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "An unexpected error occurred during Google sign-in.");
+            setLoading(false);
+          }
         }}
       >
         <GoogleG />
         {loading ? "Redirecting to Google…" : label}
       </Button>
-      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <span className="h-px flex-1 bg-border" />
-        or
-        <span className="h-px flex-1 bg-border" />
-      </div>
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }

@@ -21,6 +21,13 @@ enum AdminRole {
   SUPER_ADMIN
 }
 
+enum ReportStatus {
+  NEW
+  INVESTIGATING
+  RESOLVED
+  DISMISSED
+}
+
 enum AuditResult {
   SUCCESS
   FAILURE
@@ -35,25 +42,29 @@ enum AuditSeverity {
 }
 
 model User {
-  id                  String   @id @default(uuid())
+  id                  String    @id @default(uuid())
   name                String
-  email               String   @unique
-  emailVerified       Boolean  @default(false)
+  email               String    @unique
+  emailVerified       Boolean   @default(false)
   image               String?
   /// Owner phone for OTP login. Never shown on public profiles.
-  phoneNumber         String?  @unique
-  phoneNumberVerified Boolean  @default(false)
+  phoneNumber         String?   @unique
+  phoneNumberVerified Boolean   @default(false)
   preferredName       String?
   adminRole           AdminRole @default(USER)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @default(now()) @updatedAt
+  /// Set when an admin suspends the account. Null = active. Suspension
+  /// blocks owner operations server-side but never deletes data.
+  suspendedAt         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @default(now()) @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  vehicles      Vehicle[]
-  devices       Device[]
-  notifications Notification[]
-  adminActions  AuditLog[] @relation("AdminActor")
+  accounts        Account[]
+  sessions        Session[]
+  vehicles        Vehicle[]
+  devices         Device[]
+  notifications   Notification[]
+  adminActions    AuditLog[]     @relation("AdminActor")
+  assignedReports Report[]       @relation("ReportAssignee")
 }
 
 model Session {
@@ -158,6 +169,11 @@ model Vehicle {
   color              String?
   /// Incremented when a visitor opens the public vehicle page.
   scanCount          Int          @default(0)
+  /// Per-sticker-variant scans, keyed "square"|"wide"|"plate"|"round"|"arrow".
+  /// Bare /v/<token> visits without a sticker tag are NOT counted here.
+  variantScanCounts  Json?
+  /// Last time any visitor opened this vehicle's public page.
+  lastScanAt         DateTime?
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @default(now()) @updatedAt
 
@@ -218,14 +234,22 @@ model Conversation {
 }
 
 model Report {
-  id             String   @id @default(uuid())
-  conversationId String
-  reason         String?
-  createdAt      DateTime @default(now())
+  id              String       @id @default(uuid())
+  conversationId  String
+  reason          String?
+  /// Moderation lifecycle; NEW until an admin acts on it.
+  status          ReportStatus @default(NEW)
+  /// Admin notes for investigation/resolution — internal only.
+  adminNotes      String?
+  assignedAdminId String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @default(now()) @updatedAt
 
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversation  Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  assignedAdmin User?        @relation("ReportAssignee", fields: [assignedAdminId], references: [id])
 
   @@index([conversationId])
+  @@index([status, createdAt])
 }
 
 model Message {
@@ -279,33 +303,32 @@ model Device {
 }
 
 model AuditLog {
-  id           String    @id @default(uuid())
-  createdAt    DateTime  @default(now())
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
 
-  actorId      String?
-  actorType    String
+  actorId   String?
+  actorType String
 
-  action       String
-  category     String
-  severity     AuditSeverity
-  result       AuditResult
+  action   String
+  category String
+  severity AuditSeverity
+  result   AuditResult
 
   resourceType String?
   resourceId   String?
 
-  ipAddress    String?
-  userAgent    String?
-  requestId    String?
+  ipAddress String?
+  userAgent String?
+  requestId String?
 
   /// Optional justification captured for sensitive admin actions.
-  reason       String?
+  reason String?
 
   /// Structured, non-sensitive context only. Never stores secrets, tokens,
   /// PII, or raw visitor identifiers.
-  metadata     BigInt?
+  metadata Json?
 
-  actor   User?   @relation("AdminActor", fields: [actorId], references: [id])
-
+  actor User? @relation("AdminActor", fields: [actorId], references: [id])
 
   @@index([createdAt])
   @@index([actorId])
