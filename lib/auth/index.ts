@@ -20,14 +20,18 @@ async function sendOTP({ phoneNumber, code }: { phoneNumber: string; code: strin
   setLastOtp(phoneNumber, code);
 }
 
+const isProd = process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
+
 const appUrl =
   process.env.BETTER_AUTH_URL ||
-  process.env.NEXT_PUBLIC_APP_URL ||
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined) ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
-  (process.env.NODE_ENV === "production" ? "https://ping-my-car.vercel.app" : "http://localhost:3100");
+  (isProd && process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined) ||
+  (isProd && process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
+  (process.env.NEXT_PUBLIC_APP_URL && (!isProd || !process.env.NEXT_PUBLIC_APP_URL.includes("localhost"))
+    ? process.env.NEXT_PUBLIC_APP_URL
+    : undefined) ||
+  (isProd ? "https://rajweb-sage.vercel.app" : "http://localhost:3100");
 
-if (process.env.NODE_ENV === "production" && (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET)) {
+if (isProd && (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET)) {
   console.warn("[auth] Google OAuth is not fully configured for production. Social sign-in will fail until GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set.");
 }
 
@@ -36,8 +40,8 @@ const trustedOrigins = [
   "http://127.0.0.1:3100",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
+  "https://rajweb-sage.vercel.app",
   "https://ping-my-car.vercel.app",
-  "https://*.vercel.app",
   ...(process.env.NEXT_PUBLIC_APP_URL ? [process.env.NEXT_PUBLIC_APP_URL] : []),
   ...(process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : []),
   ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
