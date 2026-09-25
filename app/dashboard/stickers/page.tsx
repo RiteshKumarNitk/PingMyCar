@@ -15,8 +15,8 @@ export const metadata = { title: "Stickers" };
 
 const PLACEMENTS = [
   "Rear windshield — window vinyl",
-  "Bumper or plate surround — strip",
-  "Side window or helmet — round badge",
+  "Bumper or plate surround — strip or license-plate style",
+  "Side window or helmet — round or arrow badge",
 ];
 
 export default async function StickersPage() {
@@ -60,7 +60,7 @@ export default async function StickersPage() {
                 <CardHeader>
                   <CardTitle className="text-base">{vehicle.name}</CardTitle>
                   <CardDescription>
-                    One unique QR · three print cuts · token {vehicle.publicToken}
+                    One unique QR · five print cuts · token {vehicle.publicToken}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
@@ -72,7 +72,9 @@ export default async function StickersPage() {
                             publicUrl={publicUrl}
                             variant={v.id}
                             vehicleType={vehicle.type}
-                            className={v.id === "wide" ? "w-full max-w-none" : "w-44 max-w-none"}
+                            className={
+                              v.id === "wide" || v.id === "plate" ? "w-full max-w-none" : "w-44 max-w-none"
+                            }
                           />
                         </div>
                         <p className="text-center text-xs font-medium">{v.label}</p>

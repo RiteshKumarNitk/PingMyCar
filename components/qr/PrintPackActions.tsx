@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Download, Loader2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { vehicleFileName } from "@/lib/qr/download";
-import { buildA4StickerPackPdf, STICKER_PRINT_MM } from "@/lib/qr/a4Pdf";
-import type { StickerVariant } from "@/lib/qr/sticker";
+import { buildA4StickerPackPdf } from "@/lib/qr/a4Pdf";
+import { STICKER_PRINT_MM, type StickerVariant } from "@/lib/qr/sticker";
 
 /**
  * A4 print-pack actions. Rasterizes each sticker SVG to a high-DPI PNG in

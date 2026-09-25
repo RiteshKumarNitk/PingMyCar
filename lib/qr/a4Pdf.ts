@@ -1,5 +1,5 @@
 import { PDFDocument, PDFFont, PDFPage, PDFImage, rgb } from "pdf-lib";
-import { stickerSvgMarkup, type StickerVariant } from "@/lib/qr/sticker";
+import { STICKER_PRINT_MM, type StickerVariant } from "@/lib/qr/sticker";
 
 /**
  * A4 printable sticker pack — a real PDF with physical units.
@@ -19,13 +19,6 @@ const MM = 72 / 25.4; // pt per mm
 
 export const A4 = { wMm: 210, hMm: 297 };
 export const A4_POINTS = { w: A4.wMm * MM, h: A4.hMm * MM };
-
-/** Physical sticker sizes. Same data drives preview + print + product page. */
-export const STICKER_PRINT_MM: Record<StickerVariant, { w: number; h: number; label: string }> = {
-  square: { w: 50, h: 78, label: "Window vinyl · 50 × 78 mm" },
-  wide: { w: 90, h: 35, label: "Bumper strip · 90 × 35 mm" },
-  round: { w: 50, h: 50, label: "Round badge · ⌀50 mm" },
-};
 
 const NAVY = rgb(0.051, 0.098, 0.149);
 const BLUE = rgb(0.145, 0.388, 0.922);
@@ -123,7 +116,8 @@ function drawPlacementGuide(
 ): void {
   const { bold, regular } = fonts;
   const left = 15 * MM;
-  let y = 84 * MM;
+  // Stickers + captions end at 172 mm from the top; the guide lives below.
+  let y = 178 * MM;
 
   page.drawText("Where should I place my PingMyCar sticker?", {
     x: left,
@@ -135,8 +129,8 @@ function drawPlacementGuide(
   y -= 6 * MM;
   const placements = [
     "1. Rear windshield — window vinyl, facing outward, unobstructed by wipers.",
-    "2. Bumper or plate surround — bumper strip, readable from behind the vehicle.",
-    "3. Side window or helmet — round badge, scannable from the next parking space.",
+    "2. Bumper or plate surround — strip or plate-style sticker, readable from behind.",
+    "3. Side window or helmet — round or arrow badge, scannable from the next space.",
   ];
   for (const line of placements) {
     page.drawText(line, { x: left, y, size: 9, font: regular, color: NAVY });
@@ -211,11 +205,14 @@ export async function buildA4StickerPackPdf(
 
   drawInstructions(page, { bold, regular }, vehicleName);
 
-  // Lay out: window (left), bumper (right), round (right, below bumper).
+  // Lay out (top-origin mm): window left; bumper + plate stacked in the
+  // middle column; round + arrow badges side by side below them.
   const layout: { variant: StickerVariant; xMm: number; yTopMm: number }[] = [
-    { variant: "square", xMm: 18, yTopMm: 40 },
-    { variant: "wide", xMm: 85, yTopMm: 40 },
-    { variant: "round", xMm: 85, yTopMm: 90 },
+    { variant: "square", xMm: 18, yTopMm: 30 },
+    { variant: "wide", xMm: 85, yTopMm: 30 },
+    { variant: "plate", xMm: 85, yTopMm: 74 },
+    { variant: "round", xMm: 85, yTopMm: 118 },
+    { variant: "arrow", xMm: 140, yTopMm: 118 },
   ];
 
   const byVariant = new Map(stickerPngs.map((s) => [s.variant, s.bytes]));
@@ -225,7 +222,7 @@ export async function buildA4StickerPackPdf(
     const png = await pdf.embedPng(bytes);
     const mm = STICKER_PRINT_MM[slot.variant];
     await drawStickerWithMarks(pdf, page, png, slot.variant, slot.xMm, slot.yTopMm);
-    // Size caption under each sticker.
+    // Size caption under each sticker (captions end well above the guide).
     const captionY = (A4.hMm - slot.yTopMm - mm.h - 4) * MM;
     page.drawText(mm.label, {
       x: slot.xMm * MM,

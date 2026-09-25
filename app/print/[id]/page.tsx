@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
-import { a4StickerSheetSvg, STICKER_PRINT_MM } from "@/lib/qr/a4Sheet";
-import { stickerSvgMarkup, STICKER_VARIANTS } from "@/lib/qr/sticker";
+import { a4StickerSheetSvg } from "@/lib/qr/a4Sheet";
+import { stickerSvgMarkup, STICKER_PRINT_MM, STICKER_VARIANTS } from "@/lib/qr/sticker";
 import { publicVehicleUrl } from "@/lib/qr";
 import { PrintPackActions } from "@/components/qr/PrintPackActions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,11 +36,12 @@ export default async function PrintStickerPackPage({
           <div>
             <p className="text-lg font-semibold">{vehicle.name}</p>
             <p className="text-sm text-neutral-600">
-              Recommended sizes: {STICKER_PRINT_MM.square.label} · {STICKER_PRINT_MM.wide.label} ·{" "}
-              {STICKER_PRINT_MM.round.label}
+              {[STICKER_PRINT_MM.square, STICKER_PRINT_MM.wide, STICKER_PRINT_MM.plate, STICKER_PRINT_MM.round, STICKER_PRINT_MM.arrow]
+                .map((s) => s.label)
+                .join(" · ")}
             </p>
             <p className="text-xs text-neutral-500">
-              Paper: A4 (210 × 297 mm) · Print scale: 100% · 3 stickers per sheet
+              Paper: A4 (210 × 297 mm) · Print scale: 100% · 5 stickers per sheet
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -62,9 +63,10 @@ export default async function PrintStickerPackPage({
         </Card>
 
         <p className="text-xs text-neutral-500">
-          Placement guide: rear windshield (window vinyl) · bumper or plate surround (bumper strip) ·
-          side window or helmet (round badge). Keep it visible and scannable without obstructing the
-          driver&apos;s view, lights, or license plate — follow local vehicle regulations.
+          Placement guide: rear windshield (window vinyl) · bumper or plate surround (bumper strip or
+          license-plate sticker) · side window or helmet (round or arrow badge). Keep it visible and
+          scannable without obstructing the driver&apos;s view, lights, or license plate — follow local
+          vehicle regulations.
         </p>
       </div>
 
