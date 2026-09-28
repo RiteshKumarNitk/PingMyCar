@@ -33,8 +33,8 @@ export default async function OnboardingReadyPage({
       <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success-bg text-success">
         <CheckCircle2 className="h-7 w-7" aria-hidden />
       </span>
-      <h1 className="mt-4 text-2xl font-bold tracking-tight">🎉 Your vehicle is ready!</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
+      <h1 className="page-title mt-4">Your vehicle is ready</h1>
+      <p className="supporting mt-2">
         Your PingMyCar QR has been created and is active.
       </p>
 

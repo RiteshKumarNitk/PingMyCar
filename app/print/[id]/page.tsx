@@ -30,39 +30,39 @@ export default async function PrintStickerPackPage({
   }));
 
   return (
-    <div className="min-h-dvh bg-white text-neutral-900">
+    <div className="min-h-dvh bg-white text-foreground">
       <div className="no-print mx-auto max-w-3xl space-y-4 px-4 py-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-lg font-semibold">{vehicle.name}</p>
-            <p className="text-sm text-neutral-600">
+            <p className="text-sm text-muted-foreground">
               {[STICKER_PRINT_MM.square, STICKER_PRINT_MM.wide, STICKER_PRINT_MM.plate, STICKER_PRINT_MM.round, STICKER_PRINT_MM.arrow]
                 .map((s) => s.label)
                 .join(" · ")}
             </p>
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-muted-foreground">
               Paper: A4 (210 × 297 mm) · Print scale: 100% · 5 stickers per sheet
             </p>
           </div>
           <div className="flex items-center gap-3">
             <PrintPackActions vehicleName={vehicle.name} stickerSvgs={stickerSvgs} />
-            <Link href="/dashboard/stickers" className="text-sm text-neutral-600 underline-offset-4 hover:underline">
+            <Link href="/dashboard/stickers" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
               Back
             </Link>
           </div>
         </div>
 
-        <Card className="rounded-xl border-amber-200 bg-amber-50">
+        <Card className="border-warning/25 bg-warning-bg shadow-none">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-amber-950">Print at 100% / Actual Size</CardTitle>
+            <CardTitle className="text-sm text-warning">Print at 100% / Actual Size</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-1 text-xs text-amber-950">
+          <CardContent className="space-y-1 text-xs text-foreground/80">
             <p>Do not select Fit to Page, Shrink to Fit, or similar scaling options.</p>
             <p>Check the printed size with a ruler before cutting — scaling changes the QR dimensions.</p>
           </CardContent>
         </Card>
 
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-muted-foreground">
           Placement guide: rear windshield (window vinyl) · bumper or plate surround (bumper strip or
           license-plate sticker) · side window or helmet (round or arrow badge). Keep it visible and
           scannable without obstructing the driver&apos;s view, lights, or license plate — follow local

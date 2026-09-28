@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Bell, BellOff, BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -80,11 +81,25 @@ export function EnableNotifications() {
     setLoading(false);
   }
 
-  if (status === "checking" || status === "unsupported" || status === "granted") return null;
+  if (status === "checking" || status === "unsupported") return null;
+
+  if (status === "granted") {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+        <BellRing className="size-4 text-success" aria-hidden />
+        Browser notifications on
+      </span>
+    );
+  }
 
   return (
-    <div className="mb-6 flex items-center justify-between gap-4 rounded-lg border border-border bg-card px-4 py-3">
-      <p className="text-sm text-muted-foreground">
+    <div className="flex flex-col gap-3 rounded-xl border border-comm/25 bg-comm-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="flex items-start gap-2.5 text-sm text-foreground/80">
+        {status === "denied" ? (
+          <BellOff className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+        ) : (
+          <Bell className="mt-0.5 size-4 shrink-0 text-comm" aria-hidden />
+        )}
         {status === "denied"
           ? "Notifications are blocked in your browser settings."
           : status === "error"
@@ -92,8 +107,8 @@ export function EnableNotifications() {
             : "Get notified in your browser when someone messages you."}
       </p>
       {status !== "denied" && (
-        <Button size="sm" variant="outline" disabled={loading} onClick={enable}>
-          {loading ? "Enabling…" : "Enable"}
+        <Button size="sm" variant="outline" loading={loading} onClick={enable} className="self-start sm:self-auto">
+          {loading ? "Enabling…" : "Enable notifications"}
         </Button>
       )}
     </div>

@@ -4,6 +4,8 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
+import { FormMessage } from "@/components/ui/field";
 import { VehiclePublicCard } from "@/components/vehicles/VehiclePublicCard";
 import { hasRealName } from "@/lib/auth/identity";
 import type { VEHICLE_TYPES } from "@/lib/validation/vehicle";
@@ -45,7 +47,7 @@ function ToggleRow({
         <span className="block text-sm font-medium">{label}</span>
         {hint && <span className="block text-xs text-muted-foreground">{hint}</span>}
         {disabled && disabledReason && (
-          <span className="mt-0.5 block text-xs text-amber-600 dark:text-amber-500">{disabledReason}</span>
+          <span className="mt-0.5 block text-xs text-warning">{disabledReason}</span>
         )}
       </span>
       <input
@@ -206,13 +208,18 @@ export function VehicleProfileForm({
           <ToggleRow label="WhatsApp" checked={false} onChange={() => {}} disabled disabledReason="Coming soon" />
         </Section>
 
-        {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
+        {error && <FormMessage tone="error" className="mt-4">{error}</FormMessage>}
 
         <div className="mt-6 flex items-center gap-3">
-          <Button type="submit" disabled={saving}>
+          <Button type="submit" loading={saving}>
             {saving ? "Saving…" : "Save changes"}
           </Button>
-          {saved && <span className="text-sm text-muted-foreground">Saved.</span>}
+          {saved && (
+          <span role="status" className="inline-flex items-center gap-1.5 text-sm font-medium text-success">
+            <Check className="size-4" aria-hidden />
+            Saved
+          </span>
+        )}
         </div>
       </form>
 

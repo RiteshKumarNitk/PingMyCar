@@ -35,7 +35,7 @@ export function VehicleQrActions({
       <Button
         type="button"
         variant="outline"
-        disabled={pngBusy}
+        loading={pngBusy}
         onClick={() => {
           setPngError(null);
           setPngBusy(true);
@@ -50,11 +50,11 @@ export function VehicleQrActions({
             .finally(() => setPngBusy(false));
         }}
       >
-        <Download className="h-4 w-4" aria-hidden />
+        {!pngBusy && <Download className="h-4 w-4" aria-hidden />}
         {pngBusy ? "Preparing…" : "Download PNG"}
       </Button>
       {pngError && (
-        <p role="alert" className="w-full text-sm text-destructive">
+        <p role="alert" className="w-full rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
           {pngError}
         </p>
       )}

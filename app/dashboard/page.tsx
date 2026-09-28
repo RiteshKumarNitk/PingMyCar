@@ -1,16 +1,27 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
-import { Car, MessageSquare, MessagesSquare, QrCode, ArrowRight } from "lucide-react";
+import { ArrowRight, Car, MessageSquare, Plus, QrCode, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/badge";
 import { StatCard } from "@/components/shared/StatCard";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { reasonLabel } from "@/types";
 import { VEHICLE_TYPE_LABELS } from "@/lib/validation/vehicle";
 import { Greeting } from "@/components/dashboard/Greeting";
+import { EnableNotifications } from "@/components/dashboard/EnableNotifications";
+import { cn } from "@/lib/utils";
 
-export const metadata = { title: "Overview" };
+export const metadata = { title: "Home" };
+
+function timeAgo(d: Date) {
+  const mins = Math.round((Date.now() - d.getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
 export default async function DashboardPage() {
   const session = await requireSession();
@@ -29,12 +40,9 @@ export default async function DashboardPage() {
       messages: { orderBy: { createdAt: "asc" } },
     },
     orderBy: { updatedAt: "desc" },
-    take: 4,
+    take: 5,
   });
 
-  const totalMessages = await prisma.message.count({
-    where: { conversation: { vehicle: { ownerId } } },
-  });
   const unreadCount = await prisma.message.count({
     where: {
       conversation: { vehicle: { ownerId } },
@@ -43,148 +51,178 @@ export default async function DashboardPage() {
     },
   });
   const activeQrCount = vehicles.filter((v) => v.qrActive).length;
+  const firstName = session.user.name?.trim().split(/\s+/)[0];
 
   return (
     <div className="space-y-8">
-      <div>
-        <Greeting />
-        <p className="mt-1 text-sm text-muted-foreground">
-          Here&apos;s what&apos;s happening with your vehicles.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon={Car} label="Vehicles" value={vehicles.length} />
-        <StatCard icon={MessageSquare} label="Unread Messages" value={unreadCount} />
-        <StatCard icon={MessagesSquare} label="Total Messages" value={totalMessages} />
-        <StatCard icon={QrCode} label="Active QR Codes" value={activeQrCount} />
-      </div>
-
-      <section>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold tracking-tight">My Vehicles</h2>
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/dashboard/vehicles">
-              View all
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
-          </Button>
+      {/* Welcome + account/notification state */}
+      <section className="space-y-4">
+        <div>
+          <Greeting firstName={firstName} />
+          <p className="supporting mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="size-4 text-success" aria-hidden />
+              Signed in with Google
+            </span>
+            <span aria-hidden>·</span>
+            <span>
+              {vehicles.length} {vehicles.length === 1 ? "vehicle" : "vehicles"} with private contact
+            </span>
+          </p>
         </div>
-
-        {vehicles.length === 0 ? (
-          <p className="mt-4 text-sm text-muted-foreground">No vehicles yet.</p>
-        ) : (
-          <ul className="mt-4 space-y-3">
-            {vehicles.slice(0, 3).map((vehicle) => (
-              <li key={vehicle.id}>
-                <Card className="rounded-xl transition-colors hover:border-primary/40">
-                  <CardContent className="flex flex-wrap items-center gap-4">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <Car className="h-5 w-5" aria-hidden />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold">{vehicle.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {vehicle.registrationNumber ?? VEHICLE_TYPE_LABELS[vehicle.type ?? "OTHER"]}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Badge variant={vehicle.qrActive ? "success" : "warning"}>
-                        <span
-                          className={`h-1.5 w-1.5 rounded-full ${vehicle.qrActive ? "bg-success" : "bg-warning"}`}
-                          aria-hidden
-                        />
-                        {vehicle.qrActive ? "QR Active" : "QR Inactive"}
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {vehicle._count.conversations}{" "}
-                        {vehicle._count.conversations === 1 ? "Message" : "Messages"}
-                      </span>
-                    </div>
-                    <div className="flex w-full gap-2 sm:w-auto">
-                      <Button asChild variant="outline" size="sm" className="flex-1">
-                        <Link href={`/dashboard/vehicles/${vehicle.id}/qr`}>View QR</Link>
-                      </Button>
-                      <Button asChild variant="outline" size="sm" className="flex-1">
-                        <Link href={`/dashboard/messages?vehicle=${vehicle.id}`}>Messages</Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </li>
-            ))}
-          </ul>
-        )}
+        <EnableNotifications />
       </section>
 
-      <section>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold tracking-tight">Recent Messages</h2>
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/dashboard/messages">
-              View all
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
-          </Button>
-        </div>
+      {/* Primary actions */}
+      <div className="flex flex-wrap gap-2.5">
+        <Button asChild>
+          <Link href="/dashboard/vehicles/new">
+            <Plus aria-hidden />
+            Add Vehicle
+          </Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/dashboard/messages">
+            <MessageSquare aria-hidden />
+            View Messages
+            {unreadCount > 0 && (
+              <span className="rounded-full bg-comm px-1.5 text-[0.6875rem] leading-5 font-semibold text-white tabular-nums">
+                {unreadCount}
+              </span>
+            )}
+          </Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/dashboard/stickers">
+            <QrCode aria-hidden />
+            View QR
+          </Link>
+        </Button>
+      </div>
 
-        {recentConversations.length === 0 ? (
-          <Card className="mt-4 rounded-xl">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                No messages yet.
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Once someone scans your vehicle&apos;s QR, their message will appear here.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <ul className="mt-4 space-y-3">
-            {recentConversations.map((c) => {
-              const last = c.messages[c.messages.length - 1];
-              const unread = c.messages.some(
-                (m) => m.senderType === "VISITOR" && !m.readAt
-              );
-              return (
-                <li key={c.id}>
-                  <Link
-                    href={`/dashboard/messages/${c.id}`}
-                    className="block rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="truncate text-sm font-medium">
-                        {reasonLabel(c.reason)}
-                      </span>
-                      <span className="shrink-0 text-xs text-muted-foreground">
-                        {c.vehicle.name}
-                      </span>
-                    </div>
-                    {last && (
-                      <p className="mt-1 truncate text-sm text-muted-foreground">
-                        {last.senderType === "OWNER" ? "You: " : ""}
-                        {last.body}
-                      </p>
-                    )}
-                    <div className="mt-2 flex items-center gap-2">
-                      {unread && (
-                        <Badge variant="default" className="px-2 py-0 text-[10px]">
-                          New
-                        </Badge>
-                      )}
-                      <span className="text-xs text-muted-foreground">
-                        {c.messages.length} {c.messages.length === 1 ? "message" : "messages"}
-                      </span>
-                    </div>
-                  </Link>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatCard icon={MessageSquare} label="Unread messages" value={unreadCount} tone="comm" href="/dashboard/messages?tab=unread" />
+        <StatCard icon={Car} label="Vehicles" value={vehicles.length} href="/dashboard/vehicles" />
+        <StatCard
+          icon={QrCode}
+          label="Active QR codes"
+          value={activeQrCount}
+          tone="success"
+          href="/dashboard/stickers"
+          hint={vehicles.length > activeQrCount ? `${vehicles.length - activeQrCount} inactive` : undefined}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        {/* Recent conversations */}
+        <section aria-labelledby="recent-heading">
+          <div className="flex items-center justify-between">
+            <h2 id="recent-heading" className="section-title">Recent conversations</h2>
+            <Button asChild variant="link" size="sm">
+              <Link href="/dashboard/messages">
+                View all
+                <ArrowRight aria-hidden />
+              </Link>
+            </Button>
+          </div>
+
+          {recentConversations.length === 0 ? (
+            <div className="mt-3">
+              <EmptyState
+                icon={MessageSquare}
+                title="No messages yet"
+                description="When someone scans your QR code, their message will appear here."
+              />
+            </div>
+          ) : (
+            <ul className="surface mt-3 divide-y divide-border overflow-hidden">
+              {recentConversations.map((c) => {
+                const last = c.messages[c.messages.length - 1];
+                const unread = c.messages.some((m) => m.senderType === "VISITOR" && !m.readAt);
+                return (
+                  <li key={c.id}>
+                    <Link
+                      href={`/dashboard/messages/${c.id}`}
+                      className="flex gap-3 px-4 py-3.5 transition-colors hover:bg-accent/60"
+                    >
+                      <span
+                        aria-hidden
+                        className={cn("mt-2 size-2 shrink-0 rounded-full", unread ? "bg-comm" : "bg-transparent")}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className={cn("truncate text-sm", unread ? "font-semibold" : "font-medium")}>
+                            {reasonLabel(c.reason)}
+                          </span>
+                          <span className="meta shrink-0">{timeAgo(c.updatedAt)}</span>
+                        </div>
+                        <p className="meta mt-0.5 truncate">{c.vehicle.name}</p>
+                        {last && (
+                          <p className="mt-1 truncate text-sm text-muted-foreground">
+                            {last.senderType === "OWNER" ? "You: " : ""}
+                            {last.body}
+                          </p>
+                        )}
+                        {unread && <span className="sr-only">Unread</span>}
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
+        {/* Vehicles */}
+        <section aria-labelledby="vehicles-heading">
+          <div className="flex items-center justify-between">
+            <h2 id="vehicles-heading" className="section-title">Your vehicles</h2>
+            <Button asChild variant="link" size="sm">
+              <Link href="/dashboard/vehicles">
+                Manage
+                <ArrowRight aria-hidden />
+              </Link>
+            </Button>
+          </div>
+
+          {vehicles.length === 0 ? (
+            <div className="mt-3">
+              <EmptyState
+                icon={Car}
+                title="No vehicles yet"
+                description="Add your first vehicle to create a QR code."
+                ctaLabel="Add Vehicle"
+                ctaHref="/dashboard/vehicles/new"
+              />
+            </div>
+          ) : (
+            <ul className="mt-3 space-y-2.5">
+              {vehicles.slice(0, 4).map((vehicle) => (
+                <li key={vehicle.id} className="surface flex items-center gap-3 p-3.5">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+                    <Car className="size-5" strokeWidth={1.75} aria-hidden />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <Link href={`/dashboard/vehicles/${vehicle.id}`} className="block truncate text-sm font-semibold hover:text-primary">
+                      {vehicle.name}
+                    </Link>
+                    <p className="meta mt-0.5">
+                      {vehicle.registrationNumber ?? VEHICLE_TYPE_LABELS[vehicle.type ?? "OTHER"]} ·{" "}
+                      {vehicle._count.conversations} {vehicle._count.conversations === 1 ? "conversation" : "conversations"}
+                    </p>
+                  </div>
+                  <StatusBadge status={vehicle.qrActive ? "active" : "inactive"} label={vehicle.qrActive ? "QR active" : "QR inactive"} />
+                  <Button asChild variant="ghost" size="icon-sm" aria-label={`QR code for ${vehicle.name}`}>
+                    <Link href={`/dashboard/vehicles/${vehicle.id}/qr`}>
+                      <QrCode aria-hidden />
+                    </Link>
+                  </Button>
                 </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

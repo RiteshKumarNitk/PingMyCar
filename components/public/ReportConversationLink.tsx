@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { Flag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 export function ReportConversationLink({ visitorToken }: { visitorToken: string }) {
   const [open, setOpen] = useState(false);
@@ -10,7 +13,7 @@ export function ReportConversationLink({ visitorToken }: { visitorToken: string 
 
   if (done) {
     return (
-      <p className="rounded-lg border border-success/30 bg-success-bg px-3 py-2 text-center text-xs font-medium text-success">
+      <p role="status" className="rounded-lg bg-success-bg px-3 py-2.5 text-center text-sm font-medium text-success">
         Reported. Thank you for letting us know.
       </p>
     );
@@ -20,9 +23,10 @@ export function ReportConversationLink({ visitorToken }: { visitorToken: string 
     return (
       <button
         type="button"
-        className="mx-auto block text-xs text-muted-foreground underline-offset-4 hover:underline"
+        className="mx-auto flex min-h-11 items-center gap-1.5 rounded-md px-3 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
         onClick={() => setOpen(true)}
       >
+        <Flag className="size-3.5" aria-hidden />
         Something wrong with this conversation? Report it
       </button>
     );
@@ -30,6 +34,7 @@ export function ReportConversationLink({ visitorToken }: { visitorToken: string 
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (sending) return;
     setSending(true);
     await fetch(`/api/public/conversations/${visitorToken}/report`, {
       method: "POST",
@@ -41,30 +46,26 @@ export function ReportConversationLink({ visitorToken }: { visitorToken: string 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2 rounded-md border border-border bg-muted px-3 py-2">
-      <textarea
-        className="w-full rounded-md border border-input bg-transparent px-2 py-1.5 text-xs shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
+    <form onSubmit={handleSubmit} className="surface animate-enter space-y-3 p-4">
+      <label htmlFor="reportReason" className="section-title block">
+        Report this conversation
+      </label>
+      <Textarea
+        id="reportReason"
         rows={2}
-        placeholder="What's wrong with this conversation? (optional)"
+        className="min-h-20"
+        placeholder="What's wrong? (optional)"
         value={reason}
         onChange={(e) => setReason(e.target.value)}
         maxLength={500}
       />
       <div className="flex justify-end gap-2">
-        <button
-          type="button"
-          className="text-xs text-muted-foreground hover:underline"
-          onClick={() => setOpen(false)}
-        >
+        <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
           Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={sending}
-          className="text-xs font-medium text-destructive hover:underline disabled:opacity-50"
-        >
+        </Button>
+        <Button type="submit" variant="destructive" loading={sending}>
           {sending ? "Sending…" : "Submit report"}
-        </button>
+        </Button>
       </div>
     </form>
   );

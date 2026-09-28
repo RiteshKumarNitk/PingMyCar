@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { reasonLabel } from "@/types";
-import { Badge } from "@/components/ui/badge";
+import { ChevronLeft, Car, Lock } from "lucide-react";
+import { StatusBadge } from "@/components/ui/badge";
 import { MessageThread } from "@/components/messages/MessageThread";
 import { BlockConversationButton } from "@/components/messages/BlockConversationButton";
 import { DeleteConversationButton } from "@/components/messages/DeleteConversationButton";
@@ -42,42 +43,49 @@ export default async function MessageThreadPage({ params }: { params: Promise<{ 
     <div className="mx-auto max-w-2xl">
       <Link
         href="/dashboard/messages"
-        className="text-sm text-muted-foreground hover:text-foreground"
+        className="inline-flex items-center gap-1 rounded-md text-sm text-muted-foreground hover:text-foreground"
       >
-        ← Messages
+        <ChevronLeft className="size-4" aria-hidden />
+        Messages
       </Link>
 
-      <div className="mt-4 rounded-xl border border-border bg-card p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="eyebrow">Private message</p>
-            <h1 className="mt-1 text-xl font-bold tracking-tight">
-              {reasonLabel(conversation.reason)}
-            </h1>
+      <header className="mt-4 border-b border-border pb-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="eyebrow flex items-center gap-1.5">
+              <Lock className="size-3" aria-hidden />
+              Private conversation
+            </p>
+            <h1 className="page-title mt-1.5">{reasonLabel(conversation.reason)}</h1>
           </div>
-          <Badge
-            variant={status === "OPEN" ? "success" : status === "BLOCKED" ? "danger" : "secondary"}
-          >
-            {status === "OPEN" ? "Open" : status === "BLOCKED" ? "Blocked" : "Closed"}
-          </Badge>
+          <StatusBadge status={status === "OPEN" ? "open" : status === "BLOCKED" ? "blocked" : "closed"} className="mt-1" />
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
           <Link
             href={`/dashboard/vehicles/${conversation.vehicle.id}/messages`}
-            className="font-medium text-foreground hover:text-primary"
+            className="inline-flex items-center gap-1.5 font-medium text-foreground hover:text-primary"
           >
+            <Car className="size-4" aria-hidden />
             {conversation.vehicle.name}
           </Link>
+          <span aria-hidden>·</span>
           <span>
+            Started{" "}
             {conversation.createdAt.toLocaleDateString("en-US", {
               month: "long",
               day: "numeric",
               year: "numeric",
             })}
           </span>
-          {expired && <span>Expired after 30 days</span>}
+          {expired && (
+            <>
+              <span aria-hidden>·</span>
+              <span>Expired after 30 days</span>
+            </>
+          )}
         </div>
-      </div>
+        <p className="meta mt-2">The visitor can&apos;t see your phone number or email.</p>
+      </header>
 
       <div className="mt-6">
         <MessageThread
@@ -94,15 +102,13 @@ export default async function MessageThreadPage({ params }: { params: Promise<{ 
         />
       </div>
 
-      {conversation.status === "OPEN" && !expired && (
-        <div className="mt-4">
+      {/* Destructive actions, kept apart from everyday reply actions */}
+      <section aria-label="Conversation actions" className="mt-10 space-y-3 border-t border-border pt-5">
+        {conversation.status === "OPEN" && !expired && (
           <BlockConversationButton conversationId={conversation.id} />
-        </div>
-      )}
-
-      <div className="mt-4">
+        )}
         <DeleteConversationButton conversationId={conversation.id} />
-      </div>
+      </section>
     </div>
   );
 }

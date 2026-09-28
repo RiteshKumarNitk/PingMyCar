@@ -4,6 +4,8 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
+import { FormMessage } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -75,13 +77,18 @@ export function IdentityForm({
         />
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <FormMessage tone="error">{error}</FormMessage>}
 
       <div className="flex items-center gap-3">
-        <Button type="submit" disabled={saving || !name.trim()}>
+        <Button type="submit" disabled={!name.trim()} loading={saving}>
           {saving ? "Saving…" : "Save"}
         </Button>
-        {saved && <span className="text-sm text-muted-foreground">Saved.</span>}
+        {saved && (
+          <span role="status" className="inline-flex items-center gap-1.5 text-sm font-medium text-success">
+            <Check className="size-4" aria-hidden />
+            Saved
+          </span>
+        )}
       </div>
     </form>
   );

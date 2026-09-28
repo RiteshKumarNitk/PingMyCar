@@ -59,7 +59,7 @@ export default async function AdminConversationPage({ params }: { params: Promis
 
       <section className="rounded-xl border border-border bg-card p-5">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-xl font-bold tracking-tight">{reasonLabel(conversation.reason)}</h1>
+          <h1 className="page-title">{reasonLabel(conversation.reason)}</h1>
           <Badge variant={conversation.status === "OPEN" ? "success" : conversation.status === "BLOCKED" ? "danger" : "secondary"}>
             {conversation.status}
           </Badge>

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+/** Page title block: eyebrow → title → supporting text, with an optional action. */
 export function PageHeader({
   eyebrow,
   title,
@@ -12,13 +13,13 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-4">
-      <div>
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
         {eyebrow && <p className="eyebrow">{eyebrow}</p>}
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">{title}</h1>
-        {description && <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p>}
+        <h1 className="page-title mt-1.5">{title}</h1>
+        {description && <p className="supporting mt-1.5 max-w-2xl">{description}</p>}
       </div>
-      {action}
+      {action && <div className="flex shrink-0 flex-wrap gap-2">{action}</div>}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
+import { FormMessage } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -53,12 +54,8 @@ export function EmailPasswordForm() {
           minLength={8}
         />
       </div>
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
-      <Button type="submit" className="w-full" disabled={loading}>
+      {error && <FormMessage tone="error">{error}</FormMessage>}
+      <Button type="submit" className="w-full" loading={loading}>
         {loading ? "Signing in…" : "Sign in"}
       </Button>
     </form>

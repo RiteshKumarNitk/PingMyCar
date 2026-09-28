@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { FormMessage } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -148,9 +149,9 @@ export function VehicleForm({
         </p>
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <FormMessage tone="error">{error}</FormMessage>}
 
-      <Button type="submit" className="w-full" disabled={loading || !values.name.trim()}>
+      <Button type="submit" size="lg" className="w-full" disabled={!values.name.trim()} loading={loading}>
         {loading ? "Saving…" : mode === "create" ? "Generate My Free QR" : "Save changes"}
       </Button>
     </form>

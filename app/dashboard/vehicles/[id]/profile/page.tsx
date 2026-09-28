@@ -17,7 +17,7 @@ export default async function VehicleProfilePage({ params }: { params: Promise<{
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-bold tracking-tight">{vehicle.name} — Contact profile</h1>
+      <h1 className="page-title">{vehicle.name} — Contact profile</h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">
         Choose what visitors see when they scan your QR, and how they can reach you.
       </p>

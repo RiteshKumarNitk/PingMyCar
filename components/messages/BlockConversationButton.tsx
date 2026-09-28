@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function BlockConversationButton({ conversationId }: { conversationId: string }) {
@@ -20,19 +21,16 @@ export function BlockConversationButton({ conversationId }: { conversationId: st
 
   if (!confirming) {
     return (
-      <button
-        type="button"
-        className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-        onClick={() => setConfirming(true)}
-      >
+      <Button type="button" variant="ghost" size="sm" className="text-muted-foreground hover:text-danger" onClick={() => setConfirming(true)}>
+        <Ban aria-hidden />
         Block this conversation
-      </button>
+      </Button>
     );
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-muted px-3 py-2">
-      <p className="text-xs text-muted-foreground">Neither of you will be able to send messages after this.</p>
+    <div className="animate-enter flex flex-wrap items-center gap-3 rounded-xl border border-danger/20 bg-danger-bg/60 px-4 py-3">
+      <p className="text-sm text-foreground/80">Neither of you will be able to send messages after this.</p>
       <div className="flex gap-2">
         <Button type="button" variant="destructive" size="sm" disabled={loading} onClick={handleBlock}>
           {loading ? "Blocking…" : "Yes, block"}

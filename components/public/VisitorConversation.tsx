@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { Bookmark, CheckCircle2, Lock } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
+import { ErrorState } from "@/components/shared/ErrorState";
+import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/ui/badge";
 import { MessageThread } from "@/components/messages/MessageThread";
 import { ReportConversationLink } from "@/components/public/ReportConversationLink";
 
@@ -11,6 +14,23 @@ type ConversationData = {
   status: string;
   messages: { senderType: "VISITOR" | "OWNER"; body: string; createdAt: string }[];
 };
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-dvh flex-col bg-background">
+      <header className="bg-navy">
+        <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4">
+          <Logo linked={false} inverse />
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-white/70">
+            <Lock className="size-3" aria-hidden />
+            Private conversation
+          </span>
+        </div>
+      </header>
+      {children}
+    </div>
+  );
+}
 
 /**
  * The visitor's private conversation. Client component so it can poll GET
@@ -47,13 +67,13 @@ export function VisitorConversation({ visitorToken }: { visitorToken: string }) 
           return;
         }
         if (!res.ok) {
-          setError("Couldn't load the conversation. Check your link and refresh.");
+          setError("Couldn't load new messages. We'll keep trying.");
           return;
         }
         setData(await res.json());
         setError(null);
       } catch {
-        if (!cancelled) setError("Couldn't load the conversation. Check your connection.");
+        if (!cancelled) setError("You appear to be offline. We'll reconnect automatically.");
       }
     }
 
@@ -67,29 +87,26 @@ export function VisitorConversation({ visitorToken }: { visitorToken: string }) 
 
   if (notFound) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center px-4 text-center">
-        <Logo />
-        <div className="mt-10 w-full max-w-sm rounded-2xl border border-border bg-card p-8">
-          <p className="font-semibold">Conversation not found.</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            This link may be wrong, or the conversation may have been removed.
-          </p>
-        </div>
-      </div>
+      <Shell>
+        <ErrorState
+          kind={404}
+          title="Conversation not found"
+          description="This link may be wrong, or the conversation may have been removed."
+        />
+      </Shell>
     );
   }
 
   if (!data) {
     return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-muted-foreground">
-          <span
-            className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"
-            aria-hidden
-          />
-          <p className="text-sm">Loading your conversation…</p>
-        </div>
-      </div>
+      <Shell>
+        <main className="mx-auto w-full max-w-md space-y-4 px-4 py-6" aria-busy="true" aria-label="Loading your conversation">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-7 w-52" />
+          <Skeleton className="ml-auto h-16 w-3/4 rounded-2xl" />
+          <Skeleton className="h-12 w-2/3 rounded-2xl" />
+        </main>
+      </Shell>
     );
   }
 
@@ -98,38 +115,42 @@ export function VisitorConversation({ visitorToken }: { visitorToken: string }) 
   const maxChars = 500;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
-      <header className="border-b border-border">
-        <div className="mx-auto flex h-14 max-w-md items-center justify-center px-4">
-          <Logo />
-        </div>
-      </header>
-
+    <Shell>
       <main className="mx-auto w-full max-w-md flex-1 px-4 py-6">
-        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          {data.vehicleName ?? "Private message"}
-        </p>
-        <h1 className="mt-1 text-xl font-bold tracking-tight">Your conversation</h1>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="eyebrow truncate">{data.vehicleName ?? "Private message"}</p>
+            <h1 className="page-title mt-1">Your conversation</h1>
+          </div>
+          <StatusBadge
+            status={data.status === "BLOCKED" ? "blocked" : closed ? "closed" : "open"}
+            className="mt-1"
+          />
+        </div>
 
         {justSent && (
-          <div className="mt-4 flex items-start gap-3 rounded-xl border border-success/30 bg-success-bg px-4 py-3">
-            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden />
+          <div role="status" className="animate-enter mt-5 flex items-start gap-3 rounded-xl bg-success-bg px-4 py-3">
+            <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-success" aria-hidden />
             <div>
               <p className="text-sm font-semibold text-success">Message sent</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                The vehicle owner has been notified. Your message was delivered through
-                PingMyCar — your personal contact information was not shared.
+              <p className="mt-0.5 text-sm text-foreground/75">
+                The owner has been notified. Your personal contact details were not shared.
               </p>
             </div>
           </div>
         )}
 
-        <p className="mt-4 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
-          🔒 Bookmark this link — it&apos;s the only way back to this conversation.
+        <p className="mt-4 flex items-start gap-2 rounded-lg bg-surface-2 px-3 py-2.5 text-sm text-muted-foreground">
+          <Bookmark className="mt-0.5 size-4 shrink-0" aria-hidden />
+          Bookmark this page — this link is the only way back to your conversation.
         </p>
 
         <div className="mt-6">
-          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+          {error && (
+            <p role="status" className="meta mb-4 text-center">
+              {error}
+            </p>
+          )}
           <MessageThread
             submitUrl={`/api/public/conversations/${visitorToken}`}
             viewerRole="VISITOR"
@@ -139,10 +160,10 @@ export function VisitorConversation({ visitorToken }: { visitorToken: string }) 
           />
         </div>
 
-        <div className="mt-8">
+        <div className="mt-10">
           <ReportConversationLink visitorToken={visitorToken} />
         </div>
       </main>
-    </div>
+    </Shell>
   );
 }

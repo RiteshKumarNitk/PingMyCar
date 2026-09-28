@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
  * timezone, not the owner's. Rendered only after mount so SSR output and
  * client hydration never disagree (avoids a hydration mismatch).
  */
-export function Greeting() {
+export function Greeting({ firstName }: { firstName?: string }) {
   const [greeting, setGreeting] = useState("");
 
   useEffect(() => {
@@ -16,9 +16,6 @@ export function Greeting() {
     setGreeting(hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening");
   }, []);
 
-  return (
-    <h1 className="text-2xl font-bold tracking-tight">
-      {greeting ? `${greeting} 👋` : "👋"}
-    </h1>
-  );
+  const base = greeting || "Welcome";
+  return <h1 className="page-title">{firstName ? `${base}, ${firstName}` : base}</h1>;
 }

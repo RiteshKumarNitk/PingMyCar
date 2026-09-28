@@ -4,8 +4,8 @@ import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { qrSvgMarkup, publicVehicleUrl } from "@/lib/qr";
 import { stickerSvgMarkup } from "@/lib/qr/sticker";
+import { ArrowRight, ChevronLeft, Lock, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { VehicleQrActions } from "@/components/vehicles/VehicleQrActions";
 import { QrManagement } from "@/components/vehicles/QrManagement";
 import { StickerSvg } from "@/components/qr/StickerSvg";
@@ -27,74 +27,84 @@ export default async function VehicleQrPage({ params }: { params: Promise<{ id: 
   const stickerSvg = stickerSvgMarkup(publicUrl, "square", vehicle.type);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       <div className="no-print">
         <Link
           href={`/dashboard/vehicles/${vehicle.id}`}
-          className="text-sm text-muted-foreground hover:text-foreground"
+          className="inline-flex items-center gap-1 rounded-md text-sm text-muted-foreground hover:text-foreground"
         >
-          ← {vehicle.name}
+          <ChevronLeft className="size-4" aria-hidden />
+          {vehicle.name}
         </Link>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight">Your PingMyCar QR</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Download, print, and place this on your vehicle — then anyone can reach you
-          about it.
+        <h1 className="page-title mt-3">QR code</h1>
+        <p className="supporting mt-1.5 max-w-xl">
+          Print this and place it on your vehicle. Anyone who scans it can message you — without seeing your number
+          or email.
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+      <div className="grid items-start gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
         {/* Print sheet: only this prints */}
-        <div className="print-sheet rounded-2xl border border-border bg-card p-6 text-center">
-          <QrSvg publicUrl={publicUrl} className="mx-auto aspect-square w-56" />
-          <p className="mt-4 text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            {vehicle.name}
+        <div className="print-sheet overflow-hidden rounded-2xl border border-border bg-card text-center shadow-raised [print-color-adjust:exact]">
+          <p className="bg-navy px-4 py-3.5 text-[0.8125rem] font-semibold tracking-[0.18em] text-white">
+            SCAN TO CONTACT THE OWNER
           </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Scan to contact the owner of this vehicle — no phone number shared.
+          <div className="px-8 pt-7 pb-6">
+            <QrSvg publicUrl={publicUrl} className="mx-auto aspect-square w-52" />
+            <p className="mt-5 text-sm font-semibold tracking-tight">{vehicle.name}</p>
+            <p className="mx-auto mt-1.5 max-w-60 text-sm leading-snug text-muted-foreground">
+              Send a message without sharing your personal information.
+            </p>
+          </div>
+          <p className="flex items-center justify-center gap-1.5 border-t border-border py-2.5 text-xs text-muted-foreground">
+            <Lock className="size-3" aria-hidden />
+            Private messaging by PingMyCar
           </p>
         </div>
 
         <div className="no-print space-y-6">
-          <Card className="rounded-xl">
-            <CardHeader>
-              <CardTitle className="text-base">Status</CardTitle>
-              <CardDescription>
-                Created {vehicle.createdAt.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+          <section aria-labelledby="qr-status" className="surface p-5">
+            <h2 id="qr-status" className="section-title">Status</h2>
+            <p className="meta mt-0.5">
+              Created {vehicle.createdAt.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+            </p>
+            <div className="mt-4">
               <QrManagement vehicleId={vehicle.id} qrActive={vehicle.qrActive} />
-            </CardContent>
-          </Card>
+            </div>
+            <p className="mt-4 break-all rounded-lg bg-surface-2 px-2.5 py-2 font-mono text-xs text-muted-foreground">
+              {publicUrl}
+            </p>
+          </section>
 
-          <Card className="rounded-xl">
-            <CardHeader>
-              <CardTitle className="text-base">Downloads</CardTitle>
-              <CardDescription>SVG prints crisply at any size; PNG for quick sharing.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <VehicleQrActions
-                vehicleName={vehicle.name}
-                qrSvg={qrSvg}
-                stickerSvg={stickerSvg}
-              />
-            </CardContent>
-          </Card>
+          <section aria-labelledby="qr-downloads" className="surface p-5">
+            <h2 id="qr-downloads" className="section-title">Download &amp; print</h2>
+            <p className="meta mt-0.5">SVG prints crisply at any size; PNG is handy for sharing.</p>
+            <div className="mt-4">
+              <VehicleQrActions vehicleName={vehicle.name} qrSvg={qrSvg} stickerSvg={stickerSvg} />
+            </div>
+          </section>
 
-          <Card className="rounded-xl">
-            <CardHeader>
-              <CardTitle className="text-base">Sticker</CardTitle>
-              <CardDescription>
-                The print-ready PingMyCar sticker design with your QR embedded.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <StickerSvg publicUrl={publicUrl} vehicleType={vehicle.type} className="w-56 max-w-none" />
-              <p className="break-all rounded-md bg-muted px-2 py-1.5 text-xs text-muted-foreground">
-                {publicUrl}
-              </p>
-            </CardContent>
-          </Card>
+          <section aria-labelledby="qr-sticker" className="surface p-5">
+            <h2 id="qr-sticker" className="section-title">Sticker</h2>
+            <p className="meta mt-0.5">The print-ready PingMyCar sticker with your QR embedded.</p>
+            <div className="mt-4 flex flex-wrap items-start gap-5">
+              <StickerSvg publicUrl={publicUrl} vehicleType={vehicle.type} className="w-44 max-w-none shrink-0" />
+              <div className="flex flex-col gap-2">
+                <Button asChild variant="outline">
+                  <Link href={`/print/${vehicle.id}`}>
+                    <Printer aria-hidden />
+                    A4 print sheet
+                  </Link>
+                </Button>
+                <Button asChild variant="ghost">
+                  <Link href="/dashboard/stickers">
+                    More sticker designs
+                    <ArrowRight aria-hidden />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </div>

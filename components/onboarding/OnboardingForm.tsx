@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
+import { FormMessage } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VEHICLE_TYPES, VEHICLE_TYPE_LABELS } from "@/lib/validation/vehicle";
@@ -132,9 +133,9 @@ export function OnboardingForm({
         </>
       )}
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <FormMessage tone="error">{error}</FormMessage>}
 
-      <Button type="submit" className="w-full" disabled={saving || !canSubmit}>
+      <Button type="submit" size="lg" className="w-full" disabled={!canSubmit} loading={saving}>
         {saving ? "Setting up…" : "Generate My Free QR"}
       </Button>
     </form>

@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
-import { Car, QrCode, MessageSquare, Settings } from "lucide-react";
+import { Car, ExternalLink, MessageSquare, Pencil, Plus, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { VEHICLE_TYPE_LABELS } from "@/lib/validation/vehicle";
@@ -33,7 +33,10 @@ export default async function VehiclesPage() {
         description="Each vehicle has its own QR code and its own private inbox."
         action={
           <Button asChild>
-            <Link href="/dashboard/vehicles/new">+ Add Vehicle</Link>
+            <Link href="/dashboard/vehicles/new">
+              <Plus aria-hidden />
+              Add Vehicle
+            </Link>
           </Button>
         }
       />
@@ -41,88 +44,85 @@ export default async function VehiclesPage() {
       {vehicles.length === 0 ? (
         <EmptyState
           icon={Car}
-          title="No vehicles yet."
-          description="Add your first vehicle to create your PingMyCar QR."
+          title="No vehicles yet"
+          description="Add your first vehicle to create a QR code."
           ctaLabel="Add Vehicle"
           ctaHref="/dashboard/vehicles/new"
         />
       ) : (
-        <ul className="space-y-4">
+        <ul className="grid gap-4 lg:grid-cols-2">
           {vehicles.map((vehicle) => {
-            const lastConversation = vehicle.conversations[0];
-            const lastMessage = lastConversation?.messages[0];
+            const lastMessage = vehicle.conversations[0]?.messages[0];
+            const count = vehicle._count.conversations;
             return (
-              <li key={vehicle.id}>
-                <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center">
-                  <div className="flex min-w-0 flex-1 items-center gap-4">
-                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <Car className="h-6 w-6" aria-hidden />
+              <li key={vehicle.id} className="surface flex flex-col overflow-hidden">
+                <div className="flex gap-4 p-4 sm:p-5">
+                  {vehicle.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={vehicle.photoUrl} alt="" className="size-16 shrink-0 rounded-xl object-cover" />
+                  ) : (
+                    <span className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary">
+                      <Car className="size-8" strokeWidth={1.5} aria-hidden />
                     </span>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Link
-                          href={`/dashboard/vehicles/${vehicle.id}`}
-                          className="font-semibold hover:text-primary"
-                        >
-                          {vehicle.name}
-                        </Link>
-                        <Badge variant={vehicle.qrActive ? "success" : "warning"}>
-                          <span
-                            className={`h-1.5 w-1.5 rounded-full ${vehicle.qrActive ? "bg-success" : "bg-warning"}`}
-                            aria-hidden
-                          />
-                          {vehicle.qrActive ? "QR Active" : "QR Inactive"}
-                        </Badge>
-                      </div>
-                      <p className="mt-0.5 text-sm text-muted-foreground">
-                        {vehicle.registrationNumber ?? VEHICLE_TYPE_LABELS[vehicle.type ?? "OTHER"]}
-                        {" · "}
-                        {vehicle._count.conversations}{" "}
-                        {vehicle._count.conversations === 1 ? "message" : "messages"}
-                      </p>
-                      {lastMessage && (
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                          Last: {lastMessage.senderType === "OWNER" ? "You: " : ""}
-                          {lastMessage.body}
-                        </p>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/dashboard/vehicles/${vehicle.id}`}
+                      className="block truncate text-base font-semibold tracking-tight hover:text-primary"
+                    >
+                      {vehicle.name}
+                    </Link>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                      {vehicle.registrationNumber ? (
+                        <span className="rounded-md border border-foreground/15 bg-surface-2 px-1.5 py-0.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-[0.12em]">
+                          {vehicle.registrationNumber}
+                        </span>
+                      ) : (
+                        <span className="meta">{VEHICLE_TYPE_LABELS[vehicle.type ?? "OTHER"]}</span>
                       )}
+                      <StatusBadge
+                        status={vehicle.qrActive ? "active" : "inactive"}
+                        label={vehicle.qrActive ? "QR active" : "QR off"}
+                      />
                     </div>
+                    <p className="meta mt-2 flex items-center gap-1.5">
+                      <MessageSquare className="size-3.5" aria-hidden />
+                      {count} {count === 1 ? "conversation" : "conversations"}
+                    </p>
+                    {lastMessage && (
+                      <p className="mt-1 truncate text-sm text-muted-foreground">
+                        {lastMessage.senderType === "OWNER" ? "You: " : ""}
+                        {lastMessage.body}
+                      </p>
+                    )}
                   </div>
-
                   <div
-                    className="hidden h-16 w-16 shrink-0 rounded-lg border border-border bg-white p-1.5 sm:block"
+                    className="hidden size-18 shrink-0 rounded-lg border border-border bg-white p-1.5 sm:block"
                     aria-hidden
                     dangerouslySetInnerHTML={{
                       __html: qrSvgMarkup(publicVehicleUrl(vehicle.publicToken), 2),
                     }}
                   />
+                </div>
 
-                  <div className="grid grid-cols-4 gap-2 sm:w-auto sm:grid-cols-2">
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/dashboard/vehicles/${vehicle.id}`}>
-                        <Settings className="h-4 w-4" aria-hidden />
-                        View
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/dashboard/messages?vehicle=${vehicle.id}`}>
-                        <MessageSquare className="h-4 w-4" aria-hidden />
-                        Messages
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/dashboard/vehicles/${vehicle.id}/qr`}>
-                        <QrCode className="h-4 w-4" aria-hidden />
-                        QR
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/dashboard/vehicles/${vehicle.id}/profile`}>
-                        <Settings className="h-4 w-4" aria-hidden />
-                        Settings
-                      </Link>
-                    </Button>
-                  </div>
+                <div className="mt-auto grid grid-cols-4 border-t border-border bg-surface-2/50">
+                  {[
+                    { href: `/v/${vehicle.publicToken}`, label: "View", icon: ExternalLink, external: true },
+                    { href: `/dashboard/vehicles/${vehicle.id}/qr`, label: "QR", icon: QrCode },
+                    { href: `/dashboard/messages?vehicle=${vehicle.id}`, label: "Messages", icon: MessageSquare },
+                    { href: `/dashboard/vehicles/${vehicle.id}`, label: "Edit", icon: Pencil },
+                  ].map(({ href, label, icon: Icon, external }) => (
+                    <Link
+                      key={label}
+                      href={href}
+                      {...(external ? { target: "_blank", rel: "noopener" } : {})}
+                      className="flex min-h-12 flex-col items-center justify-center gap-1 border-l border-border text-xs font-medium text-foreground/75 transition-colors first:border-l-0 hover:bg-accent hover:text-foreground sm:flex-row sm:gap-1.5 sm:text-sm"
+                    >
+                      <Icon className="size-4" strokeWidth={1.75} aria-hidden />
+                      {label}
+                      {external && <span className="sr-only">(opens the public page in a new tab)</span>}
+                    </Link>
+                  ))}
                 </div>
               </li>
             );

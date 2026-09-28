@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function DeleteConversationButton({ conversationId }: { conversationId: string }) {
@@ -26,19 +27,16 @@ export function DeleteConversationButton({ conversationId }: { conversationId: s
 
   if (!confirming) {
     return (
-      <button
-        type="button"
-        className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-        onClick={() => setConfirming(true)}
-      >
+      <Button type="button" variant="ghost" size="sm" className="text-muted-foreground hover:text-danger" onClick={() => setConfirming(true)}>
+        <Trash2 aria-hidden />
         Delete this conversation
-      </button>
+      </Button>
     );
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-muted px-3 py-2">
-      <p className="text-xs text-muted-foreground">
+    <div className="animate-enter flex flex-wrap items-center gap-3 rounded-xl border border-danger/20 bg-danger-bg/60 px-4 py-3">
+      <p className="text-sm text-foreground/80">
         All messages are permanently deleted, and the visitor&apos;s link stops working.
       </p>
       <div className="flex gap-2">

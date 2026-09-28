@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
+import { FormMessage } from "@/components/ui/field";
 
 function getGoogleAuthProblemMessage(error: unknown): string {
   const message =
@@ -85,8 +86,9 @@ export function GoogleSignInSection({ label = "Continue with Google" }: { label?
       <Button
         type="button"
         variant="outline"
-        className="h-12 w-full text-base font-medium"
-        disabled={loading}
+        size="lg"
+        className="w-full border-foreground/15 text-base"
+        loading={loading}
         onClick={async () => {
           try {
             setError(null);
@@ -122,10 +124,10 @@ export function GoogleSignInSection({ label = "Continue with Google" }: { label?
           }
         }}
       >
-        <GoogleG />
+        {!loading && <GoogleG />}
         {loading ? "Redirecting to Google…" : label}
       </Button>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <FormMessage tone="error">{error}</FormMessage>}
     </div>
   );
 }

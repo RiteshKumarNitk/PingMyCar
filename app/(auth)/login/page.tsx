@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { postLoginPath } from "@/lib/onboarding";
 import { GoogleSignInSection } from "@/components/auth/GoogleSignInSection";
+import { ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Log In" };
@@ -38,37 +39,40 @@ export default async function LoginPage({
   const errorCode = typeof error === "string" ? error : undefined;
 
   return (
-    <div className="text-center">
-      <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Contact your vehicle. Keep your number private.
-      </p>
+    <div>
+      <h1 className="page-title">Sign in to PingMyCar</h1>
+      <p className="supporting mt-1.5">Vehicle owners sign in with Google to manage vehicles, QR codes, and messages.</p>
 
       {errorCode && (
-        <div
-          role="alert"
-          className="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-left text-sm text-destructive"
-        >
+        <div role="alert" className="mt-6 rounded-lg bg-danger-bg px-4 py-3 text-sm text-danger">
           {loginErrorMessage(errorCode)}
           {/* The raw code (never sensitive) makes support reports actionable. */}
           <span className="mt-1 block text-xs opacity-70">Error code: {errorCode.slice(0, 64)}</span>
         </div>
       )}
 
-      <div className="mt-8 text-left">
+      <div className="mt-7">
         <GoogleSignInSection />
       </div>
 
-      <div className="mt-8 border-t border-border pt-6">
+      <div className="mt-6 flex items-start gap-3 rounded-lg bg-surface-2 px-3.5 py-3">
+        <ScanLine className="mt-0.5 size-4 shrink-0 text-comm" aria-hidden />
+        <p className="text-sm leading-snug text-muted-foreground">
+          <span className="font-medium text-foreground">Scanned a QR sticker?</span> You don&apos;t need an
+          account — just send your message from the vehicle&apos;s page.
+        </p>
+      </div>
+
+      <div className="mt-7 border-t border-border pt-6 text-center">
         <p className="text-sm text-muted-foreground">New to PingMyCar?</p>
         <Button asChild variant="outline" className="mt-3 w-full">
           <Link href="/signup">Get Your Free QR</Link>
         </Button>
       </div>
 
-      <p className="mt-10 text-center text-xs text-muted-foreground">
-        <Link href="/login/staff" className="underline-offset-4 hover:underline">
-          Admin sign-in
+      <p className="mt-8 text-center">
+        <Link href="/login/staff" className="meta rounded-sm underline-offset-4 hover:text-foreground hover:underline">
+          Staff sign-in
         </Link>
       </p>
     </div>

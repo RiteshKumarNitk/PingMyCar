@@ -14,17 +14,18 @@ export default async function StaffLoginPage() {
   }
 
   return (
-    <div className="text-center">
-      <h1 className="text-2xl font-bold tracking-tight">Admin sign-in</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Staff access only. Vehicle owners should use Google.
-      </p>
-      <div className="mt-8 text-left">
+    <div>
+      <p className="eyebrow">Staff only</p>
+      <h1 className="page-title mt-1.5">Admin sign-in</h1>
+      <p className="supporting mt-1.5">For pre-provisioned staff accounts. Vehicle owners sign in with Google.</p>
+      <div className="mt-7">
         <EmailPasswordForm />
       </div>
-      <Link href="/login" className="mt-6 inline-block text-sm text-muted-foreground underline-offset-4 hover:underline">
-        Back to owner login
-      </Link>
+      <p className="mt-6 text-center">
+        <Link href="/login" className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+          ← Back to owner sign-in
+        </Link>
+      </p>
     </div>
   );
 }

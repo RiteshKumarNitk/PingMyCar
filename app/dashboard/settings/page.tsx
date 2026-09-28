@@ -17,7 +17,7 @@ export default async function SettingsPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <p className="eyebrow">Account</p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">Settings</h1>
+        <h1 className="page-title mt-1.5">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           How we reach you when a message arrives.
         </p>

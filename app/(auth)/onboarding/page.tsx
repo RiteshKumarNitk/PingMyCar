@@ -20,7 +20,7 @@ export default async function OnboardingPage() {
     <div className="w-full">
       <div className="mb-6 text-center">
         <p className="eyebrow">Welcome to PingMyCar 👋</p>
-        <CardTitle className="mt-2 text-2xl font-bold tracking-tight">
+        <CardTitle className="page-title mt-2">
           Let&apos;s connect your first vehicle.
         </CardTitle>
         <CardDescription className="mt-1.5">

@@ -2,8 +2,8 @@ import Link from "next/link";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { reasonLabel } from "@/types";
-import { MessageSquare } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Car, MessageSquare, X } from "lucide-react";
+import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -46,6 +46,8 @@ export default async function MessagesPage({
     include: {
       vehicle: { select: { id: true, name: true } },
       messages: { orderBy: { createdAt: "desc" }, take: 1 },
+      // Report indicator only (open reports) — no report content is loaded.
+      _count: { select: { reports: { where: { status: { in: ["NEW", "INVESTIGATING"] } } } } },
     },
     orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     take: PAGE_SIZE + 1,
@@ -84,7 +86,7 @@ export default async function MessagesPage({
     const unreadCount = unreadByConversation.get(c.id) ?? 0;
     const expired = c.expiresAt < new Date();
     const status = expired ? "CLOSED" : c.status;
-    return { conversation: c, last: c.messages[0] ?? null, unreadCount, status };
+    return { conversation: c, last: c.messages[0] ?? null, unreadCount, status, reported: c._count.reports > 0 };
   });
 
   const filterVehicle = vehicleFilter
@@ -102,13 +104,13 @@ export default async function MessagesPage({
     <div className="space-y-6">
       <PageHeader
         title="Messages"
-        description="Private conversations about your vehicles."
+        description="Private conversations about your vehicles. Visitors never see your contact details."
       />
 
       <EnableNotifications />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-1 rounded-lg border border-border bg-card p-1" role="tablist" aria-label="Filter messages">
+        <div className="inline-flex gap-1 rounded-[10px] border border-border bg-card p-1 shadow-card" role="tablist" aria-label="Filter messages">
           {TABS.map(({ key, label }) => (
             <Link
               key={key}
@@ -116,13 +118,13 @@ export default async function MessagesPage({
               role="tab"
               aria-selected={tab === key}
               className={cn(
-                "rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors",
-                tab === key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                "inline-flex h-8 items-center gap-1.5 rounded-md px-3.5 text-sm font-medium transition-colors",
+                tab === key ? "bg-primary-soft text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
               {label}
               {key === "unread" && unreadTotal > 0 && (
-                <span className="ml-1.5 rounded-full bg-white/20 px-1.5 text-xs">
+                <span className="rounded-full bg-comm px-1.5 text-[0.6875rem] leading-5 font-semibold text-white tabular-nums">
                   {unreadTotal}
                 </span>
               )}
@@ -131,9 +133,11 @@ export default async function MessagesPage({
         </div>
 
         {filterVehicle && (
-          <Button asChild variant="ghost" size="sm">
-            <Link href={`/dashboard/messages?tab=${tab}`}>
-              Filter: {filterVehicle.name} ✕
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/dashboard/messages?tab=${tab}`} aria-label={`Remove filter ${filterVehicle.name}`}>
+              <Car aria-hidden />
+              {filterVehicle.name}
+              <X aria-hidden />
             </Link>
           </Button>
         )}
@@ -142,51 +146,50 @@ export default async function MessagesPage({
       {withMeta.length === 0 ? (
         <EmptyState
           icon={MessageSquare}
-          title={tab === "unread" ? "You're all caught up." : "No messages here yet."}
+          title={tab === "unread" ? "You're all caught up" : "No messages yet"}
           description={
             tab === "unread"
               ? "No unread messages. New ones will show up here."
-              : "When someone scans your vehicle's QR and sends a message, it will appear here."
+              : "When someone scans your QR code, their message will appear here."
           }
         />
       ) : (
-        <ul className="space-y-3">
-          {withMeta.map(({ conversation: c, last, unreadCount, status }) => (
+        <ul className="surface divide-y divide-border overflow-hidden">
+          {withMeta.map(({ conversation: c, last, unreadCount, status, reported }) => (
             <li key={c.id}>
               <Link
                 href={`/dashboard/messages/${c.id}`}
-                className={cn(
-                  "block rounded-xl border bg-card p-4 transition-colors hover:border-primary/40",
-                  unreadCount > 0 ? "border-primary/40" : "border-border"
-                )}
+                className="flex gap-3 px-4 py-4 transition-colors hover:bg-accent/60 sm:px-5"
               >
-                <div className="flex items-center justify-between gap-3">
-                  <span className={cn("text-sm", unreadCount > 0 ? "font-semibold" : "font-medium")}>
-                    {reasonLabel(c.reason)}
-                  </span>
-                  <Badge
-                    variant={status === "OPEN" ? "success" : status === "BLOCKED" ? "danger" : "secondary"}
-                  >
-                    {status === "OPEN" ? "Open" : status === "BLOCKED" ? "Blocked" : "Closed"}
-                  </Badge>
-                </div>
-                {last && (
-                  <p className="mt-1 truncate text-sm text-muted-foreground">
-                    {last.senderType === "OWNER" ? "You: " : ""}
-                    {last.body}
+                <span
+                  aria-hidden
+                  className={cn("mt-1.5 size-2 shrink-0 rounded-full", unreadCount > 0 ? "bg-comm" : "bg-transparent")}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className={cn("truncate text-[0.9375rem]", unreadCount > 0 ? "font-semibold" : "font-medium")}>
+                      {reasonLabel(c.reason)}
+                    </span>
+                    <time dateTime={c.updatedAt.toISOString()} className="meta shrink-0">
+                      {c.updatedAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })} ·{" "}
+                      {c.updatedAt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+                    </time>
+                  </div>
+                  <p className="meta mt-0.5 flex items-center gap-1.5 truncate">
+                    <Car className="size-3.5 shrink-0" aria-hidden />
+                    {c.vehicle.name}
                   </p>
-                )}
-                <div className="mt-2 flex items-center gap-3">
-                  <span className="text-xs text-muted-foreground">{c.vehicle.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {c.updatedAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })} ·{" "}
-                    {c.updatedAt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
-                  </span>
-                  {unreadCount > 0 && (
-                    <Badge className="px-2 py-0 text-[10px]">
-                      {unreadCount} new
-                    </Badge>
+                  {last && (
+                    <p className={cn("mt-1.5 truncate text-sm", unreadCount > 0 ? "text-foreground/85" : "text-muted-foreground")}>
+                      {last.senderType === "OWNER" ? "You: " : ""}
+                      {last.body}
+                    </p>
                   )}
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    {unreadCount > 0 && <StatusBadge status="unread" label={`${unreadCount} new`} />}
+                    {status !== "OPEN" && <StatusBadge status={status === "BLOCKED" ? "blocked" : "closed"} />}
+                    {reported && <StatusBadge status="reported" />}
+                  </div>
                 </div>
               </Link>
             </li>

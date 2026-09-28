@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/badge";
+import { FormMessage } from "@/components/ui/field";
 import { ConfirmModal } from "@/components/shared/ConfirmModal";
 
 /**
@@ -63,14 +64,8 @@ export function QrManagement({ vehicleId, qrActive }: { vehicleId: string; qrAct
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Badge variant={qrActive ? "success" : "warning"}>
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${qrActive ? "bg-success" : "bg-warning"}`}
-            aria-hidden
-          />
-          {qrActive ? "Active" : "Inactive"}
-        </Badge>
+      <div className="flex flex-wrap items-center gap-3">
+        <StatusBadge status={qrActive ? "active" : "inactive"} />
         <p className="text-sm text-muted-foreground">
           {qrActive
             ? "Anyone scanning this QR can contact you."
@@ -78,20 +73,20 @@ export function QrManagement({ vehicleId, qrActive }: { vehicleId: string; qrAct
         </p>
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <FormMessage tone="error">{error}</FormMessage>}
 
       <div className="flex flex-wrap gap-2">
         {qrActive ? (
           <Button
             type="button"
             variant="outline"
-            disabled={togglePending}
+            loading={togglePending}
             onClick={() => setConfirmingToggle(true)}
           >
             {togglePending ? "Deactivating…" : "Deactivate QR"}
           </Button>
         ) : (
-          <Button type="button" disabled={togglePending} onClick={toggleActive}>
+          <Button type="button" variant="success" loading={togglePending} onClick={toggleActive}>
             {togglePending ? "Activating…" : "Activate QR"}
           </Button>
         )}

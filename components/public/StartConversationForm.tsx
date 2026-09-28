@@ -2,11 +2,14 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Send } from "lucide-react";
+import { Check, Lock, Send } from "lucide-react";
 import { visibleReasons, type ContactFlags, type ContactReasonId } from "@/types";
 import { REASON_ICONS } from "@/components/public/reasonIcons";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { FormMessage } from "@/components/ui/field";
+import { friendlyError } from "@/lib/ui/errors";
+import { cn } from "@/lib/utils";
 
 export function StartConversationForm({
   publicToken,
@@ -26,31 +29,36 @@ export function StartConversationForm({
 
   if (reasons.length === 0) {
     return (
-      <p className="text-center text-sm text-muted-foreground">
-        This vehicle isn&apos;t accepting messages right now.
-      </p>
+      <p className="supporting text-center">This vehicle isn&apos;t accepting messages right now.</p>
     );
   }
 
-  const showsUrgentReason = reasons.some((r) => r.id === "URGENT" || r.id === "SECURITY");
+  const needsBody = selectedReason === "OTHER";
+  const canSend = Boolean(selectedReason) && (!needsBody || Boolean(messageBody.trim()));
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!selectedReason) return;
+    if (!selectedReason || sending) return;
     setError(null);
     setSending(true);
 
-    const res = await fetch("/api/public/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ publicToken, reason: selectedReason, body: messageBody }),
-    });
-
-    setSending(false);
+    let res: Response;
+    try {
+      res = await fetch("/api/public/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publicToken, reason: selectedReason, body: messageBody }),
+      });
+    } catch {
+      setSending(false);
+      setError(friendlyError("network"));
+      return;
+    }
 
     if (!res.ok) {
+      setSending(false);
       const data = await res.json().catch(() => null);
-      setError(data?.error ?? "Couldn't send your message. Try again.");
+      setError(friendlyError(res.status, data?.error));
       return;
     }
 
@@ -66,69 +74,79 @@ export function StartConversationForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <p className="text-sm font-medium">How can we help?</p>
-        <div className="mt-3 grid gap-2">
-          {reasons.map((reason) => {
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <fieldset>
+        <legend className="section-title">Why are you contacting the owner?</legend>
+        <div className="mt-3 grid grid-cols-2 gap-2.5">
+          {reasons.map((reason, i) => {
             const Icon = REASON_ICONS[reason.id];
+            const selected = selectedReason === reason.id;
+            const spanFull = reasons.length % 2 === 1 && i === reasons.length - 1;
             return (
               <button
                 key={reason.id}
                 type="button"
                 onClick={() => setSelectedReason(reason.id)}
-                aria-pressed={selectedReason === reason.id}
-                className={`flex min-h-14 items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-base transition-colors ${
-                  selectedReason === reason.id
-                    ? "border-primary bg-primary/5 font-medium text-foreground"
-                    : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                }`}
+                aria-pressed={selected}
+                className={cn(
+                  "relative flex min-h-19 flex-col items-start justify-between gap-2 rounded-xl border p-3.5 text-left text-sm font-medium leading-snug transition-[border-color,background-color,box-shadow] duration-150",
+                  spanFull && "col-span-2 min-h-14 flex-row items-center justify-start",
+                  selected
+                    ? "border-primary bg-primary-soft text-foreground ring-2 ring-primary/20"
+                    : "border-border bg-card text-foreground/85 hover:border-primary/40"
+                )}
               >
-                <Icon className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+                <Icon className={cn("size-5 shrink-0", selected ? "text-primary" : "text-muted-foreground")} strokeWidth={1.75} aria-hidden />
                 {reason.label}
+                {selected && (
+                  <span className="absolute right-2.5 top-2.5 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                    <Check className="size-3" strokeWidth={3} aria-hidden />
+                  </span>
+                )}
               </button>
             );
           })}
         </div>
-      </div>
+      </fieldset>
 
       {selectedReason && (
-        <div className="space-y-1.5">
-          <label htmlFor="visitorMessage" className="text-sm font-medium">
-            {selectedReason === "OTHER" ? "Your message" : "Add a note (optional)"}
-          </label>
+        <div className="animate-enter space-y-2">
+          <div className="flex items-baseline justify-between">
+            <label htmlFor="visitorMessage" className="text-sm font-medium">
+              {needsBody ? "Your message" : "Add a note"}
+              {!needsBody && <span className="font-normal text-muted-foreground"> (optional)</span>}
+            </label>
+            <span className="meta" aria-live="polite">
+              {messageBody.length}/{maxChars}
+            </span>
+          </div>
           <Textarea
             id="visitorMessage"
             rows={3}
-            className="min-h-24 text-base"
-            placeholder={
-              selectedReason === "OTHER"
-                ? "Tell the owner what's going on…"
-                : "Anything else they should know? (optional)"
-            }
+            placeholder={needsBody ? "Tell the owner what's going on…" : "e.g. Parked at gate 2, blocking the exit"}
             value={messageBody}
             onChange={(e) => setMessageBody(e.target.value)}
             maxLength={maxChars}
-            required={selectedReason === "OTHER"}
+            required={needsBody}
             autoFocus
           />
         </div>
       )}
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <FormMessage tone="error">{error}</FormMessage>}
 
-      {selectedReason && (
-        <Button type="submit" size="lg" className="h-14 w-full text-base" disabled={sending || (selectedReason === "OTHER" && !messageBody.trim())}>
-          <Send className="h-4 w-4" aria-hidden />
+      <div className="space-y-3">
+        <Button type="submit" size="lg" className="h-14 w-full text-base" disabled={!canSend} loading={sending}>
+          {!sending && <Send aria-hidden />}
           {sending ? "Sending…" : "Send Message"}
         </Button>
-      )}
-
-      {showsUrgentReason && (
-        <p className="text-center text-sm text-muted-foreground">
-          For a real emergency, call local emergency services — not this page.
+        {!selectedReason && <p className="meta text-center">Choose a reason above to continue.</p>}
+        <p className="flex items-center justify-center gap-1.5 text-center text-sm text-muted-foreground">
+          <Lock className="size-3.5 shrink-0" aria-hidden />
+          You don&apos;t need to share your phone number or email.
         </p>
-      )}
+      </div>
+
     </form>
   );
 }

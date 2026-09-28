@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+/** Useful empty state: what this list is for, and the one action that fills it. */
 export function EmptyState({
   icon: Icon,
   title,
@@ -16,14 +17,14 @@ export function EmptyState({
   ctaHref?: string;
 }) {
   return (
-    <div className="flex flex-col items-center rounded-xl border border-dashed border-border bg-card px-6 py-14 text-center">
-      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-        <Icon className="h-6 w-6" aria-hidden />
+    <div className="flex flex-col items-center rounded-xl border border-dashed border-input bg-card/60 px-6 py-12 text-center sm:py-16">
+      <span className="flex size-12 items-center justify-center rounded-xl bg-primary-soft text-primary">
+        <Icon className="size-6" strokeWidth={1.75} aria-hidden />
       </span>
-      <p className="mt-4 font-semibold">{title}</p>
-      <p className="mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>
+      <p className="section-title mt-4">{title}</p>
+      <p className="supporting mt-1 max-w-sm">{description}</p>
       {ctaLabel && ctaHref && (
-        <Button asChild size="sm" className="mt-5">
+        <Button asChild className="mt-6">
           <Link href={ctaHref}>{ctaLabel}</Link>
         </Button>
       )}

@@ -18,7 +18,7 @@ export default async function ProfilePage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <p className="eyebrow">Account</p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">Profile</h1>
+        <h1 className="page-title mt-1.5">Profile</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           How you appear on your vehicles&apos; contact pages — if you choose to appear at all.
         </p>

@@ -30,7 +30,7 @@ export function DeleteVehicleButton({ vehicleId }: { vehicleId: string }) {
   return (
     <div className="flex items-center gap-3">
       <p className="text-sm text-muted-foreground">Are you sure?</p>
-      <Button variant="destructive" size="sm" disabled={loading} onClick={handleDelete}>
+      <Button variant="destructive" size="sm" loading={loading} onClick={handleDelete}>
         {loading ? "Deleting…" : "Yes, delete"}
       </Button>
       <Button variant="ghost" size="sm" onClick={() => setConfirming(false)}>

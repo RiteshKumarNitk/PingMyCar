@@ -4,43 +4,61 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --radius: 0.75rem;
+  /*
+   * PingMyCar design tokens — the ONLY place colors are defined.
+   * Midnight navy + electric blue brand, teal for communication, green only
+   * for success/active, amber for pending/warning, red for danger. Components
+   * use the semantic names below (bg-primary, text-comm, bg-success-bg …),
+   * never raw colors.
+   */
+  --radius: 0.75rem; /* 12px — cards/inputs; buttons use radius-md (10px) */
 
-  /* Surfaces — cool, light, slightly navy-tinted */
-  --background: oklch(0.982 0.003 247);
-  --foreground: oklch(0.229 0.037 265);
+  /* Surfaces — white on very light blue-gray */
+  --background: oklch(0.975 0.005 250);
+  --foreground: oklch(0.22 0.035 262); /* slate-900-ish navy ink */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.229 0.037 265);
+  --card-foreground: oklch(0.22 0.035 262);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.229 0.037 265);
+  --popover-foreground: oklch(0.22 0.035 262);
+  --surface-2: oklch(0.955 0.008 250); /* inset panels, table headers */
 
-  /* The one brand accent — confident signal blue */
-  --primary: oklch(0.53 0.194 261.8);
-  --primary-foreground: oklch(0.985 0.002 247);
-  --secondary: oklch(0.951 0.011 247);
-  --secondary-foreground: oklch(0.345 0.055 260);
-  --muted: oklch(0.957 0.006 247);
-  --muted-foreground: oklch(0.532 0.033 252);
-  --accent: oklch(0.945 0.019 255);
-  --accent-foreground: oklch(0.345 0.055 260);
+  /* Brand — electric blue on midnight navy */
+  --primary: oklch(0.55 0.2 259);
+  --primary-hover: oklch(0.5 0.2 260);
+  --primary-foreground: oklch(0.99 0.003 250);
+  --primary-soft: oklch(0.95 0.03 255); /* selected nav, subtle highlights */
+  --secondary: oklch(1 0 0);
+  --secondary-foreground: oklch(0.3 0.045 260);
+  --muted: oklch(0.955 0.008 250);
+  --muted-foreground: oklch(0.5 0.03 255); /* slate-500, AA on white */
+  --accent: oklch(0.955 0.012 252);
+  --accent-foreground: oklch(0.3 0.045 260);
 
-  /* Semantic status — green success, amber warning, red danger */
-  --success: oklch(0.53 0.14 152);
-  --success-bg: oklch(0.945 0.05 155);
-  --warning: oklch(0.6 0.13 70);
-  --warning-bg: oklch(0.963 0.055 80);
-  --danger: oklch(0.577 0.245 27.3);
-  --danger-bg: oklch(0.945 0.04 25);
+  /* Communication — teal/cyan for messages, conversations, unread */
+  --comm: oklch(0.56 0.1 200);
+  --comm-bg: oklch(0.955 0.03 200);
 
-  --destructive: oklch(0.577 0.245 27.3);
-  --border: oklch(0.912 0.009 247);
-  --input: oklch(0.893 0.012 247);
-  --ring: oklch(0.53 0.194 261.8);
+  /* Semantic status */
+  --success: oklch(0.52 0.13 152);
+  --success-bg: oklch(0.955 0.045 155);
+  --warning: oklch(0.56 0.12 65);
+  --warning-bg: oklch(0.965 0.05 85);
+  --danger: oklch(0.55 0.2 27);
+  --danger-bg: oklch(0.955 0.03 25);
+  --destructive: oklch(0.55 0.2 27);
 
-  /* Dark automotive navy bands (hero, privacy, footer) */
-  --navy: #0d1926;
-  --navy-2: #14243a;
-  --navy-3: #1c3049;
+  --border: oklch(0.915 0.01 252);
+  --input: oklch(0.87 0.014 252);
+  --ring: oklch(0.55 0.2 259);
+
+  /* Midnight navy — hero/visitor bands, footer, admin chrome */
+  --navy: #0b1524;
+  --navy-2: #111f33;
+  --navy-3: #1a2c45;
+
+  /* Elevation — subtle only */
+  --shadow-card: 0 1px 2px oklch(0.22 0.035 262 / 0.05), 0 1px 3px oklch(0.22 0.035 262 / 0.04);
+  --shadow-raised: 0 4px 16px -4px oklch(0.22 0.035 262 / 0.12);
 }
 
 @theme inline {
@@ -57,6 +75,13 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-surface-2: var(--surface-2);
+  --color-comm: var(--comm);
+  --color-comm-bg: var(--comm-bg);
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -87,6 +112,12 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv11", "ss01"; /* Inter: open digits, single-storey a */
+    text-rendering: optimizeLegibility;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
   /* Anchored sections clear the sticky navbar */
   [id] {
@@ -95,9 +126,26 @@
 }
 
 @layer components {
-  /* Small caps label used above section headings */
+  /* Type scale — page title > section title > body > supporting > meta. */
+  .page-title {
+    @apply text-2xl font-semibold tracking-tight text-foreground sm:text-[1.75rem] sm:leading-9;
+  }
+  .section-title {
+    @apply text-base font-semibold tracking-tight text-foreground;
+  }
+  .supporting {
+    @apply text-sm leading-relaxed text-muted-foreground;
+  }
+  .meta {
+    @apply text-xs text-muted-foreground tabular-nums;
+  }
+  /* Small caps label used above headings */
   .eyebrow {
-    @apply text-xs font-semibold uppercase tracking-[0.2em] text-primary;
+    @apply text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-primary;
+  }
+  /* Grouping surface — use only where grouping helps */
+  .surface {
+    @apply rounded-xl border border-border bg-card shadow-card;
   }
   /* Vertical chain used in flow diagrams (CREATE ↓ STICK ↓ …) */
   .flow-chain {
@@ -106,7 +154,28 @@
 }
 
 ::selection {
-  background: oklch(0.53 0.194 261.8 / 0.18);
+  background: oklch(0.55 0.2 259 / 0.18);
+}
+
+/* Motion: fast and functional; nothing moves for reduced-motion users. */
+@keyframes pmc-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.animate-enter {
+  animation: pmc-enter 180ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Print: only the sticker sheet should come out of the printer */

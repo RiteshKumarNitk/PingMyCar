@@ -41,14 +41,15 @@ export function ConfirmModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-navy/50 p-4 backdrop-blur-[2px] sm:items-center"
       role="dialog"
       aria-modal="true"
-      aria-label={title}
+      aria-labelledby="confirm-modal-title"
+      aria-describedby="confirm-modal-description"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-lg"
+        className="animate-enter w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-raised sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-3">
@@ -56,19 +57,18 @@ export function ConfirmModal({
             <AlertTriangle className="h-5 w-5" aria-hidden />
         </span>
           <div>
-            <h2 className="font-semibold">{title}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+            <h2 id="confirm-modal-title" className="section-title">{title}</h2>
+            <p id="confirm-modal-description" className="supporting mt-1">{description}</p>
           </div>
         </div>
-        <div className="mt-5 flex justify-end gap-2">
-          <Button ref={cancelRef} type="button" variant="outline" size="sm" onClick={onClose}>
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button ref={cancelRef} type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
           <Button
             type="button"
             variant={destructive ? "destructive" : "default"}
-            size="sm"
-            disabled={busy}
+            loading={busy}
             onClick={onConfirm}
           >
             {busy ? (pendingLabel ?? "Working…") : confirmLabel}
