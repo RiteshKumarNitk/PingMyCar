@@ -23,6 +23,9 @@ export const PERMISSIONS = [
   "MESSAGE_READ_METADATA",
   "MESSAGE_READ_CONTENT",
   "MESSAGE_MODERATE",
+  // Permanently deleting a whole conversation (privacy/support/moderation).
+  // Separate from MESSAGE_MODERATE so "can block" never implies "can destroy".
+  "CONVERSATION_DELETE",
 
   // Reports
   "REPORT_READ",
@@ -70,6 +73,7 @@ export const ROLE_PERMISSIONS: Partial<Record<Exclude<AdminRole, "SUPER_ADMIN">,
     "MESSAGE_READ_METADATA",
     "MESSAGE_READ_CONTENT",
     "MESSAGE_MODERATE",
+    "CONVERSATION_DELETE",
     "REPORT_READ",
     "REPORT_MANAGE",
     "ANALYTICS_READ",
@@ -102,6 +106,7 @@ export const ROLE_PERMISSIONS: Partial<Record<Exclude<AdminRole, "SUPER_ADMIN">,
     "QR_MANAGE",
     "MESSAGE_READ_METADATA",
     "MESSAGE_MODERATE",
+    "CONVERSATION_DELETE",
     "REPORT_READ",
     "REPORT_MANAGE",
     "STICKER_READ",

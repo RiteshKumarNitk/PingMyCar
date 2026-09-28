@@ -6,6 +6,7 @@ import { reasonLabel } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { MessageThread } from "@/components/messages/MessageThread";
 import { BlockConversationButton } from "@/components/messages/BlockConversationButton";
+import { DeleteConversationButton } from "@/components/messages/DeleteConversationButton";
 
 export const metadata = { title: "Message" };
 
@@ -98,6 +99,10 @@ export default async function MessageThreadPage({ params }: { params: Promise<{ 
           <BlockConversationButton conversationId={conversation.id} />
         </div>
       )}
+
+      <div className="mt-4">
+        <DeleteConversationButton conversationId={conversation.id} />
+      </div>
     </div>
   );
 }

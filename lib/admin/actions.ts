@@ -190,17 +190,26 @@ export async function updateReportStatus(
 
 /* ------------------------------------------------- message content access */
 
-export async function readMessageContent(
-  conversationId: string,
-  reason: string
-): Promise<ActionResult> {
+export type RevealedMessage = { senderType: "VISITOR" | "OWNER"; body: string; createdAt: string };
+export type ContentResult = { ok: true; messages: RevealedMessage[] } | { ok: false; error: string };
+
+/**
+ * Returns a conversation's message bodies to an admin holding
+ * MESSAGE_READ_CONTENT. The audit event is written BEFORE any content is
+ * returned, so every view is tied to a logged reason. Bodies are never put in
+ * the audit row — only the count.
+ */
+export async function readMessageContent(conversationId: string, reason: string): Promise<ContentResult> {
   if (reason.trim().length < 4) return { ok: false, error: "A reason is required." };
   const g = await guard("MESSAGE_READ_CONTENT");
   if ("error" in g) return { ok: false, error: g.error };
 
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
-    select: { id: true, messages: { select: { id: true }, take: 1 } },
+    select: {
+      id: true,
+      messages: { orderBy: { createdAt: "asc" }, select: { senderType: true, body: true, createdAt: true } },
+    },
   });
   if (!conversation) return { ok: false, error: "Conversation not found." };
 
@@ -212,7 +221,85 @@ export async function readMessageContent(
     resourceId: conversationId,
     severity: "WARNING",
     reason,
+    metadata: { count: conversation.messages.length, actorRole: g.admin.role },
   });
 
+  return {
+    ok: true,
+    messages: conversation.messages.map((m) => ({
+      senderType: m.senderType,
+      body: m.body,
+      createdAt: m.createdAt.toISOString(),
+    })),
+  };
+}
+
+/* --------------------------------------------------- conversation actions */
+
+/** Block (stop all replies) or reopen a conversation. */
+export async function moderateConversation(
+  conversationId: string,
+  toStatus: "BLOCKED" | "OPEN",
+  reason: string
+): Promise<ActionResult> {
+  if (reason.trim().length < 4) return { ok: false, error: "A reason is required." };
+  const g = await guard("MESSAGE_MODERATE");
+  if ("error" in g) return { ok: false, error: g.error };
+
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: { status: true },
+  });
+  if (!conversation) return { ok: false, error: "Conversation not found." };
+  if (conversation.status === toStatus) return { ok: false, error: `Conversation is already ${toStatus}.` };
+
+  await prisma.conversation.update({ where: { id: conversationId }, data: { status: toStatus } });
+
+  await audit({
+    adminId: g.admin.user.id,
+    action: "ADMIN_MODERATED_CONVERSATION",
+    category: "MESSAGE",
+    resourceType: "CONVERSATION",
+    resourceId: conversationId,
+    reason,
+    metadata: { fromStatus: conversation.status, toStatus, actorRole: g.admin.role },
+  });
+
+  revalidatePath("/admin/messages");
+  revalidatePath(`/admin/messages/${conversationId}`);
+  return { ok: true };
+}
+
+/**
+ * Permanently deletes a conversation (messages and reports cascade) for
+ * privacy/support/moderation reasons. The audit row keeps who/why/how many —
+ * never the content.
+ */
+export async function deleteConversation(conversationId: string, reason: string): Promise<ActionResult> {
+  if (reason.trim().length < 4) return { ok: false, error: "A reason is required." };
+  const g = await guard("CONVERSATION_DELETE");
+  if ("error" in g) return { ok: false, error: g.error };
+
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: { id: true, _count: { select: { messages: true, reports: true } } },
+  });
+  if (!conversation) return { ok: false, error: "Conversation not found." };
+
+  await prisma.conversation.delete({ where: { id: conversationId } });
+
+  await audit({
+    adminId: g.admin.user.id,
+    action: "ADMIN_DELETED_CONVERSATION",
+    category: "MESSAGE",
+    resourceType: "CONVERSATION",
+    resourceId: conversationId,
+    severity: "WARNING",
+    reason,
+    metadata: { count: conversation._count.messages, actorRole: g.admin.role },
+  });
+
+  revalidatePath("/admin/messages");
+  revalidatePath("/admin/reports");
   return { ok: true };
 }

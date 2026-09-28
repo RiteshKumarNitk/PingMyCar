@@ -64,12 +64,24 @@ test.describe("RBAC role→permission map", () => {
     expect(withSettings).toEqual(["SUPER_ADMIN"]);
   });
 
+  test("conversation deletion is explicit: MODERATOR, ADMIN, SUPER_ADMIN only", () => {
+    const withDelete = ALL_ROLES.filter((r) => roleHasPermission(r, "CONVERSATION_DELETE"));
+    expect(withDelete).toEqual(["MODERATOR", "ADMIN", "SUPER_ADMIN"]);
+  });
+
+  test("SUPPORT sees conversation metadata but not content, moderation, or deletion", () => {
+    expect(roleHasPermission("SUPPORT", "MESSAGE_READ_METADATA")).toBe(true);
+    expect(roleHasPermission("SUPPORT", "MESSAGE_READ_CONTENT")).toBe(false);
+    expect(roleHasPermission("SUPPORT", "MESSAGE_MODERATE")).toBe(false);
+    expect(roleHasPermission("SUPPORT", "CONVERSATION_DELETE")).toBe(false);
+  });
+
   test("roles that can manage can also read (no manage-without-read)", () => {
     for (const role of ALL_ROLES) {
       if (roleHasPermission(role, "VEHICLE_MANAGE")) {
         expect(roleHasPermission(role, "VEHICLE_READ")).toBe(true);
       }
-      if (roleHasPermission(role, "MESSAGE_MODERATE")) {
+      if (roleHasPermission(role, "MESSAGE_MODERATE") || roleHasPermission(role, "CONVERSATION_DELETE")) {
         expect(roleHasPermission(role, "MESSAGE_READ_METADATA")).toBe(true);
       }
     }
