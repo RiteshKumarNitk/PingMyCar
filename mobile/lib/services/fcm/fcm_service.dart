@@ -42,9 +42,21 @@ class FcmService {
     importance: Importance.defaultImportance,
   );
 
-  /// Boot local notifications for foreground display.
+  /// Boot local notifications for foreground display. Must run before any
+  /// show(); taps on foreground banners route like FCM taps.
   Future<void> ensureInitialized() async {
     if (!_firebaseAvailable) return;
+    await _flutterLocalNotifications.initialize(
+      const InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        iOS: DarwinInitializationSettings(
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        ),
+      ),
+      onDidReceiveNotificationResponse: (response) => _deps.deepLinkSignal.emitRoute(response.payload),
+    );
     await _flutterLocalNotifications
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(_channel);
@@ -130,8 +142,10 @@ class FcmService {
     if (notification == null) return;
     await _flutterLocalNotifications.show(
       DateTime.now().millisecondsSinceEpoch % 0x7fffffff,
-      notification.title ?? 'PingMyCar',
-      notification.body ?? 'New message about your vehicle.',
+      notification.title ?? 'New message about your vehicle',
+      // Generic body: the visitor's words stay inside the app, behind the
+      // authenticated conversation screen — not on the banner.
+      'Tap to open the private conversation.',
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'pingmycar_messages',
@@ -149,14 +163,20 @@ class FcmService {
 
 extension RemoteMessageRoute on RemoteMessage {
   /// The backend sends `data.route` like `/dashboard/messages/<id>` — the
-  /// same route shape the web app uses. Nothing here is trusted: the route
-  /// is only a hint, and the backend re-verifies ownership when the message
-  /// is fetched.
-  String? get routeFromData {
-    final route = data['route'] as String?;
-    if (route == null || !route.startsWith('/dashboard/messages/')) return null;
-    return route;
-  }
+  /// web app's route shape — mapped here to the app's `/messages/<id>`.
+  /// Nothing here is trusted: the route is only a hint, and the backend
+  /// re-verifies ownership when the conversation is fetched.
+  String? get routeFromData => appRouteForNotification(data['route'] as String?);
+}
+
+/// Maps a backend notification route to an app route (or null if unknown).
+String? appRouteForNotification(String? route) {
+  const prefix = '/dashboard/messages/';
+  if (route == null || !route.startsWith(prefix)) return null;
+  final id = route.substring(prefix.length);
+  // Conversation ids are UUIDs — reject anything that could smuggle a path.
+  if (!RegExp(r'^[0-9a-fA-F-]{8,64}$').hasMatch(id)) return null;
+  return '/messages/$id';
 }
 
 /// Must be a top-level function so background isolates can resume handling.

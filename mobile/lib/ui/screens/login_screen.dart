@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config.dart';
 import '../../core/api_error.dart';
 import '../../providers.dart';
+import '../components/components.dart';
 
 /// The only sign-in surface: Continue with Google (backend Google OAuth).
 /// No OTP, no password, no magic link — by product rule.
@@ -34,80 +35,129 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final t = Theme.of(context).textTheme;
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Spacer(),
-              Container(
-                width: 88,
-                height: 88,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8EFFC),
-                  borderRadius: BorderRadius.circular(24),
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: Space.xl),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: Space.xl),
+                    const Align(alignment: Alignment.centerLeft, child: BrandLogo(markSize: 36)),
+                    const Spacer(),
+                    Text(
+                      'Connect with your vehicle without sharing personal information.',
+                      style: t.headlineMedium,
+                    ),
+                    const SizedBox(height: Space.sm),
+                    Text(
+                      'People who scan your QR sticker can message you privately. You reply from here.',
+                      style: t.bodyLarge?.copyWith(color: c.slate),
+                    ),
+                    const SizedBox(height: Space.xxl),
+                    if (!AppConfig.googleConfigured) ...[
+                      Container(
+                        padding: const EdgeInsets.all(Space.sm + 2),
+                        decoration: BoxDecoration(
+                          color: c.warningSoft,
+                          borderRadius: BorderRadius.circular(Radii.md),
+                        ),
+                        child: Text(
+                          "Google sign-in isn't configured for this build. Run:\n"
+                          'flutter run --dart-define=PINGMYCAR_GOOGLE_CLIENT_ID=<web-client-id>\n'
+                          'See mobile/lib/config.dart for the full setup.',
+                          style: t.bodySmall?.copyWith(color: c.warning, height: 1.45),
+                        ),
+                      ),
+                      const SizedBox(height: Space.md),
+                    ],
+                    _GoogleButton(loading: _loading, onPressed: _signIn),
+                    if (_error != null) ...[
+                      const SizedBox(height: Space.sm),
+                      Semantics(
+                        liveRegion: true,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: 10),
+                          decoration: BoxDecoration(color: c.dangerSoft, borderRadius: BorderRadius.circular(Radii.md)),
+                          child: Row(
+                            children: [
+                              Icon(Icons.error_outline, size: 18, color: c.danger),
+                              const SizedBox(width: Space.xs),
+                              Expanded(child: Text(_error!, style: t.bodyMedium?.copyWith(color: c.danger))),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: Space.md),
+                    const PrivacyLabel('Your contact details are never shared with visitors.', center: true),
+                    const Spacer(),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: Space.lg, top: Space.xl),
+                      child: Text(
+                        "Scanned a sticker? Visitors don't need this app — just send your message from the page that opened.",
+                        textAlign: TextAlign.center,
+                        style: t.bodySmall,
+                      ),
+                    ),
+                  ],
                 ),
-                child: const Text('🚗', style: TextStyle(fontSize: 44)),
               ),
-              const SizedBox(height: 24),
-              const Text(
-                'PingMyCar',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Color(0xFF0D1926)),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Contact your vehicle. Keep your number private.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 15, color: Color(0xFF5B6773)),
-              ),
-              const SizedBox(height: 48),
-              if (!AppConfig.googleConfigured)
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFDF3E2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    'Google sign-in isn\'t configured for this build. Run:\n'
-                    'flutter run --dart-define=PINGMYCAR_GOOGLE_CLIENT_ID=<web-client-id>\n'
-                    'See mobile/lib/config.dart for the full setup.',
-                    style: TextStyle(fontSize: 12.5, color: Color(0xFF92610A), height: 1.4),
-                  ),
-                ),
-              FilledButton.icon(
-                onPressed: _loading ? null : _signIn,
-                icon: _loading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const _GoogleG(),
-                label: Text(_loading ? 'Signing in…' : 'Continue with Google'),
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: 16),
-                Text(
-                  _error!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Color(0xFFDC2626), fontSize: 14),
-                ),
-              ],
-              const Spacer(),
-              const Text(
-                'Visitors never need this app — they just scan the QR sticker.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12.5, color: Color(0xFF9AA6B2)),
-              ),
-            ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Primary owner CTA — Google is the only owner sign-in.
+class _GoogleButton extends StatelessWidget {
+  const _GoogleButton({required this.loading, required this.onPressed});
+
+  final bool loading;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return Semantics(
+      button: true,
+      label: loading ? 'Signing in with Google' : 'Continue with Google',
+      excludeSemantics: true,
+      child: FilledButton(
+        onPressed: loading ? null : onPressed,
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(56),
+          disabledBackgroundColor: c.primary.withValues(alpha: 0.7),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(7)),
+              child: loading
+                  ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: c.primary))
+                  : const _GoogleG(),
+            ),
+            const SizedBox(width: Space.sm),
+            Flexible(
+              child: Text(
+                loading ? 'Signing in…' : 'Continue with Google',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -129,45 +179,33 @@ class _GoogleG extends StatelessWidget {
 }
 
 class _GoogleGPainter extends CustomPainter {
+  // Google brand colors — must stay exact (brand asset, not theme colors).
+  static const _blue = Color(0xFF4285F4);
+  static const _green = Color(0xFF34A853);
+  static const _yellow = Color(0xFFFBBC05);
+  static const _red = Color(0xFFEA4335);
+
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width / 24;
-    final blue = Paint()..color = const Color(0xFF4285F4);
-    final green = Paint()..color = const Color(0xFF34A853);
-    final yellow = Paint()..color = const Color(0xFFFBBC05);
-    final red = Paint()..color = const Color(0xFFEA4335);
+    final stroke = 4.2 * s;
+    final center = Offset(12 * s, 12 * s);
+    final rect = Rect.fromCircle(center: center, radius: 9 * s);
+    Paint arc(Color color) => Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke;
+    double deg(double d) => d * 3.1415926535 / 180;
 
-    // Blue bar: right side of the G.
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(12 * s, 10.27 * s, 11.49 * s, 4.51 * s),
-        Radius.circular(2.25 * s),
-      ),
-      blue,
-    );
-    // Green: bottom-left arc.
-    canvas.drawArc(
-      Rect.fromLTWH(1.29 * s, 1.29 * s, 21.42 * s, 21.42 * s),
-      0.35, // radians, sweep below-left
-      1.1,
-      true,
-      green,
-    );
-    // Yellow: left bar.
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 10.27 * s, 4.6 * s, 7.6 * s),
-        Radius.circular(2.3 * s),
-      ),
-      yellow,
-    );
-    // Red: top-left arc.
-    canvas.drawArc(
-      Rect.fromLTWH(1.29 * s, 1.29 * s, 21.42 * s, 21.42 * s),
-      3.5,
-      1.2,
-      true,
-      red,
+    // Ring segments (angles clockwise from 3 o'clock), open at the upper right.
+    canvas.drawArc(rect, deg(-150), deg(108), false, arc(_red));
+    canvas.drawArc(rect, deg(150), deg(60), false, arc(_yellow));
+    canvas.drawArc(rect, deg(45), deg(105), false, arc(_green));
+    canvas.drawArc(rect, deg(0), deg(46), false, arc(_blue));
+    // Blue crossbar from the center to the ring's right edge.
+    canvas.drawRect(
+      Rect.fromLTRB(12 * s, 12 * s - stroke / 2, 12 * s + 9 * s + stroke / 2, 12 * s + stroke / 2),
+      Paint()..color = _blue,
     );
   }
 

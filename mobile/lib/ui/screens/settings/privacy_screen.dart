@@ -1,79 +1,100 @@
 import 'package:flutter/material.dart';
+import '../../components/components.dart';
 
 /// Static privacy explainer — reflects the backend's real behavior:
-/// visitors never see owner contact info; QR only exposes the public flow.
+/// visitors never see owner contact info; the QR only exposes the public flow.
 class PrivacyScreen extends StatelessWidget {
   const PrivacyScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final t = Theme.of(context).textTheme;
     return Scaffold(
       appBar: AppBar(title: const Text('Privacy')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(Space.page, Space.xs, Space.page, Space.xxl),
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('What visitors see', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF0D1926))),
-                  const SizedBox(height: 10),
-                  _bullet('Your vehicle\'s name/type — if you enable it per vehicle'),
-                  _bullet('A form to send you a private message'),
-                  _bullet('Nothing else, unless you explicitly turn it on'),
-                ],
-              ),
-            ),
+          Text('Visitors reach you through PingMyCar — never directly.', style: t.bodyLarge?.copyWith(color: c.slate)),
+          const SizedBox(height: Space.lg),
+          _Group(
+            title: 'What visitors can see',
+            icon: Icons.check_circle_outline,
+            color: c.success,
+            items: const [
+              'Your vehicle\'s name or type — only if you enable it for that vehicle',
+              'A form to send you a private message',
+            ],
           ),
-          const SizedBox(height: 12),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('What visitors never see', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFFDC2626))),
-                  const SizedBox(height: 10),
-                  _bullet('Your phone number'),
-                  _bullet('Your email address'),
-                  _bullet('Your registration number (unless you enable it)'),
-                  _bullet('Your Google account or profile photo (unless enabled)'),
-                ],
-              ),
-            ),
+          const SizedBox(height: Space.md),
+          _Group(
+            title: 'What visitors never see',
+            icon: Icons.remove_circle_outline,
+            color: c.danger,
+            items: const [
+              'Your phone number',
+              'Your email address',
+              'Your registration number (unless you enable it)',
+              'Your Google account or profile photo (unless you enable it)',
+            ],
           ),
-          const SizedBox(height: 12),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('About the QR code', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'The QR contains only a public link to your vehicle\'s contact page — no personal information, no ids that expose your account. You can pause it anytime, or regenerate it to make old stickers stop working.',
-                    style: TextStyle(fontSize: 13.5, height: 1.4, color: Color(0xFF5B6773)),
-                  ),
-                ],
-              ),
+          const SizedBox(height: Space.md),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.qr_code_2_outlined, color: c.primary),
+                    const SizedBox(width: Space.sm),
+                    Text('About the QR code', style: t.titleSmall),
+                  ],
+                ),
+                const SizedBox(height: Space.xs),
+                Text(
+                  'The QR contains only a public link to your vehicle\'s contact page — no personal information and no account ids. You can turn it off anytime, or regenerate it so old stickers stop working.',
+                  style: t.bodyMedium,
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _bullet(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('•  ', style: TextStyle(fontWeight: FontWeight.w800)),
-            Expanded(child: Text(text, style: const TextStyle(fontSize: 13.5, height: 1.35))),
-          ],
-        ),
-      );
+class _Group extends StatelessWidget {
+  const _Group({required this.title, required this.icon, required this.color, required this.items});
+
+  final String title;
+  final IconData icon;
+  final Color color;
+  final List<String> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: t.titleSmall),
+          const SizedBox(height: Space.sm),
+          for (final item in items)
+            Padding(
+              padding: const EdgeInsets.only(bottom: Space.xs),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(icon, size: 18, color: color),
+                  const SizedBox(width: Space.sm),
+                  Expanded(child: Text(item, style: t.bodyMedium)),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }

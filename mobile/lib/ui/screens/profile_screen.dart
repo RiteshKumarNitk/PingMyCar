@@ -2,99 +2,144 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers.dart';
+import '../components/components.dart';
 
-/// Profile: Google identity from the backend session + entry points to
-/// settings. No extra personal information is collected or shown.
-class ProfileScreen extends ConsumerWidget {
+/// Profile: the Google identity from the backend session + settings entry
+/// points. No phone/OTP settings exist — owners sign in with Google only.
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  bool _signingOut = false;
+
+  Future<void> _signOut() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Log out?'),
+        content: const Text('You\'ll need to continue with Google again. This device will stop receiving notifications.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Log out')),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted || _signingOut) return;
+    setState(() => _signingOut = true);
+    await ref.read(authControllerProvider.notifier).signOut();
+    // The router redirects to sign-in; no need to reset state here.
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final t = Theme.of(context).textTheme;
     final user = ref.watch(authControllerProvider).user;
+    final name = user?.hasRealName == true ? user!.name : 'PingMyCar owner';
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(Space.page, Space.xs, Space.page, Space.xxl),
         children: [
-          const SizedBox(height: 8),
-          CircleAvatar(
-            radius: 44,
-            backgroundColor: const Color(0xFFE8EFFC),
-            backgroundImage: user?.image != null ? NetworkImage(user!.image!) : null,
-            child: user?.image == null
-                ? Text(
-                    (user?.name ?? '?').isNotEmpty ? user!.name[0].toUpperCase() : '?',
-                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700, color: Color(0xFF2563EB)),
-                  )
-                : null,
+          AppCard(
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: c.primarySoft,
+                  foregroundImage: user?.image != null ? NetworkImage(user!.image!) : null,
+                  child: Text(initial, style: t.headlineSmall?.copyWith(color: c.primary)),
+                ),
+                const SizedBox(width: Space.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: t.titleMedium),
+                      const SizedBox(height: 2),
+                      Text(user?.email ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: t.bodyMedium),
+                      const SizedBox(height: Space.xs),
+                      const StatusBadge(StatusKind.verified, label: 'Signed in with Google'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 14),
-          Text(
-            user?.hasRealName == true ? user!.name : 'PingMyCar owner',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: Color(0xFF0D1926)),
-          ),
-          Text(
-            user?.email ?? '',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 13.5, color: Color(0xFF5B6773)),
-          ),
-          const SizedBox(height: 20),
-          Card(
+          const SizedBox(height: Space.sm),
+          const PrivacyLabel('Your contact details are never shared with visitors.', icon: Icons.shield_outlined),
+          const SizedBox(height: Space.xl),
+          const SectionHeader(title: 'Settings'),
+          AppCard(
+            padding: EdgeInsets.zero,
             child: Column(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.notifications_outlined, color: Color(0xFF2563EB)),
-                  title: const Text('Notifications'),
-                  subtitle: const Text('Permission and preferences'),
-                  trailing: const Icon(Icons.chevron_right),
+                _Row(
+                  icon: Icons.notifications_outlined,
+                  title: 'Notifications',
+                  subtitle: 'New message alerts on this device',
                   onTap: () => context.push('/settings/notifications'),
                 ),
-                const Divider(indent: 16, endIndent: 16),
-                ListTile(
-                  leading: const Icon(Icons.shield_outlined, color: Color(0xFF2563EB)),
-                  title: const Text('Privacy'),
-                  subtitle: const Text('What visitors can and cannot see'),
-                  trailing: const Icon(Icons.chevron_right),
+                const Divider(indent: 56),
+                _Row(
+                  icon: Icons.shield_outlined,
+                  title: 'Privacy',
+                  subtitle: 'What visitors can and cannot see',
                   onTap: () => context.push('/settings/privacy'),
                 ),
-                const Divider(indent: 16, endIndent: 16),
-                ListTile(
-                  leading: const Icon(Icons.settings_outlined, color: Color(0xFF2563EB)),
-                  title: const Text('Settings'),
-                  subtitle: const Text('Account, app info'),
-                  trailing: const Icon(Icons.chevron_right),
+                const Divider(indent: 56),
+                _Row(
+                  icon: Icons.sell_outlined,
+                  title: 'Stickers',
+                  subtitle: 'Designs, sizes and printing',
+                  onTap: () => context.push('/stickers'),
+                ),
+                const Divider(indent: 56),
+                _Row(
+                  icon: Icons.manage_accounts_outlined,
+                  title: 'Account',
+                  subtitle: 'Google account and app info',
                   onTap: () => context.push('/settings'),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.logout, color: Color(0xFFDC2626)),
-              title: const Text('Sign out', style: TextStyle(color: Color(0xFFDC2626))),
-              onTap: () async {
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Sign out?'),
-                    content: const Text('You will need to sign in with Google again. This device will stop receiving notifications.'),
-                    actions: [
-                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                      FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Sign Out')),
-                    ],
-                  ),
-                );
-                if (confirmed == true && context.mounted) {
-                  await ref.read(authControllerProvider.notifier).signOut();
-                }
-              },
-            ),
+          const SizedBox(height: Space.xl),
+          AppButton(
+            label: 'Log out',
+            icon: Icons.logout_outlined,
+            variant: AppButtonVariant.secondary,
+            loading: _signingOut,
+            onPressed: _signOut,
           ),
         ],
       ),
+    );
+  }
+}
+
+class _Row extends StatelessWidget {
+  const _Row({required this.icon, required this.title, required this.subtitle, required this.onTap});
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
     );
   }
 }

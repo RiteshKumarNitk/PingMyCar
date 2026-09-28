@@ -2,7 +2,7 @@
 ///
 /// The UI only ever shows [message] — never raw bodies, stack traces, or
 /// server internals (no SQL/Prisma errors, no secrets).
-enum ApiErrorKind { network, unauthorized, forbidden, notFound, validation, rateLimited, server, unknown }
+enum ApiErrorKind { network, unauthorized, forbidden, notFound, conflict, validation, rateLimited, server, unknown }
 
 class ApiException implements Exception {
   const ApiException(this.kind, this.message, {this.statusCode});
@@ -32,6 +32,16 @@ class Api {
         return ApiException(ApiErrorKind.forbidden, "You don't have access to this.", statusCode: status);
       case 404:
         return ApiException(ApiErrorKind.notFound, 'This item no longer exists.', statusCode: status);
+      case 409:
+        // Conflicts carry a human reason from the backend (e.g. "This
+        // conversation has an open report…"); fall back to a generic hint.
+        return ApiException(
+          ApiErrorKind.conflict,
+          serverMessage == null || serverMessage.isEmpty
+              ? 'Something changed in the meantime. Refresh and try again.'
+              : _friendlyValidation(serverMessage),
+          statusCode: status,
+        );
       case 422:
       case 400:
         return ApiException(ApiErrorKind.validation, _friendlyValidation(serverMessage), statusCode: status);

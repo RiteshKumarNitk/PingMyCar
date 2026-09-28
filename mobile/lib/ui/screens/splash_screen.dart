@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../providers.dart';
+import '../components/components.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -30,67 +31,36 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       return;
     }
 
-    context.go('/welcome');
+    context.go('/login');
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final t = Theme.of(context).textTheme;
     return Scaffold(
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF0D1926), Color(0xFF1E3A5F)],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 110,
-                  height: 110,
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(36, 255, 255, 255),
-                    borderRadius: BorderRadius.circular(32),
-                  ),
-                  child: const Icon(
-                    Icons.qr_code_2_rounded,
-                    size: 56,
-                    color: Colors.white,
-                  ),
+      backgroundColor: c.navy,
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const BrandMark(size: 72, inverse: true),
+              const SizedBox(height: Space.lg),
+              Text('PingMyCar', style: t.headlineMedium?.copyWith(color: c.onNavy)),
+              const SizedBox(height: Space.xs),
+              Text('Private vehicle contact', style: t.bodyMedium?.copyWith(color: c.onNavy.withValues(alpha: 0.7))),
+              const SizedBox(height: Space.xxl),
+              SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.4,
+                  color: c.onNavy.withValues(alpha: 0.85),
+                  semanticsLabel: 'Loading',
                 ),
-                const SizedBox(height: 28),
-                const Text(
-                  'PingMyCar',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: -0.8,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Private vehicle contact',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFFCFD9E6),
-                  ),
-                ),
-                const SizedBox(height: 26),
-                const SizedBox(
-                  width: 28,
-                  height: 28,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

@@ -4,11 +4,14 @@ import 'package:go_router/go_router.dart';
 import '../../core/api_error.dart';
 import '../../models/models.dart';
 import '../../providers.dart';
+import '../components/components.dart';
 
-/// Owner inbox: All / Unread tabs plus an optional vehicle filter, mirroring
-/// the web dashboard's semantics. Unread state is server-side (readAt).
+/// Owner inbox: All / Unread plus an optional vehicle filter (also reachable
+/// as `/messages?vehicle=ID`). Unread state is server-side (readAt).
 class MessagesScreen extends ConsumerStatefulWidget {
-  const MessagesScreen({super.key});
+  const MessagesScreen({super.key, this.initialVehicleId});
+
+  final String? initialVehicleId;
 
   @override
   ConsumerState<MessagesScreen> createState() => _MessagesScreenState();
@@ -17,16 +20,23 @@ class MessagesScreen extends ConsumerStatefulWidget {
 class _MessagesScreenState extends ConsumerState<MessagesScreen> {
   List<ConversationSummary>? _all;
   List<Vehicle>? _vehicles;
-  String? _error;
+  Object? _error;
   bool _unreadOnly = false;
   String? _vehicleFilter;
-  bool _loaded = false;
+  late final UnreadCountSignal _signal;
 
   @override
   void initState() {
     super.initState();
+    _vehicleFilter = widget.initialVehicleId;
     _load();
-    ref.read(unreadCountSignalProvider).addListener(_refreshOnPush);
+    _signal = ref.read(unreadCountSignalProvider)..addListener(_refreshOnPush);
+  }
+
+  @override
+  void dispose() {
+    _signal.removeListener(_refreshOnPush);
+    super.dispose();
   }
 
   void _refreshOnPush() {
@@ -44,38 +54,83 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
         _all = futures[0] as List<ConversationSummary>;
         _vehicles = futures[1] as List<Vehicle>?;
         _error = null;
-        _loaded = true;
       });
     } on ApiException catch (e) {
       if (!mounted) return;
-      setState(() {
-        _error = e.message;
-        _loaded = true;
-      });
+      if (_all != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), action: SnackBarAction(label: 'Retry', onPressed: _load)),
+        );
+      }
+      setState(() => _error = e);
     }
   }
 
   List<ConversationSummary> get _visible {
-    var items = _all ?? const <ConversationSummary>[];
-    if (_unreadOnly) items = items.where((c) => c.unreadCount > 0).toList();
-    return items;
+    final items = _all ?? const <ConversationSummary>[];
+    return _unreadOnly ? items.where((c) => c.unreadCount > 0).toList() : items;
+  }
+
+  Vehicle? get _filterVehicle =>
+      _vehicleFilter == null ? null : _vehicles?.where((v) => v.id == _vehicleFilter).firstOrNull;
+
+  Future<void> _pickVehicle() async {
+    final vehicles = _vehicles ?? const <Vehicle>[];
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.only(bottom: Space.md),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(Space.page, 0, Space.page, Space.xs),
+              child: Text('Filter by vehicle', style: Theme.of(context).textTheme.titleMedium),
+            ),
+            ListTile(
+              leading: const Icon(Icons.all_inclusive_outlined),
+              title: const Text('All vehicles'),
+              trailing: _vehicleFilter == null ? const Icon(Icons.check) : null,
+              onTap: () => Navigator.pop(context, ''),
+            ),
+            for (final v in vehicles)
+              ListTile(
+                leading: VehicleAvatar(vehicle: v, size: 36),
+                title: Text(v.name),
+                trailing: _vehicleFilter == v.id ? const Icon(Icons.check) : null,
+                onTap: () => Navigator.pop(context, v.id),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _vehicleFilter = picked.isEmpty ? null : picked;
+      _all = null;
+    });
+    _load();
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final t = Theme.of(context).textTheme;
     final items = _visible;
+    final filter = _filterVehicle;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Messages'),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(64),
+          preferredSize: const Size.fromHeight(60),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            padding: const EdgeInsets.fromLTRB(Space.page, 0, Space.page, Space.sm),
             child: Row(
               children: [
                 Expanded(
                   child: SegmentedButton<bool>(
+                    showSelectedIcon: false,
                     segments: const [
                       ButtonSegment(value: false, label: Text('All')),
                       ButtonSegment(value: true, label: Text('Unread')),
@@ -84,20 +139,17 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                     onSelectionChanged: (s) => setState(() => _unreadOnly = s.first),
                   ),
                 ),
-                const SizedBox(width: 10),
-                DropdownMenu<String>(
-                  width: 160,
-                  requestFocusOnTap: false,
-                  initialSelection: _vehicleFilter,
-                  hintText: 'Vehicle',
-                  dropdownMenuEntries: [
-                    const DropdownMenuEntry(value: '', label: 'All vehicles'),
-                    ...?_vehicles?.map((v) => DropdownMenuEntry(value: v.id, label: v.name)),
-                  ],
-                  onSelected: (v) {
-                    setState(() => _vehicleFilter = v!.isEmpty ? null : v);
-                    _load();
-                  },
+                const SizedBox(width: Space.xs),
+                Flexible(
+                  child: ActionChip(
+                    avatar: Icon(Icons.directions_car_outlined, size: 18, color: filter != null ? c.primary : c.slate),
+                    label: Text(filter?.name ?? 'All vehicles', overflow: TextOverflow.ellipsis),
+                    labelStyle: t.labelMedium?.copyWith(color: filter != null ? c.primary : c.slate),
+                    side: BorderSide(color: filter != null ? c.primary.withValues(alpha: 0.4) : c.border),
+                    backgroundColor: filter != null ? c.primarySoft : c.surface,
+                    onPressed: _vehicles == null ? null : _pickVehicle,
+                    tooltip: 'Filter by vehicle',
+                  ),
                 ),
               ],
             ),
@@ -106,110 +158,59 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: _load,
-        child: _error != null && _all == null
-            ? ListView(children: [
-                const SizedBox(height: 120),
-                Center(child: Text(_error!, textAlign: TextAlign.center)),
-              ])
-            : !_loaded
-                ? const SizedBox()
-                : items.isEmpty
-                    ? ListView(
-                        children: [
-                          const SizedBox(height: 110),
-                          Icon(_unreadOnly ? Icons.mark_email_read_outlined : Icons.mail_outline, size: 48, color: const Color(0xFF9AA6B2)),
-                          const SizedBox(height: 12),
-                          Text(
-                            _unreadOnly ? "You're all caught up." : 'No messages here yet.',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFF0D1926)),
+        child: _all == null
+            ? (_error != null
+                ? ScrollableCenter(child: ErrorState(error: _error!, onRetry: _load))
+                : const LoadingSkeleton(rows: 5, header: false))
+            : items.isEmpty
+                ? ScrollableCenter(
+                    child: _unreadOnly
+                        ? const EmptyState(
+                            icon: Icons.mark_chat_read_outlined,
+                            title: "You're all caught up",
+                            message: 'No unread messages. New ones will show up here.',
+                          )
+                        : EmptyState(
+                            icon: Icons.chat_bubble_outline,
+                            title: 'No messages yet',
+                            message: 'When someone scans your QR code, their message will appear here.',
+                            actionLabel: (_vehicles?.isEmpty ?? true) ? 'Add Vehicle' : 'View QR',
+                            actionIcon: (_vehicles?.isEmpty ?? true) ? Icons.add : Icons.qr_code_2_outlined,
+                            onAction: () {
+                              final vehicles = _vehicles ?? const <Vehicle>[];
+                              if (vehicles.isEmpty) {
+                                context.push('/vehicles/new');
+                              } else {
+                                context.push('/vehicles/${(filter ?? vehicles.first).id}/qr');
+                              }
+                            },
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            _unreadOnly
-                                ? 'No unread messages. New ones will show up here.'
-                                : 'When someone scans your vehicle’s QR, their message will appear here.',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Color(0xFF5B6773)),
-                          ),
-                        ],
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: items.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
-                        itemBuilder: (context, i) {
-                          final c = items[i];
-                          return Card(
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(16),
-                              onTap: () => context.push('/messages/${c.id}'),
-                              child: Padding(
-                                padding: const EdgeInsets.all(14),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            c.reasonLabel,
-                                            style: TextStyle(
-                                              fontWeight: c.unreadCount > 0 ? FontWeight.w800 : FontWeight.w600,
-                                              color: const Color(0xFF0D1926),
-                                            ),
-                                          ),
-                                        ),
-                                        _StatusChip(status: c.status),
-                                      ],
-                                    ),
-                                    if (c.lastMessageBody != null) ...[
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        c.lastMessageBody!,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 13.5, color: Color(0xFF5B6773)),
-                                      ),
-                                    ],
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        Expanded(child: Text(c.vehicleName, style: const TextStyle(fontSize: 12, color: Color(0xFF9AA6B2)))),
-                                        if (c.unreadCount > 0)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                            decoration: BoxDecoration(color: const Color(0xFFE8EFFC), borderRadius: BorderRadius.circular(10)),
-                                            child: Text(
-                                              '${c.unreadCount} new',
-                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF2563EB)),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                  )
+                : ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(Space.page, Space.xs, Space.page, Space.xl),
+                    children: [
+                      AppCard(
+                        padding: EdgeInsets.zero,
+                        child: Column(
+                          children: [
+                            for (var i = 0; i < items.length; i++)
+                              MessagePreview(
+                                conversation: items[i],
+                                showDivider: i < items.length - 1,
+                                onTap: () async {
+                                  await context.push('/messages/${items[i].id}');
+                                  if (mounted) _load(); // read state changed server-side
+                                },
                               ),
-                            ),
-                          );
-                        },
+                          ],
+                        ),
                       ),
+                      const SizedBox(height: Space.md),
+                      const PrivacyLabel('Private conversations — your contact details stay hidden.', center: true),
+                    ],
+                  ),
       ),
     );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status});
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, color) = switch (status) {
-      'OPEN' => ('Open', const Color(0xFF16A34A)),
-      'BLOCKED' => ('Blocked', const Color(0xFFDC2626)),
-      _ => ('Closed', const Color(0xFF5B6773)),
-    };
-    return Text(label, style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: color));
   }
 }

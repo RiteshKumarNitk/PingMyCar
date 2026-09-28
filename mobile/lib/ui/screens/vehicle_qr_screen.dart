@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../../config.dart';
 import '../../core/api_error.dart';
 import '../../models/models.dart';
 import '../../providers.dart';
+import '../components/components.dart';
+import 'qr_actions.dart';
 
-/// Clean QR screen per spec: vehicle name, status, the QR itself, then
-/// Share / Save / Open Public Page / Sticker actions. The displayed QR is
-/// the real backend PNG (same publicToken as the web dashboard); Share and
-/// Save download the same bytes through the authenticated API.
+/// Dedicated QR screen. The QR shown is the real backend PNG (same
+/// publicToken as the web dashboard); Share / Download fetch the same bytes
+/// through the authenticated API. No QR generation or token logic here.
 class VehicleQrScreen extends ConsumerStatefulWidget {
   const VehicleQrScreen({super.key, required this.vehicleId});
 
@@ -26,7 +22,9 @@ class VehicleQrScreen extends ConsumerStatefulWidget {
 class _VehicleQrScreenState extends ConsumerState<VehicleQrScreen> {
   Vehicle? _vehicle;
   String? _authHeader;
-  String? _error;
+  Object? _error;
+  bool _sharing = false;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -46,146 +44,127 @@ class _VehicleQrScreenState extends ConsumerState<VehicleQrScreen> {
       });
     } on ApiException catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.message);
+      setState(() => _error = e);
     }
   }
 
-  String get _publicUrl => '${AppConfig.apiBaseUrl}/v/${_vehicle!.publicToken}';
-
-  Future<void> _shareQr() async {
+  Future<void> _guarded(bool Function() isBusy, void Function(bool) setBusy, Future<void> Function() action) async {
+    if (isBusy()) return;
+    setState(() => setBusy(true));
     try {
-      final file = await ref.read(vehicleRepositoryProvider).downloadQrPng(_vehicle!.id, _vehicle!.publicToken);
-      await Share.shareXFiles([XFile(file.path)], text: 'Scan to contact me about my ${_vehicle!.name}');
-    } on ApiException catch (e) {
-      _toast(e.message);
+      await action();
+    } finally {
+      if (mounted) setState(() => setBusy(false));
     }
-  }
-
-  Future<void> _saveQr() async {
-    try {
-      final docs = await getApplicationDocumentsDirectory();
-      final file = await ref.read(vehicleRepositoryProvider).downloadQrPng(
-            _vehicle!.id,
-            _vehicle!.publicToken,
-            toPath: '${docs.path}/pingmycar-qr-${_vehicle!.publicToken}.png',
-          );
-      _toast('QR saved: ${file.uri.pathSegments.last}');
-    } on ApiException catch (e) {
-      _toast(e.message);
-    }
-  }
-
-  Future<void> _openPublicPage() async {
-    final uri = Uri.parse(_publicUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      await Clipboard.setData(ClipboardData(text: _publicUrl));
-      _toast('Link copied');
-    }
-  }
-
-  void _toast(String message) {
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
     final v = _vehicle;
     return Scaffold(
-      appBar: AppBar(title: Text(v?.name ?? 'QR Code')),
-      body: _error != null && v == null
-          ? Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(_error!, textAlign: TextAlign.center)))
-          : v == null
-              ? const Center(child: CircularProgressIndicator())
-              : ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          children: [
-                            Text(v.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF0D1926))),
-                            if (v.registrationNumber?.isNotEmpty == true) ...[
-                              const SizedBox(height: 2),
-                              Text(v.registrationNumber!, style: const TextStyle(color: Color(0xFF5B6773))),
-                            ],
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  v.qrActive ? Icons.check_circle : Icons.pause_circle,
-                                  size: 14,
-                                  color: v.qrActive ? const Color(0xFF16A34A) : const Color(0xFFD97706),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  v.qrActive ? 'Active' : 'Paused',
-                                  style: TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: v.qrActive ? const Color(0xFF16A34A) : const Color(0xFFD97706),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            SizedBox(
-                              width: 240,
-                              height: 240,
-                              child: _authHeader == null
-                                  ? const Center(child: CircularProgressIndicator())
-                                  : Image.network(
-                                      '${AppConfig.apiBaseUrl}/api/vehicles/${v.id}/qr.png',
-                                      headers: {'Authorization': _authHeader!},
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (_, __, ___) => const Icon(Icons.qr_code_2, size: 64, color: Color(0xFF9AA6B2)),
-                                    ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              _publicUrl,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 11.5, color: Color(0xFF9AA6B2)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton.icon(
-                      onPressed: _shareQr,
-                      icon: const Icon(Icons.ios_share),
-                      label: const Text('Share QR'),
-                    ),
-                    const SizedBox(height: 10),
-                    OutlinedButton.icon(
-                      onPressed: _saveQr,
-                      icon: const Icon(Icons.download_outlined),
-                      label: const Text('Save QR'),
-                    ),
-                    const SizedBox(height: 10),
-                    OutlinedButton.icon(
-                      onPressed: _openPublicPage,
-                      icon: const Icon(Icons.open_in_new),
-                      label: const Text('Open Public Page'),
-                    ),
-                    const SizedBox(height: 10),
-                    OutlinedButton.icon(
-                      onPressed: () => context.push('/stickers/${v.id}'),
-                      icon: const Icon(Icons.sticky_note_2_outlined),
-                      label: const Text('Sticker'),
-                    ),
-                    const SizedBox(height: 10),
-                    OutlinedButton.icon(
-                      onPressed: () => context.push('/vehicles/${v.id}'),
-                      icon: const Icon(Icons.tune),
-                      label: const Text('Manage QR'),
-                    ),
-                  ],
+      appBar: AppBar(title: const Text('QR code')),
+      body: v == null
+          ? (_error != null
+              ? ScrollableCenter(child: ErrorState(error: _error!, onRetry: _load))
+              : const LoadingSkeleton(rows: 2, rowHeight: 200))
+          : _content(context, v),
+    );
+  }
+
+  Widget _content(BuildContext context, Vehicle v) {
+    final c = AppColors.of(context);
+    final t = Theme.of(context).textTheme;
+    final actions = QrActions(ref, context);
+    final width = MediaQuery.sizeOf(context).width;
+    final qrSize = (width - 2 * Space.page - 2 * Space.lg).clamp(180.0, 280.0).toDouble();
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(Space.page, Space.xs, Space.page, Space.xxl),
+      children: [
+        Semantics(header: true, child: Text('Let people contact you privately', style: t.headlineSmall)),
+        const SizedBox(height: Space.xs),
+        Text(
+          'Anyone can scan this QR code to send you a message without seeing your phone number or email.',
+          style: t.bodyMedium,
+        ),
+        const SizedBox(height: Space.lg),
+        Center(child: QrPreviewCard(vehicle: v, authHeader: _authHeader, qrSize: qrSize)),
+        const SizedBox(height: Space.md),
+        if (!v.qrActive)
+          Container(
+            padding: const EdgeInsets.all(Space.sm),
+            margin: const EdgeInsets.only(bottom: Space.md),
+            decoration: BoxDecoration(color: c.warningSoft, borderRadius: BorderRadius.circular(Radii.md)),
+            child: Row(
+              children: [
+                Icon(Icons.pause_circle_outline, size: 18, color: c.warning),
+                const SizedBox(width: Space.xs),
+                Expanded(
+                  child: Text(
+                    'This QR is turned off. Visitors see a paused page until you turn it back on.',
+                    style: t.bodySmall?.copyWith(color: c.warning),
+                  ),
                 ),
+              ],
+            ),
+          ),
+        AppButton(
+          label: 'Share',
+          icon: Icons.ios_share_outlined,
+          loading: _sharing,
+          onPressed: () => _guarded(() => _sharing, (b) => _sharing = b, () => actions.share(v)),
+        ),
+        const SizedBox(height: Space.sm),
+        Row(
+          children: [
+            Expanded(
+              child: AppButton(
+                label: 'Download',
+                icon: Icons.download_outlined,
+                variant: AppButtonVariant.secondary,
+                compact: true,
+                loading: _saving,
+                onPressed: () => _guarded(() => _saving, (b) => _saving = b, () => actions.download(v)),
+              ),
+            ),
+            const SizedBox(width: Space.sm),
+            Expanded(
+              child: AppButton(
+                label: 'Print',
+                semanticLabel: 'Print sticker sheet',
+                icon: Icons.print_outlined,
+                variant: AppButtonVariant.secondary,
+                compact: true,
+                onPressed: () => context.push('/stickers/${v.id}'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: Space.lg),
+        AppCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.open_in_new_outlined),
+                title: const Text('Open public page'),
+                subtitle: const Text('See exactly what visitors see'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => actions.openPublicPage(v),
+              ),
+              const Divider(indent: Space.md, endIndent: Space.md),
+              ListTile(
+                leading: const Icon(Icons.link_outlined),
+                title: const Text('Copy link'),
+                subtitle: Text(actions.publicUrl(v), maxLines: 1, overflow: TextOverflow.ellipsis),
+                onTap: () => actions.copyLink(v),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: Space.lg),
+        const PrivacyLabel('The QR contains only a link — no personal information.', center: true),
+      ],
     );
   }
 }

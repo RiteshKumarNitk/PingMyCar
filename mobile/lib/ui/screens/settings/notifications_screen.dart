@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../services/fcm/fcm_bootstrap.dart';
+import '../../components/components.dart';
 
-/// Notification settings: permission status, enable via the primer flow
-/// (native prompt only after the in-app explanation), token registration on
-/// grant. Disabling on this device never affects the owner's other devices.
+/// Notification settings: permission status, enable via the in-app primer
+/// (native prompt only after this explanation), token registration on grant.
+/// Turning off on this device never affects the owner's other devices.
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
@@ -12,8 +13,10 @@ class NotificationsScreen extends ConsumerStatefulWidget {
   ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
+enum _PermState { checking, unavailable, off, on, registrationFailed }
+
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
-  bool? _enabled;
+  _PermState _state = _PermState.checking;
   bool _working = false;
 
   @override
@@ -24,87 +27,146 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   Future<void> _refresh() async {
     final fcm = ref.read(fcmInstanceProvider);
-    if (fcm == null) return;
+    if (fcm == null) {
+      if (mounted) setState(() => _state = _PermState.unavailable);
+      return;
+    }
     final granted = await fcm.hasPermission();
-    if (mounted) setState(() => _enabled = granted);
+    if (mounted) {
+      setState(() {
+        if (_state != _PermState.registrationFailed || !granted) {
+          _state = granted ? _PermState.on : _PermState.off;
+        }
+      });
+    }
   }
 
   Future<void> _enable() async {
     final fcm = ref.read(fcmInstanceProvider);
-    if (fcm == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Notifications are not available on this device.')),
-        );
-      }
-      return;
-    }
+    if (fcm == null || _working) return;
     setState(() => _working = true);
     final granted = await fcm.requestPermission();
+    var state = granted ? _PermState.on : _PermState.off;
     if (granted) {
       try {
         await fcm.registerCurrentToken();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("You'll be notified when someone contacts your vehicle.")),
-          );
-        }
+        _toast("You'll be notified when someone contacts your vehicle.");
       } catch (_) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not register this device right now. Try again later.')),
-          );
-        }
+        // Offline or server hiccup — FCM's token-refresh path retries later.
+        state = _PermState.registrationFailed;
       }
+    } else {
+      _toast('Notifications are blocked. You can allow them in system settings.');
     }
-    if (mounted) setState(() => _working = false);
-    _refresh();
+    if (mounted) {
+      setState(() {
+        _working = false;
+        _state = state;
+      });
+    }
+  }
+
+  void _toast(String message) {
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
-    final enabled = _enabled == true;
+    final c = AppColors.of(context);
+    final t = Theme.of(context).textTheme;
+
+    final (StatusKind kind, String badge, String headline, String body) = switch (_state) {
+      _PermState.checking => (StatusKind.pending, 'Checking', 'Checking notifications…', ''),
+      _PermState.unavailable => (
+          StatusKind.inactive,
+          'Unavailable',
+          'Notifications aren\'t available',
+          'This build or device can\'t receive push notifications. Messages still appear in the app.',
+        ),
+      _PermState.off => (
+          StatusKind.inactive,
+          'Off',
+          'Get notified about new messages',
+          'We\'ll alert this device when someone scans your QR and sends a message. Alerts never include the visitor\'s contact details.',
+        ),
+      _PermState.on => (
+          StatusKind.active,
+          'On',
+          'Notifications are on',
+          'This device is alerted when someone contacts your vehicle.',
+        ),
+      _PermState.registrationFailed => (
+          StatusKind.pending,
+          'Not connected',
+          'Couldn\'t connect this device',
+          'Permission is on, but we couldn\'t register this device. Check your connection and try again.',
+        ),
+    };
+
     return Scaffold(
       appBar: AppBar(title: const Text('Notifications')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(Space.page, Space.xs, Space.page, Space.xxl),
         children: [
-          Card(
-            child: SwitchListTile(
-              value: enabled,
-              onChanged: _working ? null : (v) => v ? _enable() : _explainSystemSettings(),
-              title: const Text('Visitor messages'),
-              subtitle: Text(enabled
-                  ? 'This device receives notifications when someone contacts your vehicle.'
-                  : 'Notifications are off for this device.'),
+          AppCard(
+            padding: const EdgeInsets.all(Space.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(color: c.commSoft, borderRadius: BorderRadius.circular(Radii.md)),
+                      child: Icon(
+                        _state == _PermState.on ? Icons.notifications_active_outlined : Icons.notifications_outlined,
+                        color: c.comm,
+                      ),
+                    ),
+                    const Spacer(),
+                    StatusBadge(kind, label: badge),
+                  ],
+                ),
+                const SizedBox(height: Space.md),
+                Text(headline, style: t.titleMedium),
+                if (body.isNotEmpty) ...[
+                  const SizedBox(height: Space.xs),
+                  Text(body, style: t.bodyMedium),
+                ],
+                if (_state == _PermState.off || _state == _PermState.registrationFailed) ...[
+                  const SizedBox(height: Space.lg),
+                  AppButton(
+                    label: _state == _PermState.off ? 'Turn on notifications' : 'Try again',
+                    icon: Icons.notifications_active_outlined,
+                    loading: _working,
+                    onPressed: _enable,
+                  ),
+                ],
+              ],
             ),
           ),
-          const SizedBox(height: 12),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
+          const SizedBox(height: Space.xl),
+          const SectionHeader(title: 'How it works'),
+          for (final (icon, text) in const [
+            (Icons.qr_code_scanner_outlined, 'A visitor scans your QR and sends a message.'),
+            (Icons.notifications_outlined, 'Every device you\'re signed in on gets an alert.'),
+            (Icons.touch_app_outlined, 'Tap the alert to open that conversation.'),
+            (Icons.phonelink_erase_outlined, 'Turning alerts off here affects this device only. To turn them off, use system settings → PingMyCar → Notifications.'),
+          ])
+            Padding(
+              padding: const EdgeInsets.only(bottom: Space.sm),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('How it works', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'When a visitor scans your QR and sends a message, PingMyCar notifies every signed-in device. '
-                    'Turning notifications off here affects this device only — your other devices keep receiving them.',
-                    style: TextStyle(fontSize: 13.5, height: 1.4, color: Color(0xFF5B6773)),
-                  ),
+                  Icon(icon, size: 18, color: c.slate),
+                  const SizedBox(width: Space.sm),
+                  Expanded(child: Text(text, style: t.bodyMedium)),
                 ],
               ),
             ),
-          ),
         ],
       ),
-    );
-  }
-
-  void _explainSystemSettings() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('To turn notifications off, use system settings → PingMyCar → Notifications.')),
     );
   }
 }

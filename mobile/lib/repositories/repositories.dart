@@ -184,6 +184,28 @@ class ConversationRepository {
   Future<void> block(String id) async {
     await _client.post('/api/conversations/$id/block');
   }
+
+  /// Owner deletes their own conversation (server refuses with 409 while a
+  /// report on it is still open).
+  Future<void> delete(String id) async {
+    await _client.delete('/api/conversations/$id');
+  }
+
+  /// Conversation + unread counts per vehicle, from the most recent
+  /// [limit] conversations (the vehicles API doesn't carry counts).
+  /// `partial` is true when older conversations exist beyond that window.
+  Future<({Map<String, int> total, Map<String, int> unread, bool partial})> countsByVehicle({int limit = 50}) async {
+    final data = await _client.get('/api/messages', query: {'limit': '$limit'});
+    final items = (data?['conversations'] as List? ?? []);
+    final total = <String, int>{};
+    final unread = <String, int>{};
+    for (final raw in items) {
+      final c = ConversationSummary.fromListJson((raw as Map).cast<String, dynamic>());
+      total[c.vehicleId] = (total[c.vehicleId] ?? 0) + 1;
+      if (c.unreadCount > 0) unread[c.vehicleId] = (unread[c.vehicleId] ?? 0) + c.unreadCount;
+    }
+    return (total: total, unread: unread, partial: data?['nextCursor'] != null);
+  }
 }
 
 class DeviceRepository {

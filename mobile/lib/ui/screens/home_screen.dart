@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import '../../core/api_error.dart';
 import '../../models/models.dart';
 import '../../providers.dart';
+import '../components/components.dart';
+import 'home_shell.dart' show unreadBadgeProvider;
 
-/// Home dashboard. All values come from /api/dashboard/summary — nothing is
-/// computed or faked locally.
+/// Home dashboard. Every number comes from the backend (dashboard summary +
+/// vehicles) — nothing is computed or faked locally.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -17,17 +18,22 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   DashboardSummary? _summary;
-  bool _loading = true;
-  String? _error;
+  List<Vehicle>? _vehicles;
+  Object? _error;
+  late final UnreadCountSignal _signal;
 
   @override
   void initState() {
     super.initState();
     _load();
-    // FCM foreground notifications bump this signal — refresh then.
-    // (Listener is registered here while ref is valid; Riverpod forbids
-    // touching ref after dispose.)
-    ref.read(unreadCountSignalProvider).addListener(_refreshOnPush);
+    // FCM foreground pushes bump this signal — refresh then.
+    _signal = ref.read(unreadCountSignalProvider)..addListener(_refreshOnPush);
+  }
+
+  @override
+  void dispose() {
+    _signal.removeListener(_refreshOnPush);
+    super.dispose();
   }
 
   void _refreshOnPush() {
@@ -36,286 +42,264 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _load() async {
     try {
-      final s = await ref.read(dashboardRepositoryProvider).summary();
+      final results = await Future.wait([
+        ref.read(dashboardRepositoryProvider).summary(),
+        ref.read(vehicleRepositoryProvider).list(),
+      ]);
       if (!mounted) return;
+      final summary = results[0] as DashboardSummary;
+      ref.read(unreadBadgeProvider.notifier).state = summary.unreadMessageCount;
       setState(() {
-        _summary = s;
-        _loading = false;
+        _summary = summary;
+        _vehicles = results[1] as List<Vehicle>;
         _error = null;
       });
     } on ApiException catch (e) {
       if (!mounted) return;
-      setState(() {
-        _error = e.message;
-        _loading = false;
-      });
+      if (_summary != null) {
+        // Keep showing what we have; offer a retry instead of a blank screen.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), action: SnackBarAction(label: 'Retry', onPressed: _load)),
+        );
+      }
+      setState(() => _error = e);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authControllerProvider).user;
-    final hasVehicles = (_summary?.vehicleCount ?? 0) > 0;
-
+    final summary = _summary;
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_greeting(user?.name), style: const TextStyle(fontSize: 16)),
-            Text('Your PingMyCar', style: Theme.of(context).textTheme.bodySmall),
-          ],
-        ),
-      ),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          children: [
-            if (_error != null && _summary == null)
-              _ErrorRetry(message: _error!, onRetry: _load)
-            else if (_loading && _summary == null)
-              ..._skeleton()
-            else ...[
-              if (!hasVehicles) ...[
-                const _WelcomeCard(),
-                const SizedBox(height: 24),
-              ] else ...[
-                _StatsRow(summary: _summary!),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () => context.push('/vehicles/new'),
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add Vehicle'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => context.push('/stickers'),
-                        icon: const Icon(Icons.sticky_note_2_outlined),
-                        label: const Text('Stickers'),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-              ],
-              _RecentMessages(summary: _summary),
-            ],
-          ],
+      body: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+          onRefresh: _load,
+          child: summary == null
+              ? (_error != null
+                  ? ScrollableCenter(child: ErrorState(error: _error!, onRetry: _load))
+                  : const _HomeSkeleton())
+              : _content(context, summary),
         ),
       ),
     );
   }
 
-  String _greeting(String? name) {
-    final hour = DateTime.now().hour;
-    final part = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-    final first = (name ?? '').trim().split(' ').first;
-    return first.isEmpty ? part : '$part, $first';
-  }
+  Widget _content(BuildContext context, DashboardSummary s) {
+    final c = AppColors.of(context);
+    final vehicles = _vehicles ?? const <Vehicle>[];
+    final hasVehicles = s.vehicleCount > 0;
 
-  List<Widget> _skeleton() => [
-        const _SkeletonBox(height: 88),
-        const SizedBox(height: 12),
-        const _SkeletonBox(height: 52),
-        const SizedBox(height: 24),
-        const _SkeletonBox(height: 220),
-      ];
-}
-
-class _StatsRow extends StatelessWidget {
-  const _StatsRow({required this.summary});
-
-  final DashboardSummary summary;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _Stat(value: summary.vehicleCount, label: 'Vehicles'),
-            _verticalDivider(),
-            _Stat(value: summary.activeQrCount, label: 'Active QR'),
-            _verticalDivider(),
-            _Stat(
-              value: summary.unreadMessageCount,
-              label: 'Unread',
-              highlight: summary.unreadMessageCount > 0,
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(Space.page, Space.md, Space.page, Space.xl),
+      children: [
+        _Header(),
+        const SizedBox(height: Space.lg),
+        if (!hasVehicles)
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: EmptyState(
+              icon: Icons.qr_code_2_outlined,
+              title: 'Set up your first vehicle',
+              message: 'Add your vehicle to create your first private contact QR.',
+              actionLabel: 'Add Vehicle',
+              actionIcon: Icons.add,
+              onAction: () => context.push('/vehicles/new'),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _verticalDivider() => Container(width: 1, height: 36, color: const Color(0xFFE5E9EF));
-}
-
-class _Stat extends StatelessWidget {
-  const _Stat({required this.value, required this.label, this.highlight = false});
-
-  final int value;
-  final String label;
-  final bool highlight;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = highlight ? const Color(0xFF2563EB) : const Color(0xFF0D1926);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text('$value', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: color)),
-        const SizedBox(height: 2),
-        Text(label, style: const TextStyle(fontSize: 12.5, color: Color(0xFF5B6773))),
-      ],
-    );
-  }
-}
-
-class _RecentMessages extends StatelessWidget {
-  const _RecentMessages({required this.summary});
-
-  final DashboardSummary? summary;
-
-  @override
-  Widget build(BuildContext context) {
-    final recent = summary?.recentConversations ?? [];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Recent Messages', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFF0D1926))),
-            TextButton(onPressed: () => context.go('/messages'), child: const Text('View all')),
-          ],
-        ),
-        if (recent.isEmpty)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Icon(Icons.mail_outline, size: 36, color: Color(0xFF9AA6B2)),
-                  const SizedBox(height: 8),
-                  const Text('No messages yet.', style: TextStyle(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Once someone scans your vehicle’s QR, their message will appear here.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: Color(0xFF5B6773)),
-                  ),
-                ],
+          )
+        else ...[
+          Row(
+            children: [
+              Expanded(
+                child: StatTile(
+                  icon: Icons.mark_chat_unread_outlined,
+                  label: 'Unread',
+                  value: s.unreadMessageCount,
+                  tone: c.comm,
+                  onTap: () => context.go('/messages'),
+                ),
               ),
+              const SizedBox(width: Space.sm),
+              Expanded(
+                child: StatTile(
+                  icon: Icons.directions_car_outlined,
+                  label: 'Vehicles',
+                  value: s.vehicleCount,
+                  onTap: () => context.go('/vehicles'),
+                ),
+              ),
+              const SizedBox(width: Space.sm),
+              Expanded(
+                child: StatTile(
+                  icon: Icons.qr_code_2_outlined,
+                  label: 'Active QR',
+                  value: s.activeQrCount,
+                  tone: c.success,
+                  onTap: () => context.go('/vehicles'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: Space.md),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  label: 'Add Vehicle',
+                  icon: Icons.add,
+                  compact: true,
+                  onPressed: () => context.push('/vehicles/new'),
+                ),
+              ),
+              const SizedBox(width: Space.sm),
+              Expanded(
+                child: AppButton(
+                  label: 'Messages',
+                  icon: Icons.chat_bubble_outline,
+                  compact: true,
+                  variant: AppButtonVariant.secondary,
+                  onPressed: () => context.go('/messages'),
+                ),
+              ),
+            ],
+          ),
+        ],
+        const SizedBox(height: Space.xl),
+        SectionHeader(
+          title: 'Latest conversations',
+          actionLabel: s.recentConversations.isEmpty ? null : 'View all',
+          onAction: () => context.go('/messages'),
+        ),
+        if (s.recentConversations.isEmpty)
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: EmptyState(
+              icon: Icons.chat_bubble_outline,
+              title: 'No messages yet',
+              message: 'When someone scans your QR code, their message will appear here.',
+              actionLabel: hasVehicles ? 'View QR' : null,
+              actionIcon: Icons.qr_code_2_outlined,
+              onAction: hasVehicles && vehicles.isNotEmpty ? () => context.push('/vehicles/${vehicles.first.id}/qr') : null,
             ),
           )
         else
-          ...recent.map((c) => _RecentConversationTile(conversation: c)),
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (var i = 0; i < s.recentConversations.length; i++)
+                  MessagePreview(
+                    conversation: s.recentConversations[i],
+                    showDivider: i < s.recentConversations.length - 1,
+                    onTap: () => context.push('/messages/${s.recentConversations[i].id}'),
+                  ),
+              ],
+            ),
+          ),
+        if (vehicles.isNotEmpty) ...[
+          const SizedBox(height: Space.xl),
+          SectionHeader(title: 'Your vehicles', actionLabel: 'Manage', onAction: () => context.go('/vehicles')),
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (var i = 0; i < vehicles.length && i < 3; i++)
+                  _VehicleRow(vehicle: vehicles[i], showDivider: i < vehicles.length - 1 && i < 2),
+              ],
+            ),
+          ),
+        ],
+        const SizedBox(height: Space.lg),
+        const PrivacyLabel('Visitors never see your phone number or email.', center: true),
       ],
     );
   }
 }
 
-class _RecentConversationTile extends StatelessWidget {
-  const _RecentConversationTile({required this.conversation});
-
-  final ConversationSummary conversation;
-
+class _Header extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/messages/${conversation.id}'),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = AppColors.of(context);
+    final t = Theme.of(context).textTheme;
+    final user = ref.watch(authControllerProvider).user;
+    final first = (user?.hasRealName ?? false) ? user!.name.trim().split(RegExp(r'\s+')).first : '';
+    final initial = first.isNotEmpty ? first[0].toUpperCase() : '?';
+
+    return Row(
+      children: [
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      conversation.reasonLabel,
-                      style: TextStyle(
-                        fontWeight: conversation.unread ? FontWeight.w800 : FontWeight.w600,
-                        color: const Color(0xFF0D1926),
-                      ),
-                    ),
-                  ),
-                  if (conversation.unread)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(color: const Color(0xFF2563EB), borderRadius: BorderRadius.circular(10)),
-                      child: const Text('NEW', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700)),
-                    ),
-                ],
-              ),
-              if (conversation.lastMessageBody != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  conversation.lastMessageBody!,
+              Text(greetingFor(DateTime.now()), style: t.bodyLarge?.copyWith(color: c.slate)),
+              const SizedBox(height: 2),
+              Semantics(
+                header: true,
+                child: Text(
+                  first.isEmpty ? 'Welcome back' : first,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13.5, color: Color(0xFF5B6773)),
+                  style: t.headlineMedium,
                 ),
-              ],
-              const SizedBox(height: 6),
-              Text(
-                '${conversation.vehicleName}  ·  ${_timeAgo(conversation.lastMessageAt)}',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF9AA6B2)),
               ),
             ],
           ),
         ),
-      ),
+        Semantics(
+          button: true,
+          label: 'Profile',
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: () => context.go('/profile'),
+            child: CircleAvatar(
+              radius: 22,
+              backgroundColor: c.primarySoft,
+              foregroundImage: user?.image != null ? NetworkImage(user!.image!) : null,
+              child: Text(initial, style: t.titleMedium?.copyWith(color: c.primary)),
+            ),
+          ),
+        ),
+      ],
     );
-  }
-
-  String _timeAgo(DateTime? time) {
-    if (time == null) return '';
-    final diff = DateTime.now().difference(time);
-    if (diff.inMinutes < 1) return 'just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
-    if (diff.inHours < 24) return '${diff.inHours} hr ago';
-    return DateFormat('d MMM').format(time);
   }
 }
 
-class _WelcomeCard extends StatelessWidget {
-  const _WelcomeCard();
+class _VehicleRow extends StatelessWidget {
+  const _VehicleRow({required this.vehicle, required this.showDivider});
+
+  final Vehicle vehicle;
+  final bool showDivider;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
+    final c = AppColors.of(context);
+    final t = Theme.of(context).textTheme;
+    return InkWell(
+      onTap: () => context.push('/vehicles/${vehicle.id}'),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(Space.md, Space.sm, Space.xs, Space.sm),
+        decoration: BoxDecoration(border: showDivider ? Border(bottom: BorderSide(color: c.border)) : null),
+        child: Row(
           children: [
-            const Text('👋', style: TextStyle(fontSize: 40)),
-            const SizedBox(height: 12),
-            const Text('Welcome to PingMyCar', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: Color(0xFF0D1926))),
-            const SizedBox(height: 6),
-            const Text(
-              'Add your first vehicle and create your PingMyCar QR — anyone who scans it can reach you without seeing your number.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Color(0xFF5B6773)),
+            VehicleAvatar(vehicle: vehicle, size: 44),
+            const SizedBox(width: Space.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(vehicle.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: t.titleSmall),
+                  const SizedBox(height: 4),
+                  StatusBadge(
+                    vehicle.qrActive ? StatusKind.active : StatusKind.inactive,
+                    label: vehicle.qrActive ? 'QR active' : 'QR off',
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: () => context.push('/vehicles/new'),
-              icon: const Icon(Icons.add),
-              label: const Text('Add Vehicle'),
+            IconButton(
+              tooltip: 'QR code for ${vehicle.name}',
+              icon: Icon(Icons.qr_code_2_outlined, color: c.primary),
+              onPressed: () => context.push('/vehicles/${vehicle.id}/qr'),
             ),
           ],
         ),
@@ -324,42 +308,36 @@ class _WelcomeCard extends StatelessWidget {
   }
 }
 
-class _SkeletonBox extends StatelessWidget {
-  const _SkeletonBox({required this.height});
-  final double height;
+class _HomeSkeleton extends StatelessWidget {
+  const _HomeSkeleton();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: height,
-      decoration: BoxDecoration(
-        color: const Color(0xFFEDF0F4),
-        borderRadius: BorderRadius.circular(16),
-      ),
-    );
-  }
-}
-
-class _ErrorRetry extends StatelessWidget {
-  const _ErrorRetry({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            const Icon(Icons.wifi_off, size: 36, color: Color(0xFF9AA6B2)),
-            const SizedBox(height: 12),
-            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF5B6773))),
-            const SizedBox(height: 16),
-            OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
-          ],
-        ),
+    return Semantics(
+      label: 'Loading dashboard',
+      liveRegion: true,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(Space.page, Space.md, Space.page, Space.xl),
+        children: const [
+          SkeletonBox(width: 120, height: 16),
+          SizedBox(height: Space.xs),
+          SkeletonBox(width: 180, height: 28),
+          SizedBox(height: Space.lg),
+          Row(children: [
+            Expanded(child: SkeletonBox(height: 96, radius: Radii.lg)),
+            SizedBox(width: Space.sm),
+            Expanded(child: SkeletonBox(height: 96, radius: Radii.lg)),
+            SizedBox(width: Space.sm),
+            Expanded(child: SkeletonBox(height: 96, radius: Radii.lg)),
+          ]),
+          SizedBox(height: Space.md),
+          SkeletonBox(height: 44),
+          SizedBox(height: Space.xl),
+          SkeletonBox(width: 180, height: 18),
+          SizedBox(height: Space.sm),
+          SkeletonBox(height: 220, radius: Radii.lg),
+        ],
       ),
     );
   }

@@ -18,7 +18,6 @@ import 'screens/settings/notifications_screen.dart';
 import 'screens/settings/privacy_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/splash_screen.dart';
-import 'screens/welcome_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -37,13 +36,15 @@ class _AuthListenable extends ChangeNotifier {
 /// hint — the target screen fetches from the backend, which enforces
 /// ownership; a deep link never bypasses authentication or authorization.
 class _DeepLinkBinding {
-  _DeepLinkBinding(this._ref, this._router) {
-    _ref.read(deepLinkSignalProvider).addListener(_onRoute);
+  _DeepLinkBinding(this._ref, this._router) : _signal = _ref.read(deepLinkSignalProvider) {
+    _signal.addListener(_onRoute);
     _ref.onDispose(_dispose);
   }
 
   final Ref _ref;
   final GoRouter _router;
+  // Held directly: providers must not be read while the container disposes.
+  final DeepLinkSignal _signal;
   bool _disposed = false;
 
   void _onRoute(String? route) {
@@ -55,7 +56,7 @@ class _DeepLinkBinding {
 
   void _dispose() {
     _disposed = true;
-    _ref.read(deepLinkSignalProvider).removeListener(_onRoute);
+    _signal.removeListener(_onRoute);
   }
 }
 
@@ -75,20 +76,28 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (status == AuthStatus.unknown) return '/splash';
-      if (status == AuthStatus.unauthenticated) return '/welcome';
+      // Guests are never owners: every owner route requires a session.
+      if (status == AuthStatus.unauthenticated) return '/login';
       if (status == AuthStatus.authenticated && location == '/login') return '/home';
       return null;
     },
     routes: [
       GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
-      GoRoute(path: '/welcome', builder: (context, state) => const WelcomeScreen()),
+      // Kept for old links; sign-in is a single clean screen now.
+      GoRoute(path: '/welcome', redirect: (context, state) => '/login'),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) => HomeShell(child: child),
         routes: [
           GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
-          GoRoute(path: '/messages', builder: (context, state) => const MessagesScreen()),
+          GoRoute(
+            path: '/messages',
+            builder: (context, state) => MessagesScreen(
+              key: ValueKey(state.uri.queryParameters['vehicle']),
+              initialVehicleId: state.uri.queryParameters['vehicle'],
+            ),
+          ),
           GoRoute(path: '/vehicles', builder: (context, state) => const VehiclesScreen()),
           GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
         ],
