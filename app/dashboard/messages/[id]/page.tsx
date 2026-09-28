@@ -6,8 +6,6 @@ import { reasonLabel } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { MessageThread } from "@/components/messages/MessageThread";
 import { BlockConversationButton } from "@/components/messages/BlockConversationButton";
-import { KeepConversationButton } from "@/components/messages/KeepConversationButton";
-import { autoDeleteAt } from "@/lib/conversations/retention";
 
 export const metadata = { title: "Message" };
 
@@ -28,7 +26,6 @@ export default async function MessageThreadPage({ params }: { params: Promise<{ 
   const closed = conversation.status !== "OPEN" || expired;
   const status = expired ? "CLOSED" : conversation.status;
   const maxChars = Number(process.env.MESSAGE_MAX_CHARS ?? 500);
-  const deleteAt = autoDeleteAt(conversation);
 
   // Opening the thread marks the visitor's messages as read.
   await prisma.message.updateMany({
@@ -93,18 +90,6 @@ export default async function MessageThreadPage({ params }: { params: Promise<{ 
               : "This conversation has ended."
           }
           maxChars={maxChars}
-        />
-      </div>
-
-      <div className="mt-4">
-        <KeepConversationButton
-          conversationId={conversation.id}
-          kept={Boolean(conversation.keptAt)}
-          autoDeleteLabel={
-            deleteAt
-              ? `on ${deleteAt.toLocaleDateString("en-US", { month: "long", day: "numeric" })}`
-              : null
-          }
         />
       </div>
 
