@@ -1,17 +1,16 @@
 import { test, expect } from "@playwright/test";
-import { uniquePhone, signUpAndOnboard } from "../helpers/auth";
-import { deleteUserByPhone } from "../helpers/db";
+import { signInWithGoogleAndOnboard, type TestOwner } from "../helpers/auth";
+import { deleteUserById } from "../helpers/db";
 
 test.describe("dashboard artifacts", () => {
-  let phone: string;
+  let owner: TestOwner | undefined;
 
   test.beforeEach(async ({ page }) => {
-    phone = uniquePhone();
-    await signUpAndOnboard(page, { phone, name: "Artifact Tester", vehicleName: "Honda City" });
+    owner = await signInWithGoogleAndOnboard(page, { name: "Artifact Tester", vehicleName: "Honda City" });
   });
 
   test.afterEach(async () => {
-    await deleteUserByPhone(phone);
+    await deleteUserById(owner?.userId);
   });
 
   test("PNG download rasters the QR via the real button and shows an error path when it fails", async ({

@@ -2,8 +2,7 @@ import { Resend } from "resend";
 
 /**
  * No email provider is required to run this app locally. Without
- * RESEND_API_KEY, the email is logged to the server console instead of sent
- * — same dev-fallback pattern as the phone OTP in lib/auth/index.ts.
+ * RESEND_API_KEY, the email is logged to the server console instead of sent.
  */
 export async function sendEmail({ to, subject, text }: { to: string; subject: string; text: string }) {
   const apiKey = process.env.RESEND_API_KEY;

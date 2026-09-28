@@ -1,5 +1,5 @@
 import { createAuthClient } from "better-auth/react";
-import { phoneNumberClient, inferAdditionalFields } from "better-auth/client/plugins";
+import { inferAdditionalFields } from "better-auth/client/plugins";
 import type { auth } from "@/lib/auth";
 
 export const authClient = createAuthClient({
@@ -7,5 +7,5 @@ export const authClient = createAuthClient({
   // from (localhost vs 127.0.0.1 vs the prod domain). A hardcoded absolute
   // URL makes every auth call cross-origin — and Better Auth's preflight
   // fails, so sign-in dies with "Failed to fetch" on any other hostname.
-  plugins: [phoneNumberClient(), inferAdditionalFields<typeof auth>()],
+  plugins: [inferAdditionalFields<typeof auth>()],
 });

@@ -50,7 +50,7 @@ export default async function ProfilePage() {
           <EnableNotifications />
           <Button asChild variant="ghost" size="sm" className="mt-2">
             <Link href="/dashboard/settings">
-              Manage email &amp; phone
+              Manage email
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </Button>

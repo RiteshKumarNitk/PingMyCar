@@ -1,42 +1,19 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
-import { phoneNumber } from "better-auth/plugins/phone-number";
 import { bearer } from "better-auth/plugins/bearer";
 import { prisma } from "../db";
-import { tempEmailFor, isTempEmail } from "./tempEmail";
+import { isTempEmail } from "./tempEmail";
 import { sendEmail } from "@/lib/notifications/email";
-import { setLastOtp } from "./otpStore";
-
-/**
- * No SMS provider is wired up yet (dev fallback per ARCHITECTURE.md).
- * The OTP is logged to the server console so the phone-OTP flow can be
- * exercised end-to-end locally, and stashed in-memory for the e2e suite to
- * read via /api/test/last-otp. Swap this for a real SMS send (Twilio, etc.)
- * before production.
- */
-async function sendOTP({ phoneNumber, code }: { phoneNumber: string; code: string }) {
-  if (!phoneOtpEnabled) throw new Error("Phone OTP is disabled on this deployment");
-  console.log(`[dev OTP] ${phoneNumber} -> ${code}`);
-  setLastOtp(phoneNumber, code);
-}
 
 const isProd = process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
 
 /**
- * Phone OTP has no real SMS sender yet, so its endpoints are only live in
- * development. In production they 404 (disabledPaths below) — otherwise anyone
- * could mint accounts/codes that only ever land in server logs. The plugin
- * itself stays registered so the User.phoneNumber schema field is unchanged.
+ * Owner authentication is Google-only. There is no phone/OTP login, no
+ * email OTP or magic link, and no public email/password sign-up (see
+ * emailAndPassword below). Guests are unauthenticated visitors using the
+ * public QR/visitor-token flow and never get an account.
  */
-export const phoneOtpEnabled = !isProd;
-const PHONE_OTP_PATHS = [
-  "/sign-in/phone-number",
-  "/phone-number/send-otp",
-  "/phone-number/verify",
-  "/phone-number/request-password-reset",
-  "/phone-number/reset-password",
-];
 
 const appUrl =
   process.env.BETTER_AUTH_URL ||
@@ -68,13 +45,15 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET,
   baseURL: appUrl,
   trustedOrigins: Array.from(new Set(trustedOrigins.filter(Boolean))),
-  disabledPaths: phoneOtpEnabled ? [] : PHONE_OTP_PATHS,
   // OAuth failures land on /login (which explains ?error=…) instead of
   // Better Auth's bare /api/auth/error page.
   onAPIError: { errorURL: "/login" },
   database: prismaAdapter(prisma, { provider: "postgresql" }),
+  // Sign-in only, for pre-provisioned staff accounts on /login/staff. Public
+  // sign-up is disabled: owners can only be created through Google.
   emailAndPassword: {
     enabled: true,
+    disableSignUp: true,
     minPasswordLength: 8,
   },
   session: {
@@ -114,6 +93,13 @@ export const auth = betterAuth({
         type: "string",
         required: false,
       },
+      // Legacy data from the removed phone login. Read-only (input: false):
+      // kept so older accounts' names/profiles still resolve; never settable.
+      phoneNumber: {
+        type: "string",
+        required: false,
+        input: false,
+      },
     },
     changeEmail: {
       enabled: true,
@@ -134,17 +120,6 @@ export const auth = betterAuth({
   },
   plugins: [
     nextCookies(),
-    phoneNumber({
-      sendOTP,
-      otpLength: 6,
-      expiresIn: 300,
-      allowedAttempts: 3,
-      phoneNumberValidator: (phoneNumber) => /^\+?[1-9]\d{7,14}$/.test(phoneNumber),
-      signUpOnVerification: {
-        getTempEmail: tempEmailFor,
-        getTempName: (phoneNumber) => phoneNumber,
-      },
-    }),
     // Lets the Flutter owner app authenticate with the SAME session system:
     // the mobile sign-in response carries the session token in a
     // `set-auth-token` response header, which the app echoes back as

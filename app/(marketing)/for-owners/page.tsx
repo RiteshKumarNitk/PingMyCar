@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 const STEPS = [
-  { title: "Create your free account", text: "Phone number or Google — under a minute." },
+  { title: "Create your free account", text: "Continue with Google — under a minute." },
   { title: "Add your vehicle", text: "A nickname is enough; details are optional." },
   { title: "Generate your unique QR", text: "One code per vehicle, generated instantly." },
   { title: "Get your sticker", text: "Download the print-ready sticker design from your dashboard." },

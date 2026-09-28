@@ -1,36 +1,27 @@
 /**
  * Conversation privacy & authorization — end-to-end against a real app + DB.
  *
- * Setup (never production):
- *   1. Start a throwaway Postgres (e.g. local Postgres or PGlite socket server).
- *   2. DATABASE_URL=<local url> prisma migrate deploy
- *   3. Start the app against it: DATABASE_URL=<local url> BETTER_AUTH_URL=http://localhost:3100 next dev -p 3100
- *   4. INTEGRATION_DATABASE_URL=<same local url> playwright test --config=playwright.integration.config.ts
+ * Setup (never production) — see playwright.config.ts:
+ *   E2E_DATABASE_URL=<localhost postgres> playwright test --config=playwright.integration.config.ts
+ *
+ * Every actor is a Google-authenticated user created via the test-session
+ * helper (tests/helpers/auth.ts); admin roles are then set in the test DB.
  */
 import { test, expect, type APIRequestContext, type Browser, type BrowserContext } from "@playwright/test";
-import { PrismaClient } from "@prisma/client";
+import { signInAsGoogleUser } from "../helpers/auth";
+import { E2E_BASE_URL, isLocalDatabaseUrl, E2E_DATABASE_URL, testDb as prisma } from "../helpers/db";
 
-const DB_URL = process.env.INTEGRATION_DATABASE_URL ?? "";
-const isLocalDb = /^postgres(ql)?:\/\/[^@]*@(localhost|127\.0\.0\.1)(:\d+)?\//.test(DB_URL);
+test.skip(!isLocalDatabaseUrl(E2E_DATABASE_URL), "Set E2E_DATABASE_URL to a localhost database (refusing to touch any other DB).");
 
-test.skip(!isLocalDb, "Set INTEGRATION_DATABASE_URL to a localhost database (refusing to touch any other DB).");
-
-const prisma = new PrismaClient({ datasourceUrl: DB_URL || "postgresql://invalid@localhost/invalid" });
-const ORIGIN = process.env.INTEGRATION_BASE_URL ?? "http://localhost:3100";
+const ORIGIN = E2E_BASE_URL;
 const run = Date.now().toString(36);
 
 type Actor = { ctx: BrowserContext; req: APIRequestContext; userId: string; email: string };
 
 async function signUp(browser: Browser, label: string): Promise<Actor> {
   const ctx = await browser.newContext({ baseURL: ORIGIN });
-  const email = `${label}-${run}@example.test`;
-  const res = await ctx.request.post("/api/auth/sign-up/email", {
-    headers: { Origin: ORIGIN },
-    data: { email, password: "Integration!234", name: `${label} ${run}` },
-  });
-  expect(res.ok(), `sign-up ${label}: ${res.status()} ${await res.text()}`).toBeTruthy();
-  const user = await prisma.user.findUniqueOrThrow({ where: { email }, select: { id: true } });
-  return { ctx, req: ctx.request, userId: user.id, email };
+  const { userId, email } = await signInAsGoogleUser(ctx, { name: `${label} ${run}` });
+  return { ctx, req: ctx.request, userId, email };
 }
 
 async function createVehicle(owner: Actor, name: string): Promise<string> {

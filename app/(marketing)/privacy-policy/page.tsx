@@ -27,9 +27,9 @@ export default function PrivacyPolicyPage() {
         <div className="mt-6">
           <Section title="What we collect">
             <p>
-              <strong className="text-foreground">Owner accounts:</strong> your name (as you
-              enter it), email address if you add one, and phone number for login codes.
-              Google sign-in provides your name, email, and profile photo if you use it.
+              <strong className="text-foreground">Owner accounts:</strong> owners sign in with
+              Google, which provides your name, email address, and profile photo. You can
+              edit your name in your profile.
             </p>
             <p>
               <strong className="text-foreground">Vehicles:</strong> the details you add —

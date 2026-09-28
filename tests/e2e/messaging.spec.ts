@@ -1,20 +1,19 @@
 import { test, expect } from "@playwright/test";
-import { uniquePhone, signUpAndOnboard } from "../helpers/auth";
-import { deleteUserByPhone, testDb } from "../helpers/db";
+import { signInWithGoogleAndOnboard, type TestOwner } from "../helpers/auth";
+import { deleteUserById, testDb } from "../helpers/db";
 
 test.describe("messaging", () => {
-  let phone: string;
+  let owner: TestOwner | undefined;
   let publicToken: string;
 
   test.beforeEach(async ({ page }) => {
-    phone = uniquePhone();
-    await signUpAndOnboard(page, { phone, name: "Owner Tester", vehicleName: "Honda City" });
-    const vehicle = await testDb.vehicle.findFirst({ where: { owner: { phoneNumber: phone } } });
+    owner = await signInWithGoogleAndOnboard(page, { name: "Owner Tester", vehicleName: "Honda City" });
+    const vehicle = await testDb.vehicle.findFirst({ where: { ownerId: owner!.userId } });
     publicToken = vehicle!.publicToken;
   });
 
   test.afterEach(async () => {
-    await deleteUserByPhone(phone);
+    await deleteUserById(owner?.userId);
   });
 
   test("visitor messages the vehicle, owner sees and replies, visitor sees the reply", async ({ page, browser }) => {

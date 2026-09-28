@@ -1,39 +1,71 @@
-import type { Page } from "@playwright/test";
-import { getOtp } from "./otp";
+import { randomUUID } from "node:crypto";
+import type { BrowserContext, Page } from "@playwright/test";
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { testUtils } from "better-auth/plugins";
+import { assertLocalTestDatabase, E2E_BASE_URL, testDb } from "./db";
 
-let counter = 0;
+/**
+ * Google sign-in for E2E tests.
+ *
+ * Real Google OAuth can't run unattended, so tests create the exact state a
+ * successful "Continue with Google" leaves behind — a user with a verified
+ * email plus a linked `google` Account row — and mint a real session for it
+ * with Better Auth's official `test-utils` plugin.
+ *
+ * The plugin lives ONLY in this test-process auth instance (it registers no
+ * HTTP routes, and the app's own auth config never includes it), so nothing
+ * here exists in the deployed app. Cookies are signed with the same secret
+ * the dev server uses, so the app validates them like any other session.
+ */
+const testAuth = betterAuth({
+  secret: process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET,
+  baseURL: E2E_BASE_URL,
+  database: prismaAdapter(testDb, { provider: "postgresql" }),
+  // The dev server (NODE_ENV=development) uses non-__Secure- cookie names.
+  advanced: { useSecureCookies: false },
+  user: {
+    additionalFields: {
+      preferredName: { type: "string", required: false },
+      phoneNumber: { type: "string", required: false, input: false },
+    },
+  },
+  plugins: [testUtils()],
+});
 
-/** A phone number unique to this test process run — avoids collisions between test files/runs. */
-export function uniquePhone(): string {
-  counter += 1;
-  const n = (Date.now() * 1000 + counter) % 10_000_000;
-  return `+1555${n.toString().padStart(7, "0")}`;
+export type TestOwner = { userId: string; email: string };
+
+/** Creates a Google-authenticated owner and signs `context` in as them. */
+export async function signInAsGoogleUser(
+  context: BrowserContext,
+  opts: { name: string; email?: string }
+): Promise<TestOwner> {
+  assertLocalTestDatabase();
+  const ctx = await testAuth.$context;
+  const email = opts.email ?? `e2e-${randomUUID()}@example.test`;
+  const user = await ctx.test.saveUser(ctx.test.createUser({ email, name: opts.name, emailVerified: true }));
+  // The linked-provider row a real Google sign-in creates.
+  await testDb.account.create({
+    data: { userId: user.id, providerId: "google", accountId: `e2e-google-${randomUUID()}` },
+  });
+  const cookies = await ctx.test.getCookies({ userId: user.id, domain: new URL(E2E_BASE_URL).hostname });
+  await context.addCookies(cookies);
+  return { userId: user.id, email };
 }
 
-/** Signs up via phone OTP and completes mandatory onboarding (name + first vehicle). */
-export async function signUpAndOnboard(
+/**
+ * Google sign-in, then the mandatory onboarding (first vehicle; name too if
+ * the account has none), ending on /dashboard.
+ */
+export async function signInWithGoogleAndOnboard(
   page: Page,
-  opts: { phone: string; name: string; vehicleName: string }
-) {
-  await page.goto("/signup");
-  // Google is the primary flow; the phone-OTP fallback lives inside a
-  // collapsed disclosure. Open it before interacting with the phone field.
-  await page.click('summary:has-text("Continue with phone instead")');
-  await page.fill("#phoneNumber", opts.phone);
-  await Promise.all([
-    page.waitForResponse((r) => r.url().includes("/phone-number/send-otp")),
-    page.click('button:has-text("Create account")'),
-  ]);
-  const code = await getOtp(page.request, opts.phone);
-  await page.fill("#code", code);
-  await page.click('button:has-text("Verify and continue")');
-  await page.waitForURL(/\/(onboarding|dashboard)/);
+  opts: { name: string; vehicleName: string }
+): Promise<TestOwner> {
+  const owner = await signInAsGoogleUser(page.context(), { name: opts.name });
 
-  // Hard navigation makes the onboarding-complete check deterministic
-  // regardless of any client-side soft-navigation timing.
   await page.goto("/onboarding");
   if (page.url().includes("/onboarding")) {
-    await page.fill("#name", opts.name);
+    if (await page.locator("#name").count()) await page.fill("#name", opts.name);
     await page.fill("#vehicleName", opts.vehicleName);
     await Promise.all([
       page.waitForResponse((r) => r.url().includes("/api/vehicles") && r.request().method() === "POST"),
@@ -45,4 +77,5 @@ export async function signUpAndOnboard(
     await page.goto("/dashboard");
   }
   await page.waitForURL(/\/dashboard/);
+  return owner;
 }

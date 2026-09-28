@@ -10,7 +10,7 @@ This document is the source of truth for Phases 1–14. Flutter (Phase 15) is ou
 
 | Topic | Tension | Decision |
 |---|---|---|
-| Auth | Spec wants phone + OTP. Better Auth is already in the stack and typically uses email. | **Better Auth** in one Next.js app. Phase 3: phone OTP as the owner signup path. Email stays on `User` for Better Auth + later alerts, and is **never public**. Dev fallback: email OTP / password only if SMS is not configured. |
+| Auth | Owners need an account; visitors must not. | **Better Auth**, owners are **Google-only** ("Continue with Google"). No phone/OTP, email OTP, magic link, or public email/password sign-up. Visitors (guests) use the public QR + visitor-token flow with no account. Email stays on `User` for alerts and is **never public**. |
 | Product name | Repo is PingMyCar; landing currently says CarPing. | **PingMyCar** is the product name. Unify marketing copy in Phase 2. |
 | Public IDs | Spec forbids database IDs in public URLs. Dashboard uses `/dashboard/messages/[id]`. | Public: `/v/[publicToken]`, `/c/[visitorToken]`. Owner dashboard IDs are session-gated UUIDs, never given to visitors. |
 | Visitor token storage | Spec lists `visitorToken` on Conversation. Storing raw tokens in Postgres leaks conversation URLs if the DB is dumped. | Store **SHA-256 hash only** (`visitorTokenHash`). Raw token is shown once to the visitor. |
@@ -136,7 +136,7 @@ Defaults that encode product privacy:
 ### Owner (web)
 
 ```text
-Landing → Get Your QR → Phone OTP (Phase 3)
+Landing → Get Your QR → Continue with Google
   → Add vehicle → Contact profile + live preview
   → Activate QR → Download / print
   → Dashboard inbox → Reply (no visitor identity)
@@ -234,7 +234,7 @@ Public responses **must not** include `ownerId`, email, phone, user id, or hidde
 |---|---|---|
 | 1 | Next.js, TS, Tailwind, shadcn, pnpm, Prisma, Postgres, Docker, Nginx | **this change** |
 | 2 | Landing page | already drafted — wait for approval to iterate |
-| 3 | Owner authentication (phone OTP) | not started |
+| 3 | Owner authentication (Google-only) | done |
 | 4 | Vehicle management | not started |
 | 5 | Contact profile builder | not started |
 | 6 | Live public preview | not started |

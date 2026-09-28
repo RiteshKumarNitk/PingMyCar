@@ -3,9 +3,19 @@
  * Drives the EXACT flow the Flutter app uses, including the Better Auth
  * bearer-token session the mobile client depends on.
  *
- * Usage: npx tsx scripts/test-owner-api.mjs
+ * The owner is a Google-authenticated test user created with Better Auth's
+ * test-utils plugin in THIS process (owners are Google-only; there is no
+ * phone/password login to drive). Requires the dev server and this script to
+ * share a local test database — never production.
+ *
+ * Usage: E2E_DATABASE_URL=postgresql://…@localhost/… npx tsx scripts/test-owner-api.mjs
  */
+import "dotenv/config";
 import { randomBytes } from "node:crypto";
+import { PrismaClient } from "@prisma/client";
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { testUtils } from "better-auth/plugins";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3100";
 let passed = 0;
@@ -21,56 +31,34 @@ function check(name, cond, detail = "") {
   }
 }
 
-// --- 1. Sign in with a random phone (dev OTP fallback reads console, but
-// better-auth phone plugin needs the OTP; instead we use the dev-only
-// credential-free path: sign-up via phone is interactive, so we mint a
-// session through the test helper instead.) -------------------------------
-// Simplest reliable route: create a user + session directly in the DB via
-// better-auth's API is not exposed; so we use the OTP dev endpoint.
-async function getOtp(phoneNumber) {
-  const res = await fetch(`${BASE}/api/test/last-otp?phoneNumber=${encodeURIComponent(phoneNumber)}`);
-  if (res.status === 404) return null; // not production mode gate
-  const data = await res.json();
-  return data.code ?? null;
+// --- 1. Google-authenticated owner + bearer session (mobile flow) -------
+const DB_URL = process.env.E2E_DATABASE_URL ?? "";
+if (!/^postgres(ql)?:\/\/[^@]*@(localhost|127\.0\.0\.1)(:\d+)?\//.test(DB_URL)) {
+  console.error("Set E2E_DATABASE_URL to a localhost test database (the dev server must use the same one).");
+  process.exit(1);
 }
-
-const phone = `+1555${String(Date.now()).slice(-7)}`;
-
-// Request OTP via better-auth phone plugin (send-otp sub-route, per the
-// repo's e2e helpers)
-const sendOtpRes = await fetch(`${BASE}/api/auth/phone-number/send-otp`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ phoneNumber: phone }),
+const prisma = new PrismaClient({ datasourceUrl: DB_URL });
+const testAuth = betterAuth({
+  secret: process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET,
+  baseURL: BASE,
+  database: prismaAdapter(prisma, { provider: "postgresql" }),
+  plugins: [testUtils()],
 });
-check("OTP send accepted (dev fallback)", sendOtpRes.status === 200 || sendOtpRes.status === 400, `status=${sendOtpRes.status}`);
-
-let otp = await getOtp(phone);
-if (!otp) {
-  // Wait for console flush
-  await new Promise((r) => setTimeout(r, 1500));
-  otp = await getOtp(phone);
-}
-check("OTP retrievable via dev endpoint", Boolean(otp), `otp=${otp}`);
-
-// Verify OTP → session cookie
-const verifyRes = await fetch(`${BASE}/api/auth/phone-number/verify`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ phoneNumber: phone, code: otp }),
+const testCtx = await testAuth.$context;
+const testUser = await testCtx.test.saveUser(
+  testCtx.test.createUser({
+    email: `owner-api-${randomBytes(4).toString("hex")}@example.test`,
+    name: "Owner API Tester",
+    emailVerified: true,
+  })
+);
+// The linked-provider row a real Google sign-in creates.
+await prisma.account.create({
+  data: { userId: testUser.id, providerId: "google", accountId: `script-google-${randomBytes(6).toString("hex")}` },
 });
-const verifyBody = await verifyRes.json().catch(() => ({}));
-check("OTP verification creates session", verifyRes.status === 200, `status=${verifyRes.status} body=${JSON.stringify(verifyBody).slice(0, 200)}`);
-
-// --- 2. Exchange cookie session for a BEARER session (mobile flow) ------
 // The mobile app authenticates with `Authorization: Bearer <session-token>`.
-// The bearer plugin exposes the same session token via `get-session` with
-// an Authorization header once we know the raw token. In dev we extract it
-// from the set-cookie header of the verify response.
-const setCookie = verifyRes.headers.getSetCookie?.() ?? [];
-const sessionCookie = setCookie.find((c) => c.startsWith("better-auth.session_token="));
-check("session cookie issued", Boolean(sessionCookie));
-const rawToken = sessionCookie ? decodeURIComponent(sessionCookie.split(";")[0].split("=")[1]) : "";
+const { token: rawToken } = await testCtx.test.login({ userId: testUser.id });
+check("Google test session issued", Boolean(rawToken));
 
 const auth = { Authorization: `Bearer ${rawToken}` };
 

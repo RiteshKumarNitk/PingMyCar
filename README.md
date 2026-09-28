@@ -47,15 +47,24 @@ pnpm test:e2e    # full browser flows against a real dev server + Postgres
 pnpm test        # both, in order
 ```
 
-`test:e2e` starts its own `pnpm dev` if one isn't already running on :3100 (reuses
-it otherwise) and talks to whatever Postgres `DATABASE_URL` points at — same DB
-as local dev. Each test creates its own uniquely-numbered phone/user and cleans
-up after itself in `afterEach`, but it's still the dev DB: don't point `test:e2e`
-at a database with data you care about.
+`test:e2e` (and the conversation integration suite,
+`playwright test --config=playwright.integration.config.ts`) need a throwaway
+**local** Postgres in `E2E_DATABASE_URL`; the tests refuse any non-localhost
+database, and the dev server they start is pointed at that database — never at
+`.env`'s `DATABASE_URL`:
 
-OTP codes are read via `GET /api/test/last-otp?phoneNumber=...`, a dev-only
-route (404s when `NODE_ENV=production`) that reflects whatever the console-log
-dev fallback last sent — no need to scrape server output.
+```bash
+export E2E_DATABASE_URL=postgresql://vehicle:vehicle@localhost:5432/pingmycar_test
+DATABASE_URL=$E2E_DATABASE_URL pnpm db:deploy   # once
+pnpm test:e2e
+```
+
+Owners are Google-only, and real Google OAuth can't run unattended, so tests
+sign in through `tests/helpers/auth.ts`: it creates the state a successful
+"Continue with Google" leaves (verified user + linked `google` account) and
+mints a real signed session with Better Auth's `test-utils` plugin. That
+plugin lives only in the test process's own auth instance — the app has no
+test login endpoint and no bypass.
 
 ## Docker
 
