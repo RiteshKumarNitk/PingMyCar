@@ -110,6 +110,9 @@ export function VisitorConversation({ visitorToken }: { visitorToken: string }) 
           {data.vehicleName ?? "Private message"}
         </p>
         <h1 className="mt-1 text-xl font-bold tracking-tight">Your conversation</h1>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Conversations may be deleted automatically 5 days after the last message.
+        </p>
 
         {justSent && (
           <div className="mt-4 flex items-start gap-3 rounded-xl border border-success/30 bg-success-bg px-4 py-3">

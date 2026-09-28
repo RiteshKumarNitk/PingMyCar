@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { autoDeleteAt } from "@/lib/conversations/retention";
 
 export const GET = async (req: NextRequest) => {
   const session = await getSession();
@@ -50,6 +51,8 @@ export const GET = async (req: NextRequest) => {
       updatedAt: c.updatedAt,
       unread: (unreadByConversation.get(c.id) ?? 0) > 0,
       unreadCount: unreadByConversation.get(c.id) ?? 0,
+      keptAt: c.keptAt,
+      autoDeleteAt: autoDeleteAt(c),
     })),
     nextCursor: hasMore ? page[page.length - 1].id : null,
   });

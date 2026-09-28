@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { autoDeleteAt } from "@/lib/conversations/retention";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -24,6 +25,8 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
     vehicleName: conversation.vehicle.name,
     reason: conversation.reason,
     status: conversation.expiresAt < new Date() ? "CLOSED" : conversation.status,
+    keptAt: conversation.keptAt,
+    autoDeleteAt: autoDeleteAt(conversation),
     messages: conversation.messages.map((m) => ({
       senderType: m.senderType,
       body: m.body,
