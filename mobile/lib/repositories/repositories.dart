@@ -58,11 +58,13 @@ class AuthRepository {
         'Backend rejected the Google sign-in (${e.response?.statusCode ?? 'network'}). $detail',
       );
     }
-    final sessionToken = res.headers.value('set-auth-token');
+    final sessionToken = res.headers.value('set-auth-token') ??
+        (res.data?['token'] as String?) ??
+        ((res.data?['session'] is Map) ? res.data!['session']['token'] as String? : null);
     if (sessionToken == null || sessionToken.isEmpty) {
       throw const ApiException(
         ApiErrorKind.unauthorized,
-        'Sign-in succeeded but no session was issued. Is the bearer plugin enabled on the backend?',
+        'Sign-in succeeded but no session was issued (missing token in headers and body). Is the bearer plugin enabled?',
       );
     }
     await _store.saveSessionToken(sessionToken);
