@@ -51,6 +51,16 @@ class _DeepLinkBinding {
     if (_disposed || route == null) return;
     final auth = _ref.read(authControllerProvider);
     if (auth.status != AuthStatus.authenticated) return;
+    // Cold start from a notification tap: skip the splash — land on the
+    // dashboard, then open the conversation on top of it (so Back returns
+    // to the dashboard instead of the splash).
+    if (_router.routerDelegate.currentConfiguration.uri.path == '/splash') {
+      _router.go('/home');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_disposed) _router.push(route);
+      });
+      return;
+    }
     _router.push(route);
   }
 
@@ -69,9 +79,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       final status = ref.read(authControllerProvider).status;
       final location = state.matchedLocation;
 
-      if (location == '/splash' || location == '/welcome' || location == '/login') {
+      // The splash plays its brand animation and then routes itself
+      // (authenticated → /home, otherwise → /login) once the session restore
+      // has resolved — so it is never redirected away mid-animation.
+      if (location == '/splash') return null;
+
+      if (location == '/welcome' || location == '/login') {
         if (status == AuthStatus.authenticated) return '/home';
-        if (status == AuthStatus.unknown) return null;
         return null;
       }
 

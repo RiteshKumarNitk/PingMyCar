@@ -15,6 +15,8 @@ class BrandMark extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final dot = size * 0.3;
+    // On dark backgrounds a navy tile vanishes — use the translucent style.
+    final onDark = inverse || Theme.of(context).brightness == Brightness.dark;
     return Semantics(
       label: 'PingMyCar',
       image: true,
@@ -28,9 +30,9 @@ class BrandMark extends StatelessWidget {
               width: size,
               height: size,
               decoration: BoxDecoration(
-                color: inverse ? c.onNavy.withValues(alpha: 0.1) : c.navy,
+                color: onDark ? c.onNavy.withValues(alpha: 0.1) : c.navy,
                 borderRadius: BorderRadius.circular(size * 0.28),
-                border: inverse ? Border.all(color: c.onNavy.withValues(alpha: 0.16)) : null,
+                border: onDark ? Border.all(color: c.onNavy.withValues(alpha: 0.16)) : null,
               ),
               child: Icon(Icons.qr_code_2_outlined, size: size * 0.58, color: c.onNavy),
             ),
