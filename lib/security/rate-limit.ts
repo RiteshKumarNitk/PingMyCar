@@ -8,16 +8,25 @@
  * shared across all instances via Upstash's REST API — no extra dependency.
  *
  * Without Redis (local dev), or if Redis errors, it falls back to the
- * in-process limiter so visitors are never blocked by an outage.
+ * in-process limiter so messaging never depends on Redis being up. That
+ * fallback is DEGRADED protection — per-instance only, so on Vercel an abuser
+ * spread across instances gets far more than `limit` — and results say so via
+ * `degraded: true`. It is not equivalent to the distributed limit.
  */
 
 type Bucket = { count: number; resetAt: number };
-type RateLimitResult = { ok: boolean; remaining: number; resetAt: number };
+type RateLimitResult = {
+  ok: boolean;
+  remaining: number;
+  resetAt: number;
+  /** true when enforced by the per-instance memory fallback, not Redis. */
+  degraded: boolean;
+};
 type RateLimitOptions = { key: string; limit: number; windowMs: number };
 
 const buckets = new Map<string, Bucket>();
 
-function memoryRateLimit(options: RateLimitOptions): RateLimitResult {
+function memoryRateLimit(options: RateLimitOptions): Omit<RateLimitResult, "degraded"> {
   const now = Date.now();
   const existing = buckets.get(options.key);
 
@@ -79,24 +88,31 @@ async function redisRateLimit(
     ok: count <= options.limit,
     remaining: Math.max(0, options.limit - count),
     resetAt: Date.now() + ttl,
+    degraded: false,
   };
 }
 
 export async function rateLimit(options: RateLimitOptions): Promise<RateLimitResult> {
   const redis = redisConfig();
   if (!redis) {
-    if (process.env.VERCEL && !warnedNoRedis) {
+    if ((process.env.VERCEL || process.env.NODE_ENV === "production") && !warnedNoRedis) {
       warnedNoRedis = true;
-      console.warn("[rate-limit] No Upstash Redis configured — using per-instance memory limiter, which is ineffective on Vercel.");
+      console.warn(
+        "[rate-limit] DEGRADED: no Upstash Redis configured (UPSTASH_REDIS_REST_URL/TOKEN or KV_REST_API_URL/TOKEN). " +
+          "Using the per-instance memory limiter, which does not enforce limits across serverless instances."
+      );
     }
-    return memoryRateLimit(options);
+    return { ...memoryRateLimit(options), degraded: true };
   }
 
   try {
     return await redisRateLimit(redis, options);
   } catch (err) {
-    console.error("[rate-limit] Upstash unavailable, falling back to memory limiter:", err instanceof Error ? err.message : err);
-    return memoryRateLimit(options);
+    console.error(
+      "[rate-limit] DEGRADED: Upstash request failed, falling back to per-instance memory limiter:",
+      err instanceof Error ? err.message : err
+    );
+    return { ...memoryRateLimit(options), degraded: true };
   }
 }
 

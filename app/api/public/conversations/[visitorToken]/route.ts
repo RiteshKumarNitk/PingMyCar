@@ -12,7 +12,10 @@ async function findConversation(visitorToken: string) {
   const visitorTokenHash = hashVisitorToken(visitorToken);
   return prisma.conversation.findUnique({
     where: { visitorTokenHash },
-    include: { vehicle: { select: { id: true, name: true, ownerId: true } }, messages: { orderBy: { createdAt: "asc" } } },
+    include: {
+      vehicle: { select: { id: true, name: true, ownerId: true, profile: { select: { showVehicleName: true } } } },
+      messages: { orderBy: { createdAt: "asc" } },
+    },
   });
 }
 
@@ -24,7 +27,9 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
   const expired = conversation.expiresAt < new Date();
 
   return NextResponse.json({
-    vehicleName: conversation.vehicle.name,
+    // Same privacy toggle as the public QR page: a hidden vehicle name stays
+    // hidden from the visitor here too.
+    vehicleName: conversation.vehicle.profile?.showVehicleName ? conversation.vehicle.name : null,
     status: expired ? "CLOSED" : conversation.status,
     messages: conversation.messages.map((m) => ({
       senderType: m.senderType,

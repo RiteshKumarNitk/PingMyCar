@@ -105,6 +105,8 @@ class ConversationSummary {
         reason: j['reason'] as String,
         reasonLabel: _reasonLabel(j['reason'] as String),
         status: j['status'] as String,
+        unread: (j['unread'] as bool?) ?? false,
+        unreadCount: (j['unreadCount'] as num?)?.toInt() ?? 0,
         lastMessageBody: j['lastMessage']?['body'] as String?,
         lastMessageAt: _date(j['lastMessage']?['createdAt'] ?? j['updatedAt']),
       );
