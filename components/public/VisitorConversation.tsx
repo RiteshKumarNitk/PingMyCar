@@ -7,7 +7,7 @@ import { MessageThread } from "@/components/messages/MessageThread";
 import { ReportConversationLink } from "@/components/public/ReportConversationLink";
 
 type ConversationData = {
-  vehicleName: string;
+  vehicleName: string | null;
   status: string;
   messages: { senderType: "VISITOR" | "OWNER"; body: string; createdAt: string }[];
 };
@@ -107,9 +107,12 @@ export function VisitorConversation({ visitorToken }: { visitorToken: string }) 
 
       <main className="mx-auto w-full max-w-md flex-1 px-4 py-6">
         <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          {data.vehicleName}
+          {data.vehicleName ?? "Private message"}
         </p>
         <h1 className="mt-1 text-xl font-bold tracking-tight">Your conversation</h1>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Conversations may be deleted automatically 5 days after the last message.
+        </p>
 
         {justSent && (
           <div className="mt-4 flex items-start gap-3 rounded-xl border border-success/30 bg-success-bg px-4 py-3">

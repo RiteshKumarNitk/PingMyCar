@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { generateVisitorToken, hashVisitorToken } from "@/lib/security/tokens";
+import { generateVisitorToken, hashVisitorToken, appBaseUrl } from "@/lib/security/tokens";
 import { hashedIp } from "@/lib/security/ip";
 import { rateLimit, visitorMessageLimit } from "@/lib/security/rate-limit";
 import { startConversationSchema } from "@/lib/validation/publicMessage";
@@ -11,7 +11,7 @@ const CONVERSATION_TTL_DAYS = 30;
 
 export async function POST(request: NextRequest) {
   const { limit, windowMs } = visitorMessageLimit();
-  const rl = rateLimit({ key: `public-messages:${hashedIp(request)}`, limit, windowMs });
+  const rl = await rateLimit({ key: `public-messages:${hashedIp(request)}`, limit, windowMs });
   if (!rl.ok) {
     return NextResponse.json({ error: "Too many messages. Try again in a minute." }, { status: 429 });
   }
@@ -65,12 +65,11 @@ export async function POST(request: NextRequest) {
   });
 
   const reasonLabel = CONTACT_REASONS.find((r) => r.id === reason)?.label ?? reason;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3100";
   await notifyOwner({
     userId: vehicle.ownerId,
     title: `New message about ${vehicle.name}`,
     body: `${reasonLabel}: ${messageBody}`,
-    url: `${appUrl}/dashboard/messages/${conversation.id}`,
+    url: `${appBaseUrl()}/dashboard/messages/${conversation.id}`,
   });
 
   return NextResponse.json({ visitorToken }, { status: 201 });

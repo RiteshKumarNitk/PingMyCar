@@ -221,6 +221,10 @@ model Conversation {
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @default(now()) @updatedAt
   expiresAt        DateTime
+  /// Set when the owner chooses to keep this conversation. Unkept
+  /// conversations are auto-deleted 5 days after their last activity
+  /// (lib/conversations/retention.ts).
+  keptAt           DateTime?
 
   vehicle  Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   messages Message[]
@@ -231,6 +235,8 @@ model Conversation {
   @@index([vehicleId, updatedAt])
   /// Owner inbox filter: unread threads include unseen VISITOR messages.
   @@index([vehicleId, status])
+  /// Retention purge: unkept conversations by last activity.
+  @@index([keptAt, updatedAt])
 }
 
 model Report {

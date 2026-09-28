@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/auth/session";
+import { phoneOtpEnabled } from "@/lib/auth";
 import { isTempEmail } from "@/lib/auth/tempEmail";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,16 +35,18 @@ export default async function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card className="rounded-xl">
-        <CardHeader>
-          <CardTitle className="text-base">Phone</CardTitle>
-          <CardDescription>Used to log in with a one-time code.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {user.phoneNumber && <p className="mb-3 text-sm">{user.phoneNumber}</p>}
-          <PhoneForm currentPhone={user.phoneNumber ?? null} />
-        </CardContent>
-      </Card>
+      {(phoneOtpEnabled || user.phoneNumber) && (
+        <Card className="rounded-xl">
+          <CardHeader>
+            <CardTitle className="text-base">Phone</CardTitle>
+            <CardDescription>Used to log in with a one-time code.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {user.phoneNumber && <p className="mb-3 text-sm">{user.phoneNumber}</p>}
+            {phoneOtpEnabled && <PhoneForm currentPhone={user.phoneNumber ?? null} />}
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="rounded-xl">
         <CardHeader>
