@@ -113,6 +113,7 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+    nextCookies(),
     phoneNumber({
       sendOTP,
       otpLength: 6,
@@ -130,7 +131,6 @@ export const auth = betterAuth({
     // `Authorization: Bearer <token>` on every API call. Same User/Session
     // tables, same 30-day expiry — no second auth mechanism.
     bearer(),
-    nextCookies(),
   ],
 });
 
