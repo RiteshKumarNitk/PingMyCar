@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
+import { suspendedOwnerGuard } from "@/lib/admin/guards";
 import { prisma } from "@/lib/db";
 import { updateVehicleSchema } from "@/lib/validation/vehicle";
 import { generatePublicToken } from "@/lib/security/tokens";
@@ -20,6 +21,9 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const suspended = await suspendedOwnerGuard(session.user.id);
+  if (suspended) return suspended;
 
   const { id } = await params;
   const existing = await prisma.vehicle.findFirst({ where: { id, ownerId: session.user.id } });
@@ -53,6 +57,9 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const suspended = await suspendedOwnerGuard(session.user.id);
+  if (suspended) return suspended;
 
   const { id } = await params;
   const existing = await prisma.vehicle.findFirst({ where: { id, ownerId: session.user.id } });

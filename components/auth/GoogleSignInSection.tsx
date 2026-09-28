@@ -94,6 +94,7 @@ export function GoogleSignInSection({ label = "Continue with Google" }: { label?
             const res = await authClient.signIn.social({
               provider: "google",
               callbackURL: "/post-login",
+              errorCallbackURL: "/login",
             });
 
             if (res?.error) {

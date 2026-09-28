@@ -11,7 +11,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   const { visitorToken } = await params;
 
   const { limit, windowMs } = visitorMessageLimit();
-  const rl = rateLimit({ key: `public-report:${hashedIp(request)}`, limit, windowMs });
+  const rl = await rateLimit({ key: `public-report:${hashedIp(request)}`, limit, windowMs });
   if (!rl.ok) {
     return NextResponse.json({ error: "Too many requests. Try again in a minute." }, { status: 429 });
   }

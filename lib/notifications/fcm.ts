@@ -1,6 +1,7 @@
 import { initializeApp, getApps, cert, type App } from "firebase-admin/app";
 import { getMessaging, type Messaging } from "firebase-admin/messaging";
 import { prisma } from "@/lib/db";
+import { appBaseUrl } from "@/lib/security/tokens";
 
 /**
  * FCM (HTTP v1 via firebase-admin) push for the Flutter owner app.
@@ -56,7 +57,7 @@ export async function sendFcmToUser(userId: string, payload: { title: string; bo
   });
   if (devices.length === 0) return;
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3100";
+  const appUrl = appBaseUrl();
   const deepLink = payload.url?.startsWith(appUrl)
     ? payload.url.slice(appUrl.length) // e.g. /dashboard/messages/<id>
     : undefined;

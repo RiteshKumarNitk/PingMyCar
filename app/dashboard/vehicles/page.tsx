@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { VEHICLE_TYPE_LABELS } from "@/lib/validation/vehicle";
-import { qrSvgMarkup } from "@/lib/qr";
+import { qrSvgMarkup, publicVehicleUrl } from "@/lib/qr";
 
 export const metadata = { title: "My Vehicles" };
 
@@ -93,7 +93,7 @@ export default async function VehiclesPage() {
                     className="hidden h-16 w-16 shrink-0 rounded-lg border border-border bg-white p-1.5 sm:block"
                     aria-hidden
                     dangerouslySetInnerHTML={{
-                      __html: qrSvgMarkup(`https://pingmycar.app/v/${vehicle.publicToken}`, 2),
+                      __html: qrSvgMarkup(publicVehicleUrl(vehicle.publicToken), 2),
                     }}
                   />
 

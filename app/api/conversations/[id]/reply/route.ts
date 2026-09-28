@@ -32,7 +32,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   await prisma.message.create({
     data: { conversationId: conversation.id, senderType: "OWNER", body: parsed.data.body },
   });
-  await prisma.conversation.update({ where: { id: conversation.id }, data: {} });
+  await prisma.conversation.update({ where: { id: conversation.id }, data: { updatedAt: new Date() } });
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

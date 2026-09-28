@@ -16,11 +16,27 @@ import { setLastOtp } from "./otpStore";
  * before production.
  */
 async function sendOTP({ phoneNumber, code }: { phoneNumber: string; code: string }) {
+  if (!phoneOtpEnabled) throw new Error("Phone OTP is disabled on this deployment");
   console.log(`[dev OTP] ${phoneNumber} -> ${code}`);
   setLastOtp(phoneNumber, code);
 }
 
 const isProd = process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
+
+/**
+ * Phone OTP has no real SMS sender yet, so its endpoints are only live in
+ * development. In production they 404 (disabledPaths below) — otherwise anyone
+ * could mint accounts/codes that only ever land in server logs. The plugin
+ * itself stays registered so the User.phoneNumber schema field is unchanged.
+ */
+export const phoneOtpEnabled = !isProd;
+const PHONE_OTP_PATHS = [
+  "/sign-in/phone-number",
+  "/phone-number/send-otp",
+  "/phone-number/verify",
+  "/phone-number/request-password-reset",
+  "/phone-number/reset-password",
+];
 
 const appUrl =
   process.env.BETTER_AUTH_URL ||
@@ -52,6 +68,10 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET,
   baseURL: appUrl,
   trustedOrigins: Array.from(new Set(trustedOrigins.filter(Boolean))),
+  disabledPaths: phoneOtpEnabled ? [] : PHONE_OTP_PATHS,
+  // OAuth failures land on /login (which explains ?error=…) instead of
+  // Better Auth's bare /api/auth/error page.
+  onAPIError: { errorURL: "/login" },
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   emailAndPassword: {
     enabled: true,

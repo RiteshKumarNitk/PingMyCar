@@ -11,6 +11,7 @@ import type { AdminRole } from "@prisma/client";
  * data — and is audited.
  *
  * Hardening notes:
+ * - The account's email must be verified (emailVerified), not just match.
  * - The grant runs at most once per email (the audit event is the marker).
  * - The env var is not read into any client bundle (no NEXT_PUBLIC_ prefix).
  * - Once elevated, remove the env var; future logins keep the stored role.
@@ -48,9 +49,14 @@ export async function bootstrapSuperAdmin(user: {
   // Read the DB role so the audit row always records the true pre-grant role.
   const current = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { adminRole: true },
+    select: { adminRole: true, emailVerified: true },
   });
   if (!current) return { elevated: false, role: "USER" };
+
+  // A matching email string is not proof of ownership: email/password sign-up
+  // and changeEmail both let anyone claim an address unverified. Only an
+  // address the provider (Google) verified may be elevated.
+  if (!current.emailVerified) return { elevated: false, role: current.adminRole };
 
   // Never downgrade an existing higher role; SUPER_ADMIN is already final.
   if (current.adminRole === "SUPER_ADMIN") {

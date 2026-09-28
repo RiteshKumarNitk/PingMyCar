@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { hashVisitorToken } from "@/lib/security/tokens";
+import { hashVisitorToken, appBaseUrl } from "@/lib/security/tokens";
 import { hashedIp } from "@/lib/security/ip";
 import { rateLimit, visitorMessageLimit } from "@/lib/security/rate-limit";
 import { replyMessageSchema } from "@/lib/validation/publicMessage";
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   const { visitorToken } = await params;
 
   const { limit, windowMs } = visitorMessageLimit();
-  const rl = rateLimit({ key: `public-reply:${hashedIp(request)}`, limit, windowMs });
+  const rl = await rateLimit({ key: `public-reply:${hashedIp(request)}`, limit, windowMs });
   if (!rl.ok) {
     return NextResponse.json({ error: "Too many messages. Try again in a minute." }, { status: 429 });
   }
@@ -60,14 +60,13 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     data: { conversationId: conversation.id, senderType: "VISITOR", body: parsed.data.body },
   });
   // Bump updatedAt so the owner's inbox sorts by most recent activity.
-  await prisma.conversation.update({ where: { id: conversation.id }, data: {} });
+  await prisma.conversation.update({ where: { id: conversation.id }, data: { updatedAt: new Date() } });
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3100";
   await notifyOwner({
     userId: conversation.vehicle.ownerId,
     title: `New reply about ${conversation.vehicle.name}`,
     body: parsed.data.body,
-    url: `${appUrl}/dashboard/messages/${conversation.id}`,
+    url: `${appBaseUrl()}/dashboard/messages/${conversation.id}`,
   });
 
   return NextResponse.json({ ok: true }, { status: 201 });

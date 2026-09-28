@@ -20,12 +20,25 @@ export function hashVisitorToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
+/**
+ * Absolute origin for links that leave the app — QR stickers above all, which
+ * are printed and can never be corrected. Falls back to localhost only in
+ * development; a production deploy missing NEXT_PUBLIC_APP_URL throws instead
+ * of silently encoding localhost into stickers and notification links.
+ */
+export function appBaseUrl(): string {
+  const url = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/+$/, "");
+  if (url) return url;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("NEXT_PUBLIC_APP_URL must be set in production");
+  }
+  return "http://localhost:3100";
+}
+
 export function publicVehicleUrl(publicToken: string): string {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3100";
-  return `${base}/v/${publicToken}`;
+  return `${appBaseUrl()}/v/${publicToken}`;
 }
 
 export function conversationUrl(visitorToken: string): string {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3100";
-  return `${base}/c/${visitorToken}`;
+  return `${appBaseUrl()}/c/${visitorToken}`;
 }

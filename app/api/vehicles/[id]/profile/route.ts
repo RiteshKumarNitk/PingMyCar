@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
+import { suspendedOwnerGuard } from "@/lib/admin/guards";
 import { prisma } from "@/lib/db";
 import { updateVehicleProfileSchema } from "@/lib/validation/vehicleProfile";
 
@@ -22,6 +23,9 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const suspended = await suspendedOwnerGuard(session.user.id);
+  if (suspended) return suspended;
 
   const { id } = await params;
   const vehicle = await prisma.vehicle.findFirst({
