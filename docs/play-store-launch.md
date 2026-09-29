@@ -122,9 +122,11 @@ without personal details.
 
 - **Privacy policy:** `https://ping-my-car.vercel.app/privacy-policy`
 - **Ads:** No ads.
-- **App access:** Owner features need Google sign-in. Provide a test Google
-  account for reviewers (App content → App access → "All or some
-  functionality is restricted" → add credentials + steps).
+- **App access:** choose "All or some functionality is restricted" and add
+  instructions (no credentials needed): *Open the app and tap **Continue as
+  Guest**. This opens a read-only demo account with sample vehicles, QR
+  stickers and conversations. Owner features that change data (adding
+  vehicles, replying, notifications) require Google sign-in.*
 - **Target audience:** 18+ (vehicle owners). Not designed for children.
 - **Content rating:** complete the questionnaire; the app has user-to-user
   messaging (answer "Yes" to users interacting/communicating).

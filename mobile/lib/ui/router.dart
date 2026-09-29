@@ -87,6 +87,9 @@ class _DeepLinkBinding {
   }
 }
 
+/// Screens a guest/demo session can't use (they act on a real account).
+const _ownerOnly = {'/settings/delete-account'};
+
 final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -102,14 +105,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (location == '/splash') return null;
 
       if (location == '/welcome' || location == '/login') {
-        if (status == AuthStatus.authenticated) return '/home';
+        if (status == AuthStatus.authenticated || status == AuthStatus.guest) return '/home';
         return null;
       }
 
       if (status == AuthStatus.unknown) return '/splash';
-      // Guests are never owners: every owner route requires a session.
+      // Signed-out visitors never see owner screens.
       if (status == AuthStatus.unauthenticated) return '/login';
-      if (status == AuthStatus.authenticated && location == '/login') return '/home';
+      // A guest browses demo data (the API client serves demo endpoints and
+      // refuses writes); owner-only account screens stay out of reach.
+      if (status == AuthStatus.guest && _ownerOnly.contains(location)) return '/settings';
       return null;
     },
     routes: [

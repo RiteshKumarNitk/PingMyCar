@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../providers.dart';
 import '../../../services/fcm/fcm_bootstrap.dart';
 import '../../components/components.dart';
 
@@ -48,6 +49,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> with 
   }
 
   Future<void> _refresh({bool fromResume = false}) async {
+    // Demo sessions never register this device for real owner notifications.
+    if (ref.read(authControllerProvider).isGuest) {
+      if (mounted) setState(() => _view = _View.unavailable);
+      return;
+    }
     final fcm = ref.read(fcmInstanceProvider);
     if (fcm == null) return; // Firebase still starting — the listener in build re-runs this.
     final status = await fcm.status();
@@ -126,12 +132,19 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> with 
 
     final (StatusKind kind, String badge, String headline, String body) = switch (_view) {
       _View.checking => (StatusKind.pending, 'Checking', 'Notifications', 'Checking this device\'s notification settings…'),
-      _View.unavailable => (
-          StatusKind.inactive,
-          'Unavailable',
-          'Notifications aren\'t available',
-          'This build or device can\'t receive push notifications. Messages still appear in the app.',
-        ),
+      _View.unavailable => ref.read(authControllerProvider).isGuest
+          ? (
+              StatusKind.inactive,
+              'Demo',
+              'Not available in demo mode',
+              'Sign in with Google to get alerts on this device when someone contacts your vehicle.',
+            )
+          : (
+              StatusKind.inactive,
+              'Unavailable',
+              'Notifications aren\'t available',
+              'This build or device can\'t receive push notifications. Messages still appear in the app.',
+            ),
       _View.off => (
           StatusKind.inactive,
           'Off',

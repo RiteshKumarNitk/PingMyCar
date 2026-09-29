@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../config.dart';
@@ -31,7 +32,12 @@ class GoogleSignInService {
         'See mobile/lib/config.dart for setup steps.',
       );
     }
-    final account = await _gsi.signIn();
+    final GoogleSignInAccount? account;
+    try {
+      account = await _gsi.signIn();
+    } on PlatformException catch (e) {
+      throw Exception(googleSignInErrorMessage(e));
+    }
     if (account == null) {
       throw Exception('Google sign-in was cancelled.');
     }
@@ -55,4 +61,26 @@ class GoogleSignInService {
       // Already disconnected / no saved account — nothing to do.
     }
   }
+}
+
+/// Human explanation for Google Play services sign-in failures.
+///
+/// `ApiException: 10` (DEVELOPER_ERROR) means this build's signing
+/// certificate (SHA-1) + package name isn't registered as an Android OAuth
+/// client in the Google Cloud project of the web client id — e.g. a build
+/// signed with a new upload key, or a Play-installed build (Play app-signing
+/// key). Add that SHA-1 in Google Cloud Console → Credentials.
+String googleSignInErrorMessage(PlatformException e) {
+  final detail = '${e.code} ${e.message ?? ''}';
+  if (detail.contains('ApiException: 10') || detail.contains('DEVELOPER_ERROR')) {
+    return "Google sign-in isn't set up for this version of the app yet (code 10). "
+        "The app's signing certificate must be registered with Google. Please try again later.";
+  }
+  if (e.code == 'network_error' || detail.contains('ApiException: 7')) {
+    return "You're offline. Check your connection and try again.";
+  }
+  if (e.code == 'sign_in_canceled' || detail.contains('ApiException: 12501')) {
+    return 'Google sign-in was cancelled.';
+  }
+  return 'Google sign-in failed (${e.code}). Please try again.';
 }

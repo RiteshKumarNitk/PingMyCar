@@ -73,6 +73,45 @@ class AuthRepository {
     return me();
   }
 
+  /// Whether the stored token is a guest/demo token.
+  Future<bool> hasGuestToken() async => (await _store.readSessionToken())?.startsWith(guestTokenPrefix) ?? false;
+
+  /// Asks the server for a guest/demo session. Nothing is sent that could
+  /// choose a role or account — the server decides (always GUEST).
+  Future<UserProfile> startGuestSession() async {
+    await _store.clearSessionToken(); // never mix with a stale owner token
+    final dynamic data;
+    try {
+      data = await _client.post('/api/guest/session');
+    } on ApiException catch (e) {
+      // 404 = a server without guest mode (not deployed yet).
+      if (e.kind == ApiErrorKind.notFound) {
+        throw const ApiException(ApiErrorKind.server, "Guest mode isn't available right now. Please try again later.");
+      }
+      rethrow;
+    }
+    final token = (data as Map)['token'] as String?;
+    if (token == null || !token.startsWith(guestTokenPrefix)) {
+      throw const ApiException(ApiErrorKind.server, "Couldn't start the demo. Please try again.");
+    }
+    await _store.saveSessionToken(token);
+    return UserProfile.fromJson((data['user'] as Map).cast<String, dynamic>());
+  }
+
+  /// Validates a stored guest session (expired/revoked → ApiException).
+  Future<UserProfile> restoreGuest() async {
+    final data = await _client.get('/api/guest/session');
+    return UserProfile.fromJson(((data as Map)['user'] as Map).cast<String, dynamic>());
+  }
+
+  /// Ends the guest session server-side (best-effort) and locally.
+  Future<void> endGuestSession() async {
+    try {
+      await _client.delete('/api/guest/session');
+    } catch (_) {/* expires on its own */}
+    await _store.clearSessionToken();
+  }
+
   /// Permanently deletes the signed-in owner's account (the server derives
   /// the account from the session — no id is sent). Throws [ApiException]
   /// on failure and leaves the local session untouched so the owner can

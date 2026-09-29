@@ -227,6 +227,14 @@ class _BrandHero extends ConsumerWidget {
               const BrandMark(size: 28, inverse: true),
               const SizedBox(width: Space.xs),
               Text('OwnerPing', style: t.titleSmall?.copyWith(color: c.onNavy, letterSpacing: 0.2)),
+              if (ref.watch(authControllerProvider).isGuest) ...[
+                const SizedBox(width: Space.xs),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(color: c.accent.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(Radii.pill)),
+                  child: Text('Demo', style: t.labelSmall?.copyWith(color: c.accent, letterSpacing: 0.4)),
+                ),
+              ],
               const Spacer(),
               Semantics(
                 button: true,

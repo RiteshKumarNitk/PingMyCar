@@ -92,7 +92,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
     if (router.routerDelegate.currentConfiguration.uri.path != '/splash') return;
     // Guests are never owners: only an authenticated session reaches the
     // dashboard; everyone else goes to Google sign-in.
-    context.go(status == AuthStatus.authenticated ? '/home' : '/login');
+    context.go(status == AuthStatus.authenticated || status == AuthStatus.guest ? '/home' : '/login');
   }
 
   double _seg(double begin, double end, [Curve curve = Curves.linear]) {

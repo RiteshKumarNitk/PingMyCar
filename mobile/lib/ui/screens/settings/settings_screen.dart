@@ -17,7 +17,9 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = AppColors.of(context);
     final t = Theme.of(context).textTheme;
-    final user = ref.watch(authControllerProvider).user;
+    final auth = ref.watch(authControllerProvider);
+    final user = auth.user;
+    final guest = auth.isGuest;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Account')),
@@ -28,13 +30,15 @@ class SettingsScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Google account', style: t.labelMedium),
+                Text(guest ? 'Demo account' : 'Google account', style: t.labelMedium),
                 const SizedBox(height: Space.xs),
-                Text(user?.hasRealName == true ? user!.name : 'Signed in', style: t.titleMedium),
-                Text(user?.email ?? '', style: t.bodyMedium),
+                Text(guest ? 'Guest / Demo Account' : (user?.hasRealName == true ? user!.name : 'Signed in'), style: t.titleMedium),
+                if (!guest) Text(user?.email ?? '', style: t.bodyMedium),
                 const SizedBox(height: Space.sm),
                 Text(
-                  'You sign in with Google. OwnerPing never shows your name, email or phone number to visitors unless you choose to show your name on a vehicle page.',
+                  guest
+                      ? 'You are exploring OwnerPing with sample data. Sign in with Google to use it with your own vehicles.'
+                      : 'You sign in with Google. OwnerPing never shows your name, email or phone number to visitors unless you choose to show your name on a vehicle page.',
                   style: t.bodySmall,
                 ),
               ],
@@ -45,13 +49,15 @@ class SettingsScreen extends ConsumerWidget {
             padding: EdgeInsets.zero,
             child: Column(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.notifications_outlined),
-                  title: const Text('Notifications'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/settings/notifications'),
-                ),
-                const Divider(indent: 56),
+                if (!guest) ...[
+                  ListTile(
+                    leading: const Icon(Icons.notifications_outlined),
+                    title: const Text('Notifications'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/settings/notifications'),
+                  ),
+                  const Divider(indent: 56),
+                ],
                 ListTile(
                   leading: const Icon(Icons.shield_outlined),
                   title: const Text('Privacy'),
@@ -61,17 +67,19 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: Space.md),
-          AppCard(
-            padding: EdgeInsets.zero,
-            child: ListTile(
-              leading: Icon(Icons.delete_forever_outlined, color: c.danger),
-              title: Text('Delete account', style: TextStyle(color: c.danger)),
-              subtitle: const Text('Permanently delete your account and data'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push('/settings/delete-account'),
+          if (!guest) ...[
+            const SizedBox(height: Space.md),
+            AppCard(
+              padding: EdgeInsets.zero,
+              child: ListTile(
+                leading: Icon(Icons.delete_forever_outlined, color: c.danger),
+                title: Text('Delete account', style: TextStyle(color: c.danger)),
+                subtitle: const Text('Permanently delete your account and data'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/settings/delete-account'),
+              ),
             ),
-          ),
+          ],
           const SizedBox(height: Space.md),
           AppCard(
             padding: EdgeInsets.zero,

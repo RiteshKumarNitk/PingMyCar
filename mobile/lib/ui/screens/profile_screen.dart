@@ -16,6 +16,14 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _signingOut = false;
 
+  /// Guest: end the demo session and go back to sign-in (no confirmation
+  /// needed — there's nothing to lose).
+  Future<void> _endDemo() async {
+    if (_signingOut) return;
+    setState(() => _signingOut = true);
+    await ref.read(authControllerProvider.notifier).signOut();
+  }
+
   Future<void> _signOut() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -38,7 +46,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final t = Theme.of(context).textTheme;
-    final user = ref.watch(authControllerProvider).user;
+    final auth = ref.watch(authControllerProvider);
+    if (auth.isGuest) return _guest(context);
+    final user = auth.user;
     final name = user?.hasRealName == true ? user!.name : 'OwnerPing owner';
     final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
 
@@ -139,6 +149,98 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             variant: AppButtonVariant.secondary,
             loading: _signingOut,
             onPressed: _signOut,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+extension on _ProfileScreenState {
+  /// Demo profile: no personal data, nothing editable, a clear way to sign in
+  /// for real or leave the demo.
+  Widget _guest(BuildContext context) {
+    final c = AppColors.of(context);
+    final t = Theme.of(context).textTheme;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Profile')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(Space.page, Space.xs, Space.page, Space.xxl),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(Space.lg),
+            decoration: BoxDecoration(
+              gradient: c.brandGradient,
+              borderRadius: BorderRadius.circular(Radii.xl),
+              boxShadow: Shadows.raised(context),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: c.onNavy.withValues(alpha: 0.12),
+                  child: Icon(Icons.visibility_outlined, color: c.accent, size: 28),
+                ),
+                const SizedBox(width: Space.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Guest / Demo Account', style: t.titleMedium?.copyWith(color: c.onNavy)),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Demo mode — you're exploring OwnerPing with sample data. Nothing you see belongs to a real owner.",
+                        style: t.bodySmall?.copyWith(color: c.onNavy.withValues(alpha: 0.75)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: Space.lg),
+          AppButton(label: 'Sign in with Google', icon: Icons.login_outlined, loading: _signingOut, onPressed: _endDemo),
+          const SizedBox(height: Space.xs),
+          Text(
+            'Sign in with Google to add your own vehicles, get your QR stickers and receive messages.',
+            textAlign: TextAlign.center,
+            style: t.bodySmall,
+          ),
+          const SizedBox(height: Space.xl),
+          const SectionHeader(title: 'Explore'),
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                _Row(
+                  icon: Icons.shield_outlined,
+                  title: 'Privacy',
+                  subtitle: 'What visitors can and cannot see',
+                  onTap: () => context.push('/settings/privacy'),
+                ),
+                const Divider(indent: 56),
+                _Row(
+                  icon: Icons.sell_outlined,
+                  title: 'Stickers',
+                  subtitle: 'Designs, sizes and printing',
+                  onTap: () => context.push('/stickers'),
+                ),
+                const Divider(indent: 56),
+                _Row(
+                  icon: Icons.info_outline,
+                  title: 'About',
+                  subtitle: 'App info and contact',
+                  onTap: () => context.push('/settings'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: Space.xl),
+          AppButton(
+            label: 'Exit demo',
+            icon: Icons.logout_outlined,
+            variant: AppButtonVariant.secondary,
+            onPressed: _signingOut ? null : _endDemo,
           ),
         ],
       ),

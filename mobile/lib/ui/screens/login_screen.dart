@@ -5,8 +5,10 @@ import '../../core/api_error.dart';
 import '../../providers.dart';
 import '../components/components.dart';
 
-/// The only sign-in surface: Continue with Google (backend Google OAuth).
-/// No OTP, no password, no magic link — by product rule.
+/// The sign-in surface. Owners: Continue with Google (the only owner
+/// sign-in; no OTP, no password, no magic link). Anyone else — e.g. an app
+/// reviewer — can Continue as Guest: a server-issued, read-only demo session
+/// on sample data, never an owner account.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -16,7 +18,24 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _loading = false;
+  bool _guestLoading = false;
   String? _error;
+
+  Future<void> _continueAsGuest() async {
+    setState(() {
+      _guestLoading = true;
+      _error = null;
+    });
+    try {
+      await ref.read(authControllerProvider.notifier).continueAsGuest();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _guestLoading = false;
+        _error = e is ApiException ? e.message : "Couldn't start the demo. Please try again.";
+      });
+    }
+  }
 
   Future<void> _signIn() async {
     setState(() {
@@ -28,7 +47,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       setState(() {
         _loading = false;
-        _error = e is ApiException ? e.message : 'Sign-in failed. Please try again.';
+        _error = e is ApiException
+            ? e.message
+            : e is Exception && e.toString().startsWith('Exception: ')
+                ? e.toString().substring(11)
+                : 'Sign-in failed. Please try again.';
       });
     }
   }
@@ -77,7 +100,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       const SizedBox(height: Space.md),
                     ],
-                    _GoogleButton(loading: _loading, onPressed: _signIn),
+                    _GoogleButton(loading: _loading, onPressed: _guestLoading ? () {} : _signIn),
+                    const SizedBox(height: Space.sm),
+                    AppButton(
+                      label: 'Continue as Guest',
+                      semanticLabel: 'Continue as Guest — explore OwnerPing with demo data',
+                      icon: Icons.visibility_outlined,
+                      variant: AppButtonVariant.secondary,
+                      loading: _guestLoading,
+                      onPressed: _loading ? null : _continueAsGuest,
+                    ),
+                    const SizedBox(height: Space.xs),
+                    Text(
+                      'Explore OwnerPing with demo data. No account required.',
+                      textAlign: TextAlign.center,
+                      style: t.bodySmall,
+                    ),
                     if (_error != null) ...[
                       const SizedBox(height: Space.sm),
                       Semantics(

@@ -15,10 +15,13 @@ export function StartConversationForm({
   publicToken,
   contactFlags,
   maxChars,
+  demo = false,
 }: {
   publicToken: string;
   contactFlags: ContactFlags;
   maxChars: number;
+  /** Demo QR: the send is simulated here — nothing is posted, no owner is notified. */
+  demo?: boolean;
 }) {
   const router = useRouter();
   const reasons = visibleReasons(contactFlags);
@@ -26,6 +29,25 @@ export function StartConversationForm({
   const [messageBody, setMessageBody] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [demoSent, setDemoSent] = useState(false);
+
+  if (demoSent) {
+    return (
+      <div role="status" className="space-y-3 text-center">
+        <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-success-bg text-success">
+          <Check className="size-6" aria-hidden />
+        </span>
+        <p className="section-title">Demo message ready</p>
+        <p className="supporting">
+          This was a demo, so nothing was sent. With a real OwnerPing QR, the owner gets a private
+          notification and can reply here — without either of you sharing a phone number.
+        </p>
+        <Button type="button" variant="outline" onClick={() => { setDemoSent(false); setSelectedReason(null); setMessageBody(""); }}>
+          Try again
+        </Button>
+      </div>
+    );
+  }
 
   if (reasons.length === 0) {
     return (
@@ -39,6 +61,10 @@ export function StartConversationForm({
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!selectedReason || sending) return;
+    if (demo) {
+      setDemoSent(true);
+      return;
+    }
     setError(null);
     setSending(true);
 

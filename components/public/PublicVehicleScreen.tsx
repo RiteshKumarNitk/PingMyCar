@@ -7,6 +7,8 @@ import { Logo } from "@/components/shared/Logo";
 import { VehiclePublicCard } from "@/components/vehicles/VehiclePublicCard";
 import { StartConversationForm } from "@/components/public/StartConversationForm";
 import type { VehicleType } from "@prisma/client";
+import { demoPublicView, DEMO_INACTIVE_TOKEN, isDemoPublicToken } from "@/lib/guest/demo";
+import type { ContactFlags } from "@/types";
 
 export async function PublicVehicleScreen({
   token,
@@ -15,6 +17,13 @@ export async function PublicVehicleScreen({
   token: string;
   variantParam?: string | string[];
 }) {
+  // Demo QR codes (website demos, Play reviewer) never touch the database or
+  // reach a real owner: the page renders static demo data and the send is
+  // simulated in the browser.
+  if (isDemoPublicToken(token)) {
+    return token === DEMO_INACTIVE_TOKEN ? <InactiveQr /> : <VehicleContactPage view={demoPublicView()} token={token} demo />;
+  }
+
   const vehicle = await prisma.vehicle.findUnique({
     where: { publicToken: token },
     include: {
@@ -25,8 +34,26 @@ export async function PublicVehicleScreen({
 
   if (!vehicle || !vehicle.profile) notFound();
 
-  if (!vehicle.qrActive) {
-    return (
+  if (!vehicle.qrActive) return <InactiveQr />;
+
+  prisma.vehicle
+    .update({ where: { id: vehicle.id }, data: { scanCount: { increment: 1 }, lastScanAt: new Date() } })
+    .catch(() => {});
+
+  // Per-sticker analytics: only visits that arrived from a sticker's tagged
+  // QR (?s=<variant>) count here — bare scans stay anonymous.
+  const variant = parseVariantScanParam(Array.isArray(variantParam) ? variantParam[0] : variantParam);
+  if (variant) {
+    recordVariantScan(vehicle.id, variant).catch(() => {});
+  }
+
+  const view = buildPublicVehicleView(vehicle, vehicle.profile, vehicle.owner);
+
+  return <VehicleContactPage view={view} token={token} />;
+}
+
+function InactiveQr() {
+  return (
       <div className="flex min-h-dvh flex-col bg-background">
         <header className="bg-navy px-4 py-5">
           <div className="mx-auto flex max-w-md justify-center">
@@ -43,23 +70,21 @@ export async function PublicVehicleScreen({
           </p>
         </main>
       </div>
-    );
-  }
+  );
+}
 
-  prisma.vehicle
-    .update({ where: { id: vehicle.id }, data: { scanCount: { increment: 1 }, lastScanAt: new Date() } })
-    .catch(() => {});
+type ContactView = {
+  vehicleName: string | null;
+  vehicleType: string | null;
+  vehiclePhotoUrl: string | null;
+  registrationNumber: string | null;
+  ownerName: string | null;
+  ownerPhotoUrl: string | null;
+  contact: ContactFlags;
+};
 
-  // Per-sticker analytics: only visits that arrived from a sticker's tagged
-  // QR (?s=<variant>) count here — bare scans stay anonymous.
-  const variant = parseVariantScanParam(Array.isArray(variantParam) ? variantParam[0] : variantParam);
-  if (variant) {
-    recordVariantScan(vehicle.id, variant).catch(() => {});
-  }
-
-  const view = buildPublicVehicleView(vehicle, vehicle.profile, vehicle.owner);
+function VehicleContactPage({ view, token, demo = false }: { view: ContactView; token: string; demo?: boolean }) {
   const maxChars = Number(process.env.MESSAGE_MAX_CHARS ?? 500);
-
   return (
     <div className="min-h-dvh bg-background">
       <header className="bg-navy text-white">
@@ -81,6 +106,12 @@ export async function PublicVehicleScreen({
       </header>
 
       <main className="mx-auto -mt-14 max-w-md px-4 pb-10">
+        {demo && (
+          <div role="note" className="mb-3 rounded-xl border border-primary/30 bg-primary-soft px-4 py-3 text-sm text-foreground">
+            <span className="font-semibold">Demo QR.</span> This is OwnerPing&apos;s sample vehicle — messages
+            sent here are simulated and never reach a real owner.
+          </div>
+        )}
         <VehiclePublicCard
           vehicleName={view.vehicleName}
           vehicleType={view.vehicleType as VehicleType | null}
@@ -94,6 +125,7 @@ export async function PublicVehicleScreen({
               publicToken={token}
               contactFlags={view.contact}
               maxChars={maxChars}
+              demo={demo}
             />
           }
         />
