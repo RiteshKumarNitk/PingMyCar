@@ -73,6 +73,15 @@ class AuthRepository {
     return me();
   }
 
+  /// Permanently deletes the signed-in owner's account (the server derives
+  /// the account from the session — no id is sent). Throws [ApiException]
+  /// on failure and leaves the local session untouched so the owner can
+  /// retry; the local token is cleared only after the server confirms.
+  Future<void> deleteAccount() async {
+    await _client.delete('/api/account');
+    await _store.clearSessionToken();
+  }
+
   /// Signing out clears the local session; the server session expires
   /// naturally. The device's FCM token is unregistered separately.
   Future<void> signOut() async {

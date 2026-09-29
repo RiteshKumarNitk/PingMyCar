@@ -33,7 +33,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
   return new NextResponse(new Uint8Array(pdfBytes), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="pingmycar-sticker-a4-${vehicle.publicToken}.pdf"`,
+      "Content-Disposition": `inline; filename="ownerping-sticker-a4-${vehicle.publicToken}.pdf"`,
       "Cache-Control": "no-store",
     },
   });

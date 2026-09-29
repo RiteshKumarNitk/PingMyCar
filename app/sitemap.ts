@@ -10,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/stickers",
     "/privacy",
     "/privacy-policy",
+    "/delete-account",
     "/faq",
     "/about",
     "/contact",

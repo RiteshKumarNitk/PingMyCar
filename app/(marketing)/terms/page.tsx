@@ -75,8 +75,8 @@ export default function TermsPage() {
           <Section title="Contact">
             <p>
               Questions about these terms:{" "}
-              <a href="mailto:support@pingmycar.app" className="font-medium text-primary underline-offset-4 hover:underline">
-                support@pingmycar.app
+              <a href="mailto:info@innovatex-technology.com" className="font-medium text-primary underline-offset-4 hover:underline">
+                info@innovatex-technology.com
               </a>
               .
             </p>

@@ -4,6 +4,7 @@ import { isTempEmail } from "@/lib/auth/tempEmail";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmailForm } from "@/components/settings/EmailForm";
+import { DeleteAccount } from "@/components/settings/DeleteAccount";
 import { ArrowRight } from "lucide-react";
 
 export const metadata = { title: "Settings" };
@@ -51,6 +52,20 @@ export default async function SettingsPage() {
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-xl border-destructive/30">
+        <CardHeader>
+          <CardTitle className="text-base">Delete account</CardTitle>
+          <CardDescription>
+            <Link href="/delete-account" className="underline-offset-4 hover:underline">
+              What gets deleted
+            </Link>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DeleteAccount />
         </CardContent>
       </Card>
     </div>

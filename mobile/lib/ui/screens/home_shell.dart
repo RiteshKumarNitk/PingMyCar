@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/api_error.dart';
@@ -22,6 +23,10 @@ class HomeShell extends ConsumerStatefulWidget {
 
 class _HomeShellState extends ConsumerState<HomeShell> {
   String? _lastPath;
+
+  /// While the exit dialog is up, further Back presses only close it — they
+  /// never stack a second dialog or exit by accident.
+  bool _confirmingExit = false;
   late final UnreadCountSignal _signal;
 
   @override
@@ -47,6 +52,24 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     }
   }
 
+  /// System Back on a tab. Screens pushed on top (conversation, vehicle,
+  /// stickers…) are their own routes and pop normally — this only runs when
+  /// the shell itself is the top route: other tabs go back to Home, and Home
+  /// asks before closing the app.
+  Future<void> _onBack(String location) async {
+    if (location != '/home') {
+      context.go('/home');
+      return;
+    }
+    if (_confirmingExit) return;
+    _confirmingExit = true;
+    try {
+      if (await confirmExit(context)) await SystemNavigator.pop();
+    } finally {
+      _confirmingExit = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
@@ -58,12 +81,18 @@ class _HomeShellState extends ConsumerState<HomeShell> {
 
     final destinations = PrimaryBottomNavigation.destinations;
     final index = destinations.indexWhere((d) => location.startsWith(d.path));
-    return Scaffold(
-      body: widget.child,
-      bottomNavigationBar: PrimaryBottomNavigation(
-        selectedIndex: index < 0 ? 0 : index,
-        unreadCount: ref.watch(unreadBadgeProvider),
-        onSelected: (i) => context.go(destinations[i].path),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onBack(location);
+      },
+      child: Scaffold(
+        body: widget.child,
+        bottomNavigationBar: PrimaryBottomNavigation(
+          selectedIndex: index < 0 ? 0 : index,
+          unreadCount: ref.watch(unreadBadgeProvider),
+          onSelected: (i) => context.go(destinations[i].path),
+        ),
       ),
     );
   }

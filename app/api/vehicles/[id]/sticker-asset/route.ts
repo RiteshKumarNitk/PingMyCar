@@ -47,7 +47,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
   return new NextResponse(svg, {
     headers: {
       "Content-Type": "image/svg+xml",
-      "Content-Disposition": `attachment; filename="pingmycar-sticker-${vehicle.publicToken}.svg"`,
+      "Content-Disposition": `attachment; filename="ownerping-sticker-${vehicle.publicToken}.svg"`,
     },
   });
 }

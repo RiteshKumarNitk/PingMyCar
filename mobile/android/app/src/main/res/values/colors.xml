@@ -2,4 +2,6 @@
 <resources>
     <!-- Matches AppColors.light.background so launch -> Flutter splash is seamless. -->
     <color name="splash_background">#F4F6FA</color>
+    <!-- Notification accent (small icon tint) — OwnerPing blue. -->
+    <color name="notification_accent">#1E40AF</color>
 </resources>

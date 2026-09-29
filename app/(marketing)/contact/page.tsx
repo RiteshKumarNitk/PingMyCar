@@ -26,11 +26,11 @@ export default function ContactPage() {
         </CardHeader>
         <CardContent>
           <a
-            href="mailto:support@pingmycar.app"
+            href="mailto:info@innovatex-technology.com"
             className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-5 py-3 font-medium text-primary transition-colors hover:bg-primary/10"
           >
             <Mail className="h-4 w-4" aria-hidden />
-            support@pingmycar.app
+            info@innovatex-technology.com
           </a>
           <p className="mt-6 text-sm text-muted-foreground">
             A contact form is coming later. In the meantime, email us directly — it lands

@@ -64,11 +64,16 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  // Saved first; notifying is best-effort and never fails this request.
+  console.log("[FCM] Message created");
   const reasonLabel = CONTACT_REASONS.find((r) => r.id === reason)?.label ?? reason;
   await notifyOwner({
+    // Owner comes from the database (QR token → vehicle → owner), never the visitor.
     userId: vehicle.ownerId,
     title: `New message about ${vehicle.name}`,
     body: `${reasonLabel}: ${messageBody}`,
+    pushBody: `${reasonLabel} — someone contacted you about your vehicle.`,
+    conversationId: conversation.id,
     url: `${appBaseUrl()}/dashboard/messages/${conversation.id}`,
   });
 

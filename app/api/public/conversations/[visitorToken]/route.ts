@@ -71,6 +71,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     userId: conversation.vehicle.ownerId,
     title: `New reply about ${conversation.vehicle.name}`,
     body: parsed.data.body,
+    pushBody: "The visitor replied. Tap to open the conversation.",
+    conversationId: conversation.id,
     url: `${appBaseUrl()}/dashboard/messages/${conversation.id}`,
   });
 

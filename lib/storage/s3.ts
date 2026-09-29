@@ -1,4 +1,11 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+  DeleteObjectsCommand,
+  ListObjectsV2Command,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 /**
@@ -73,4 +80,31 @@ export async function presignDownload(key: string, expiresIn = 60): Promise<stri
 export async function deleteObject(key: string): Promise<void> {
   if (!isStorageConfigured()) return;
   await s3Client().send(new DeleteObjectCommand({ Bucket: PRIVATE_BUCKET, Key: key }));
+}
+
+/**
+ * Deletes every private object stored for [userId] (everything under
+ * `userprofile/<userId>/`). Used by account deletion. Returns the number of
+ * objects removed; a no-op when storage isn't configured.
+ */
+export async function deleteAllUserObjects(userId: string): Promise<number> {
+  if (!isStorageConfigured()) return 0;
+  const client = s3Client();
+  const prefix = privateObjectKey(userId, "");
+  let removed = 0;
+  let token: string | undefined;
+  do {
+    const page = await client.send(
+      new ListObjectsV2Command({ Bucket: PRIVATE_BUCKET, Prefix: prefix, ContinuationToken: token })
+    );
+    const keys = (page.Contents ?? []).map((o) => o.Key).filter((k): k is string => Boolean(k));
+    if (keys.length > 0) {
+      await client.send(
+        new DeleteObjectsCommand({ Bucket: PRIVATE_BUCKET, Delete: { Objects: keys.map((Key) => ({ Key })), Quiet: true } })
+      );
+      removed += keys.length;
+    }
+    token = page.IsTruncated ? page.NextContinuationToken : undefined;
+  } while (token);
+  return removed;
 }

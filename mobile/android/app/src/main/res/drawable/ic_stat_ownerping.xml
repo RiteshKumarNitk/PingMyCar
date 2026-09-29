@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status-bar notification icon: a message bubble with a "ping" dot.
+     Android renders it as a white silhouette, so it is a single solid shape. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M4,4h11.1a5,5 0,0 0,4.9 5.9V16a2,2 0,0 1,-2 2H8l-4,4V6A2,2 0,0 1,4 4z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M20,5m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0" />
+</vector>

@@ -77,5 +77,5 @@ export function downloadSvgAsPng(svgMarkup: string, filename: string, sizePx = 1
 
 export function vehicleFileName(vehicleName: string, suffix?: string): string {
   const base = vehicleName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  return suffix ? `pingmycar-${base}-${suffix}` : `pingmycar-${base}`;
+  return suffix ? `ownerping-${base}-${suffix}` : `ownerping-${base}`;
 }

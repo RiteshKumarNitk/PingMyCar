@@ -86,6 +86,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
       return;
     }
     _navigated = true;
+    // Something else already moved on (a notification tap opened the
+    // dashboard + conversation): don't wipe it with a second navigation.
+    final router = GoRouter.of(context);
+    if (router.routerDelegate.currentConfiguration.uri.path != '/splash') return;
     // Guests are never owners: only an authenticated session reaches the
     // dashboard; everyone else goes to Google sign-in.
     context.go(status == AuthStatus.authenticated ? '/home' : '/login');

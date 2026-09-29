@@ -17,6 +17,7 @@ import 'screens/profile_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/settings/notifications_screen.dart';
 import 'screens/settings/privacy_screen.dart';
+import 'screens/settings/delete_account_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/splash_screen.dart';
 
@@ -39,6 +40,11 @@ class _AuthListenable extends ChangeNotifier {
 class _DeepLinkBinding {
   _DeepLinkBinding(this._ref, this._router) : _signal = _ref.read(deepLinkSignalProvider) {
     _signal.addListener(_onRoute);
+    // A tap that came in before the session was restored (cold start) or
+    // while signed out waits here, and opens once the owner is signed in.
+    _ref.listen(authControllerProvider, (_, next) {
+      if (next.status == AuthStatus.authenticated) _flush();
+    });
     _ref.onDispose(_dispose);
   }
 
@@ -47,15 +53,25 @@ class _DeepLinkBinding {
   // Held directly: providers must not be read while the container disposes.
   final DeepLinkSignal _signal;
   bool _disposed = false;
+  String? _pending;
 
   void _onRoute(String? route) {
     if (_disposed || route == null) return;
-    final auth = _ref.read(authControllerProvider);
-    if (auth.status != AuthStatus.authenticated) return;
+    _pending = route;
+    _flush();
+  }
+
+  void _flush() {
+    final route = _pending;
+    if (_disposed || route == null) return;
+    // Never open a conversation for a guest or before the session is known.
+    if (_ref.read(authControllerProvider).status != AuthStatus.authenticated) return;
+    _pending = null;
     // Cold start from a notification tap: skip the splash — land on the
     // dashboard, then open the conversation on top of it (so Back returns
     // to the dashboard instead of the splash).
-    if (_router.routerDelegate.currentConfiguration.uri.path == '/splash') {
+    final at = _router.routerDelegate.currentConfiguration.uri.path;
+    if (at == '/splash' || at == '/login' || at.isEmpty) {
       _router.go('/home');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!_disposed) _router.push(route);
@@ -158,6 +174,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
       GoRoute(path: '/settings/notifications', builder: (context, state) => const NotificationsScreen()),
       GoRoute(path: '/settings/privacy', builder: (context, state) => const PrivacyScreen()),
+      GoRoute(path: '/settings/delete-account', builder: (context, state) => const DeleteAccountScreen()),
     ],
   );
 

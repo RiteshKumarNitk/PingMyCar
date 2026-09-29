@@ -5,6 +5,7 @@ import 'core/token_store.dart';
 import 'models/models.dart';
 import 'repositories/repositories.dart';
 import 'services/google_sign_in_service.dart';
+import 'services/account_deletion_service.dart';
 import 'services/sign_out_service.dart';
 
 export 'signals.dart';
@@ -33,6 +34,8 @@ final googleSignInServiceProvider = Provider<GoogleSignInService>(
 );
 
 final signOutServiceProvider = Provider<SignOutService>((ref) => SignOutService(ref));
+
+final accountDeletionServiceProvider = Provider<AccountDeletionService>((ref) => AccountDeletionService(ref));
 
 /// Auth state machine: unknown (booting) → unauthenticated → authenticated.
 class AuthState {
@@ -68,6 +71,13 @@ class AuthController extends Notifier<AuthState> {
 
   Future<void> signOut() async {
     await ref.read(signOutServiceProvider).performSignOut();
+    state = const AuthState(status: AuthStatus.unauthenticated);
+  }
+
+  /// Deletes the account server-side, then signs this device out. If the
+  /// server call fails nothing changes locally (the error propagates).
+  Future<void> deleteAccount() async {
+    await ref.read(accountDeletionServiceProvider).deleteAccount();
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
 

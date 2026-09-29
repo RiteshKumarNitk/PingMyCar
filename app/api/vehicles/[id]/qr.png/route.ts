@@ -28,7 +28,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
   return new NextResponse(new Uint8Array(png), {
     headers: {
       "Content-Type": "image/png",
-      "Content-Disposition": `attachment; filename="pingmycar-qr-${vehicle.publicToken}.png"`,
+      "Content-Disposition": `attachment; filename="ownerping-qr-${vehicle.publicToken}.png"`,
       "Cache-Control": "no-store",
     },
   });

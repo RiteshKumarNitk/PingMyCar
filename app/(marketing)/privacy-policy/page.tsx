@@ -45,6 +45,17 @@ export default function PrivacyPolicyPage() {
               a one-way hash of visitor IP addresses — raw IPs are not stored. Push
               subscription endpoints are stored if you enable browser notifications.
             </p>
+            <p>
+              <strong className="text-foreground">OwnerPing app notifications:</strong> if you
+              use the Android app, we store your device&apos;s push token (Firebase Cloud
+              Messaging) with your account so we can alert that device about new messages.
+              It is removed when you sign out on that device. Notification text shows the
+              contact reason, not the visitor&apos;s message.
+            </p>
+            <p>
+              <strong className="text-foreground">Email alerts:</strong> we email you at your
+              Google account address when someone sends a message about your vehicle.
+            </p>
           </Section>
 
           <Section title="What visitors leave behind">
@@ -78,11 +89,56 @@ export default function PrivacyPolicyPage() {
           <Section title="Your controls">
             <p>
               You can edit or hide any visible field, deactivate or regenerate a QR at any
-              time, block conversations, and delete vehicles (which deletes their
-              conversations). Deleting your account removes your data associated with it.
-              For any request, contact{" "}
-              <a href="mailto:support@pingmycar.app" className="font-medium text-primary underline-offset-4 hover:underline">
-                support@pingmycar.app
+              time, block conversations, delete individual conversations, and delete
+              vehicles (which deletes their conversations).
+            </p>
+          </Section>
+
+          <Section title="Deleting your account">
+            <p>
+              You can delete your account at any time in the OwnerPing app (Profile →
+              Account → Delete account) or on the web (Dashboard → Settings → Delete
+              account). See{" "}
+              <Link href="/delete-account" className="font-medium text-primary underline-offset-4 hover:underline">
+                how account deletion works
+              </Link>
+              .
+            </p>
+            <p>
+              Deletion is immediate and permanent. We delete your account and sign-in link
+              with Google, your name, email address and photo, all of your vehicles and
+              their QR codes (printed stickers stop working), vehicle photos, conversations
+              and messages, and the push tokens of your devices.
+            </p>
+            <p>
+              One exception: if a conversation on your vehicle is under an open abuse
+              report, that conversation and its messages are kept until our moderators
+              finish the review. In that case the account is kept only as an anonymized,
+              disabled record with no name, email, photo or vehicle details, the vehicle&apos;s
+              QR is turned off, and no one can sign in to it. A security log records that
+              the deletion happened, without your personal details.
+            </p>
+          </Section>
+
+          <Section title="Service providers">
+            <p>
+              OwnerPing runs on service providers that process data only to provide the
+              service: Vercel (hosting), Neon (database and file storage), Upstash
+              (rate limiting), Google (sign-in and Firebase Cloud Messaging push
+              notifications) and Resend (email alerts). We don&apos;t sell personal
+              information or share it for advertising.
+            </p>
+          </Section>
+
+          <Section title="Contact">
+            <p>
+              OwnerPing is developed by{" "}
+              <a href="https://innovatex-technology.com/" className="font-medium text-primary underline-offset-4 hover:underline">
+                InnovateX Technology
+              </a>
+              . For any privacy request, contact{" "}
+              <a href="mailto:info@innovatex-technology.com" className="font-medium text-primary underline-offset-4 hover:underline">
+                info@innovatex-technology.com
               </a>
               .
             </p>
