@@ -1,4 +1,5 @@
 import { StickerSvg } from "@/components/qr/StickerSvg";
+import { demoVehicleUrl } from "@/lib/security/tokens";
 
 function PlacementCard({
   label,
@@ -56,7 +57,7 @@ export function StickerShowcase() {
             <div className="relative flex h-full w-full items-center justify-center">
               <Glass />
               <StickerSvg
-                publicUrl="https://pingmycar.app/v/EXAMPLE1"
+                publicUrl={demoVehicleUrl()}
                 className="relative w-28 max-w-none"
               />
             </div>
@@ -66,7 +67,7 @@ export function StickerShowcase() {
             <div className="relative flex h-full w-full items-center justify-center">
               <Glass tint="light" />
               <StickerSvg
-                publicUrl="https://pingmycar.app/v/EXAMPLE1"
+                publicUrl={demoVehicleUrl()}
                 variant="round"
                 className="relative w-28 max-w-none"
               />
@@ -77,7 +78,7 @@ export function StickerShowcase() {
             <div className="relative flex h-full w-full items-center justify-center">
               <Glass />
               <StickerSvg
-                publicUrl="https://pingmycar.app/v/EXAMPLE1"
+                publicUrl={demoVehicleUrl()}
                 variant="wide"
                 className="relative w-56 max-w-none"
               />

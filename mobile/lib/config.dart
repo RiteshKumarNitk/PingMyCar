@@ -5,7 +5,7 @@
 /// rather than editing this file.
 ///
 /// Examples:
-///   flutter run --dart-define=PINGMYCAR_API_BASE_URL=https://pingmycar.app
+///   flutter run --dart-define=PINGMYCAR_API_BASE_URL=https://your-frontend.example
 ///   flutter run --dart-define=PINGMYCAR_API_BASE_URL=http://10.0.2.2:3100
 class AppConfig {
   /// Backend origin (no trailing slash). The Android emulator reaches the

@@ -67,7 +67,7 @@ export default async function AdminUsersAdminPage() {
                     title={`Change role to ${role}?`}
                     description={`This account currently holds ${u.adminRole}. The role change takes effect on their next server-side session check and is audited.`}
                     confirmLabel="Confirm Role Change"
-                    action={(reason) => changeUserRole(u.id, role, reason)}
+                    action={changeUserRole.bind(null, u.id, role)}
                   />
                 ))}
               </div>

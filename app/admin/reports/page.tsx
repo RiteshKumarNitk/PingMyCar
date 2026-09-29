@@ -109,7 +109,7 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
                       title="Move this report to INVESTIGATING?"
                       description="The report will be marked as under investigation and assigned to you."
                       confirmLabel="Investigate"
-                      action={(notes) => updateReportStatus(report.id, "INVESTIGATING", notes)}
+                      action={updateReportStatus.bind(null, report.id, "INVESTIGATING")}
                     />
                   )}
                   {(report.status === "NEW" || report.status === "INVESTIGATING") && (
@@ -119,14 +119,14 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
                         title="Resolve this report?"
                         description="The report will be closed as RESOLVED with your notes on the outcome."
                         confirmLabel="Resolve"
-                        action={(notes) => updateReportStatus(report.id, "RESOLVED", notes)}
+                        action={updateReportStatus.bind(null, report.id, "RESOLVED")}
                       />
                       <AdminActionDialog
                         label="Dismiss"
                         title="Dismiss this report?"
                         description="The report will be closed as DISMISSED with your notes on why no action was taken."
                         confirmLabel="Dismiss"
-                        action={(notes) => updateReportStatus(report.id, "DISMISSED", notes)}
+                        action={updateReportStatus.bind(null, report.id, "DISMISSED")}
                       />
                     </>
                   )}

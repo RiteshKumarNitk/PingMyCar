@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import {
-  roleHasPermission,
+  adminAccess,
   type Permission,
 } from "@/lib/admin/permissions";
 import { auditContext, writeAudit } from "@/lib/admin/audit";
@@ -60,9 +60,10 @@ async function logDenied(opts: {
  */
 export async function requirePermission(permission: Permission): Promise<AdminSession> {
   const admin = await getAdminSession();
-  if (!admin) redirect("/login");
+  const access = adminAccess(admin?.role ?? null, permission);
+  if (!admin || access === "unauthenticated") redirect("/login");
 
-  if (!roleHasPermission(admin.role, permission)) {
+  if (access === "forbidden") {
     await logDenied({ userId: admin.user.id, permission, path: "/admin" });
     redirect("/admin/forbidden");
   }
@@ -79,11 +80,12 @@ export async function requirePermissionApi(
   const admin = await getAdminSession();
   const path = "/admin/api";
 
-  if (!admin) {
+  const access = adminAccess(admin?.role ?? null, permission);
+  if (!admin || access === "unauthenticated") {
     await logDenied({ userId: null, permission, path });
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
-  if (!roleHasPermission(admin.role, permission)) {
+  if (access === "forbidden") {
     await logDenied({ userId: admin.user.id, permission, path });
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }

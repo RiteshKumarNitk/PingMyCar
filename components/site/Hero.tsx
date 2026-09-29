@@ -2,9 +2,10 @@ import Link from "next/link";
 import { BellRing, Car, Check, MessageSquareText, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { qrSvgMarkup } from "@/lib/qr";
+import { demoVehicleUrl } from "@/lib/security/tokens";
 
 export function Hero() {
-  const demoQr = qrSvgMarkup("https://pingmycar.app/v/EXAMPLE1", 5);
+  const demoQr = qrSvgMarkup(demoVehicleUrl(), 5);
 
   return (
     <section className="relative overflow-hidden">

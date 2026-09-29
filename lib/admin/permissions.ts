@@ -125,6 +125,17 @@ export function roleHasPermission(role: AdminRole, permission: Permission): bool
   return ROLE_PERMISSIONS[role]?.includes(permission) ?? false;
 }
 
+/**
+ * Admin gate decision for a request: no session → "unauthenticated", a
+ * session whose database role lacks [permission] → "forbidden". The role is
+ * always the one read from the database for the session user — callers must
+ * never pass a client-supplied role here.
+ */
+export function adminAccess(role: AdminRole | null, permission: Permission): "ok" | "unauthenticated" | "forbidden" {
+  if (role === null) return "unauthenticated";
+  return roleHasPermission(role, permission) ? "ok" : "forbidden";
+}
+
 /** All permissions for a role (SUPER_ADMIN → every entry in PERMISSIONS). */
 export function permissionsForRole(role: AdminRole): readonly Permission[] {
   if (role === "SUPER_ADMIN") return PERMISSIONS;

@@ -111,7 +111,7 @@ export default async function AdminUserDetailPage({
               title="Reactivate this user?"
               description="The user will regain access to their OwnerPing dashboard and vehicle operations."
               confirmLabel="Reactivate User"
-              action={(reason) => setUserSuspended(user.id, false, reason)}
+              action={setUserSuspended.bind(null, user.id, false)}
             />
           ) : (
             <AdminActionDialog
@@ -120,7 +120,7 @@ export default async function AdminUserDetailPage({
               description="The user will no longer be able to add vehicles or reply to messages. Their vehicles, QR codes, and message history are preserved."
               confirmLabel="Suspend User"
               destructive
-              action={(reason) => setUserSuspended(user.id, true, reason)}
+              action={setUserSuspended.bind(null, user.id, true)}
             />
           )}
         </div>

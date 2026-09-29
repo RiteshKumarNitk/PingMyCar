@@ -39,6 +39,18 @@ export function publicVehicleUrl(publicToken: string): string {
   return `${appBaseUrl()}/v/${publicToken}`;
 }
 
+/**
+ * Token used by the website's demo stickers/QRs. It contains "1", which the
+ * QR alphabet above excludes, so it can never belong to a real vehicle — a
+ * scan lands on the app's own "not found" page, never on an owner.
+ */
+export const DEMO_PUBLIC_TOKEN = "EXAMPLE1";
+
+/** Demo QR URL on the configured frontend (NEXT_PUBLIC_APP_URL). */
+export function demoVehicleUrl(): string {
+  return publicVehicleUrl(DEMO_PUBLIC_TOKEN);
+}
+
 export function conversationUrl(visitorToken: string): string {
   return `${appBaseUrl()}/c/${visitorToken}`;
 }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StickerSvg } from "@/components/qr/StickerSvg";
 import { PageCta } from "@/components/site/PageCta";
+import { demoVehicleUrl } from "@/lib/security/tokens";
 
 export const metadata: Metadata = {
   title: "Stickers",
@@ -73,9 +74,9 @@ export default function StickersPage() {
 
         <div className="mt-16 grid items-center gap-10 lg:grid-cols-2">
           <div className="flex flex-wrap items-start justify-center gap-6 rounded-2xl border border-border bg-muted/40 p-8">
-            <StickerSvg publicUrl="https://pingmycar.app/v/EXAMPLE1" className="w-44 max-w-none" />
+            <StickerSvg publicUrl={demoVehicleUrl()} className="w-44 max-w-none" />
             <StickerSvg
-              publicUrl="https://pingmycar.app/v/EXAMPLE1"
+              publicUrl={demoVehicleUrl()}
               variant="wide"
               className="w-full max-w-md"
             />
