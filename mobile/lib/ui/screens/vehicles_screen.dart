@@ -36,7 +36,7 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
       if (!mounted) return;
       if (_vehicles != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), action: SnackBarAction(label: 'Retry', onPressed: _load)),
+          SnackBar(content: Text(e.message), action: SnackBarAction(label: 'Try again', onPressed: _load)),
         );
       }
       setState(() => _error = e);
@@ -60,11 +60,14 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
   Widget build(BuildContext context) {
     final vehicles = _vehicles;
     final counts = _counts;
+    // Header actions and the Add button are static: shown while loading, and
+    // hidden only for a confirmed-empty garage (its empty state has the CTA).
+    final showActions = vehicles?.isEmpty != true;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Vehicles'),
         actions: [
-          if (vehicles?.isNotEmpty == true)
+          if (showActions)
             IconButton(
               tooltip: 'Stickers',
               icon: const Icon(Icons.sell_outlined),
@@ -73,7 +76,7 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
           const SizedBox(width: Space.xs),
         ],
       ),
-      floatingActionButton: vehicles?.isNotEmpty == true
+      floatingActionButton: showActions
           ? FloatingActionButton.extended(
               onPressed: () => _open('/vehicles/new'),
               icon: const Icon(Icons.add),
@@ -84,7 +87,7 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
         onRefresh: _load,
         child: vehicles == null
             ? (_error != null
-                ? ScrollableCenter(child: ErrorState(error: _error!, onRetry: _load))
+                ? ScrollableCenter(child: ErrorState(error: _error!, title: 'Unable to load vehicles', onRetry: _load))
                 : const LoadingSkeleton(rows: 3, rowHeight: 150, header: false))
             : vehicles.isEmpty
                 ? ScrollableCenter(

@@ -155,12 +155,24 @@ class ConversationRepository {
   ConversationRepository(this._client);
   final ApiClient _client;
 
-  Future<List<ConversationSummary>> list({String? vehicleId}) async {
+  /// One page of the owner's inbox (lightweight previews — last message
+  /// only, never full histories), newest activity first. Pass the previous
+  /// page's `nextCursor` to continue; `null` means there is nothing more.
+  Future<({List<ConversationSummary> items, String? nextCursor})> listPage({
+    String? vehicleId,
+    String? cursor,
+    int limit = 50,
+  }) async {
     final data = await _client.get('/api/messages', query: {
+      'limit': '$limit',
       if (vehicleId != null) 'vehicle': vehicleId,
+      if (cursor != null) 'cursor': cursor,
     });
     final items = (data?['conversations'] as List? ?? []);
-    return items.map((c) => ConversationSummary.fromListJson((c as Map).cast<String, dynamic>())).toList();
+    return (
+      items: items.map((c) => ConversationSummary.fromListJson((c as Map).cast<String, dynamic>())).toList(),
+      nextCursor: data?['nextCursor'] as String?,
+    );
   }
 
   Future<ConversationDetail> get(String id) async {

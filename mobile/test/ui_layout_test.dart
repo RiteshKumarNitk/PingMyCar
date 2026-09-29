@@ -157,6 +157,14 @@ void main() {
   });
 
   group('states', () {
+    // Each screen's own headline for a failed load; the body always carries
+    // the friendly offline reason.
+    const offlineTitles = {
+      'home': 'Unable to load your dashboard',
+      'vehicles': 'Unable to load vehicles',
+      'messages': 'Unable to load messages',
+      'stickers': 'No internet connection',
+    };
     for (final screen in {'home': '/home', 'vehicles': '/vehicles', 'messages': '/messages', 'stickers': '/stickers'}.entries) {
       testWidgets('empty ${screen.key}', (tester) async {
         await _pumpApp(tester, path: screen.value, size: const Size(360, 800), empty: true);
@@ -166,8 +174,9 @@ void main() {
       testWidgets('offline ${screen.key}', (tester) async {
         await _pumpApp(tester, path: screen.value, size: const Size(360, 800), offline: true);
         expect(tester.takeException(), isNull);
-        expect(find.text('No internet connection'), findsOneWidget);
-        expect(find.text('Retry'), findsOneWidget);
+        expect(find.text(offlineTitles[screen.key]!), findsOneWidget);
+        expect(find.text("You're offline. Check your connection and try again."), findsOneWidget);
+        expect(find.text('Try again'), findsOneWidget);
         await _shot(tester, 'offline-${screen.key}-360x800');
       });
     }

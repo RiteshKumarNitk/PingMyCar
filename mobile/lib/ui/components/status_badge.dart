@@ -68,7 +68,7 @@ class StatusBadge extends StatelessWidget {
   }
 }
 
-/// Small teal count pill (unread messages).
+/// Small blue count pill (unread messages).
 class CountBadge extends StatelessWidget {
   const CountBadge(this.count, {super.key});
   final int count;

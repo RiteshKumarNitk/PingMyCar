@@ -65,6 +65,17 @@ class FakeBackend implements HttpClientAdapter {
       'lastMessage': {'body': 'Thanks, moved it.', 'senderType': 'OWNER', 'createdAt': _ago(const Duration(days: 3))},
       'updatedAt': _ago(const Duration(days: 3)),
     },
+    {
+      'id': 'c3',
+      'vehicleId': 'v1',
+      'vehicleName': 'Honda City VX CVT Automatic',
+      'reason': 'DAMAGE',
+      'status': 'OPEN',
+      'unread': false,
+      'unreadCount': 0,
+      'lastMessage': {'body': 'Someone scraped your rear bumper while reversing.', 'senderType': 'VISITOR', 'createdAt': _ago(const Duration(minutes: 18))},
+      'updatedAt': _ago(const Duration(minutes: 18)),
+    },
   ];
 
   Object? _route(RequestOptions o) {
@@ -104,6 +115,7 @@ class FakeBackend implements HttpClientAdapter {
     }
     if (p == '/api/messages') return {'conversations': empty ? [] : _conversations, 'nextCursor': null};
     if (p.endsWith('/read')) return {'ok': true};
+    if (o.method == 'DELETE') return {'ok': true};
     if (p.startsWith('/api/conversations/')) {
       return {
         'id': 'c1',

@@ -66,10 +66,14 @@ class EmptyState extends StatelessWidget {
 /// timeout, offline). Never shows raw API errors — only the friendly
 /// [ApiException.message] plus a clear next step.
 class ErrorState extends ConsumerWidget {
-  const ErrorState({super.key, required this.error, this.onRetry});
+  const ErrorState({super.key, required this.error, this.onRetry, this.title});
 
   final Object error;
   final VoidCallback? onRetry;
+
+  /// Screen-specific headline (e.g. "Unable to load messages"); defaults to
+  /// one derived from the failure kind.
+  final String? title;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -103,7 +107,7 @@ class ErrorState extends ConsumerWidget {
           : null,
       _ => onRetry == null
           ? null
-          : AppButton(label: 'Retry', icon: Icons.refresh_outlined, expand: false, onPressed: onRetry),
+          : AppButton(label: 'Try again', icon: Icons.refresh_outlined, expand: false, onPressed: onRetry),
     };
 
     return Semantics(
@@ -120,7 +124,7 @@ class ErrorState extends ConsumerWidget {
               child: Icon(icon, color: c.slate, size: 28),
             ),
             const SizedBox(height: Space.md),
-            Text(title, textAlign: TextAlign.center, style: t.titleMedium),
+            Text(this.title ?? title, textAlign: TextAlign.center, style: t.titleMedium),
             const SizedBox(height: Space.xs),
             Text(message, textAlign: TextAlign.center, style: t.bodyMedium),
             if (primary != null) ...[const SizedBox(height: Space.lg), primary],

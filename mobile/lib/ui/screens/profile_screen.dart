@@ -59,7 +59,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: c.primary, width: 2)),
+                  decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: c.accent, width: 2)),
                   child: CircleAvatar(
                     radius: 30,
                     backgroundColor: c.primary,
@@ -83,9 +83,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       const SizedBox(height: Space.xs),
                       Row(
                         children: [
-                          Icon(Icons.verified_outlined, size: 16, color: c.primary),
+                          Icon(Icons.verified_outlined, size: 16, color: c.accent),
                           const SizedBox(width: 6),
-                          Text('Signed in with Google', style: t.labelMedium?.copyWith(color: c.primary)),
+                          Text('Signed in with Google', style: t.labelMedium?.copyWith(color: c.accent)),
                         ],
                       ),
                     ],

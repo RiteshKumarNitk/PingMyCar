@@ -11,8 +11,7 @@ import 'ui/router.dart';
 import 'ui/theme.dart';
 
 Future<void> main() async {
-  final firebaseOk = await bootstrapFirebase();
-
+  WidgetsFlutterBinding.ensureInitialized();
   final container = ProviderContainer();
 
   // Any 401 anywhere funnels through here: the router's auth redirect sends
@@ -21,16 +20,17 @@ Future<void> main() async {
     container.read(authControllerProvider.notifier).forceSignOut();
   });
 
-  // Bind FCM listeners (token refresh, foreground messages, notification
-  // taps). Token registration itself happens after sign-in + permission.
-  // firebaseOk is false on web or when native config is missing — FCM then
-  // no-ops instead of crashing.
-  unawaited(bootstrapFcm(container, firebaseAvailable: firebaseOk));
-
   // Restore session from the stored bearer token, if any.
   unawaited(container.read(authControllerProvider.notifier).restoreSession());
 
+  // First frame (the splash) is drawn right away — nothing waits on Firebase.
   runApp(UncontrolledProviderScope(container: container, child: const OwnerPingApp()));
+
+  // Then initialize Firebase and bind FCM listeners (token refresh,
+  // foreground messages, notification taps). Token registration itself
+  // happens after sign-in + permission. On web or without native config
+  // Firebase is unavailable and FCM no-ops instead of crashing.
+  unawaited(bootstrapFirebase().then((ok) => bootstrapFcm(container, firebaseAvailable: ok)));
 }
 
 class OwnerPingApp extends ConsumerWidget {

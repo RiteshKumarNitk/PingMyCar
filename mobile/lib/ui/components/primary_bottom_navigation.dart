@@ -9,9 +9,10 @@ class NavDestinationSpec {
   final String label;
 }
 
-/// Four-tab owner navigation: Home, Messages, Vehicles, Profile. Outlined
-/// icons when inactive, filled when active; Messages carries the unread
-/// count.
+/// Four-tab owner navigation: Home, Messages, Vehicles, Profile, on a
+/// deep-navy bar (both themes) with rounded top corners. Outlined icons when
+/// inactive, filled on a soft blue pill when active; Messages carries the
+/// unread count. NavigationBar pads for the bottom safe area itself.
 class PrimaryBottomNavigation extends StatelessWidget {
   const PrimaryBottomNavigation({
     super.key,
@@ -34,21 +35,34 @@ class PrimaryBottomNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
+    const top = BorderRadius.vertical(top: Radius.circular(Radii.xl));
     return DecoratedBox(
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: c.border))),
-      child: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: onSelected,
-        animationDuration: Motion.of(context, Motion.medium),
-        destinations: [
-          for (final d in destinations)
-            NavigationDestination(
-              tooltip: '',
-              icon: _withBadge(d, Icon(d.icon), c),
-              selectedIcon: _withBadge(d, Icon(d.selectedIcon), c),
-              label: d.label,
-            ),
-        ],
+      decoration: BoxDecoration(
+        borderRadius: top,
+        boxShadow: const [BoxShadow(color: Color(0x140B1630), blurRadius: 10, offset: Offset(0, -2))],
+      ),
+      child: ClipRRect(
+        borderRadius: top,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: c.navy,
+            border: Border(top: BorderSide(color: c.onNavy.withValues(alpha: 0.06))),
+          ),
+          child: NavigationBar(
+            selectedIndex: selectedIndex,
+            onDestinationSelected: onSelected,
+            animationDuration: Motion.of(context, Motion.medium),
+            destinations: [
+              for (final d in destinations)
+                NavigationDestination(
+                  tooltip: '',
+                  icon: _withBadge(d, Icon(d.icon), c),
+                  selectedIcon: _withBadge(d, Icon(d.selectedIcon), c),
+                  label: d.label,
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -57,7 +71,7 @@ class PrimaryBottomNavigation extends StatelessWidget {
     if (d.path != '/messages' || unreadCount <= 0) return icon;
     return Badge(
       label: Text(unreadCount > 99 ? '99+' : '$unreadCount'),
-      backgroundColor: c.comm,
+      backgroundColor: const Color(0xFF3B82F6),
       textColor: Colors.white,
       child: icon,
     );

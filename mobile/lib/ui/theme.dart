@@ -32,6 +32,9 @@ class AppTheme {
     );
   }
 
+  /// Inactive tab items on the navy bar (≈5:1 on navy).
+  static const _navInactive = Color(0xFF8E9DBA);
+
   static ThemeData _build(AppColors c, Brightness brightness) {
     final scheme = ColorScheme(
       brightness: brightness,
@@ -159,20 +162,23 @@ class AppTheme {
         helperStyle: text.bodySmall,
         errorStyle: text.bodySmall?.copyWith(color: c.danger),
       ),
+      // Deep-navy tab bar in both modes: white active icon on a soft blue
+      // pill, electric-blue active label, muted blue-grey inactive items.
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: c.surface,
+        backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: c.primarySoft,
+        indicatorColor: c.accent.withValues(alpha: 0.18),
+        indicatorShape: const StadiumBorder(),
         elevation: 0,
         height: 68,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         iconTheme: WidgetStateProperty.resolveWith(
-          (s) => IconThemeData(size: 24, color: s.contains(WidgetState.selected) ? c.primaryInk : c.muted),
+          (s) => IconThemeData(size: 24, color: s.contains(WidgetState.selected) ? c.onNavy : _navInactive),
         ),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (s) => text.labelMedium?.copyWith(
             fontSize: 12,
-            color: s.contains(WidgetState.selected) ? c.primaryInk : c.muted,
+            color: s.contains(WidgetState.selected) ? c.accent : _navInactive,
             fontWeight: s.contains(WidgetState.selected) ? FontWeight.w600 : FontWeight.w500,
           ),
         ),
@@ -202,7 +208,7 @@ class AppTheme {
         behavior: SnackBarBehavior.floating,
         backgroundColor: c.navy,
         contentTextStyle: text.bodyMedium?.copyWith(color: c.onNavy),
-        actionTextColor: c.primarySoft,
+        actionTextColor: c.accent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.md)),
         insetPadding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.md),
       ),

@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 /// elevation are defined. Screens read them through [AppColors.of] /
 /// Theme.of(context); no screen hardcodes a color.
 ///
-/// Palette is taken from the OwnerPing logo (assets/icon.png): a deep navy
-/// tile with a lighter navy glow, a white QR-car, and a teal "ping". Navy is
-/// the brand chrome and text ink; logo teal is the primary accent (buttons,
-/// selection, unread). Teal text on white uses the deeper [primaryInk] so it
-/// meets WCAG AA; green stays reserved for success/active.
+/// OwnerPing is a dark-blue brand: deep navy is the chrome (hero headers,
+/// bottom navigation, text ink), a deep blue is the primary (filled buttons,
+/// selection), and an electric blue [accent] marks active/unread states and
+/// anything that sits on navy. Green is reserved for success/active status,
+/// amber for warnings and red for errors/destructive actions.
 @immutable
 class AppColors extends ThemeExtension<AppColors> {
   const AppColors({
@@ -19,6 +19,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.onPrimary,
     required this.primaryInk,
     required this.primarySoft,
+    required this.accent,
     required this.comm,
     required this.commSoft,
     required this.success,
@@ -45,17 +46,20 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color navyTop;
   final Color onNavy;
 
-  /// Logo teal — filled buttons, selection, indicators.
+  /// Deep blue — filled buttons, selection, focus.
   final Color primary;
 
-  /// Text/icons on [primary] (navy on teal ≈ 7:1).
+  /// Text/icons on [primary] (white, AA or better).
   final Color onPrimary;
 
-  /// Teal for text and icons on light surfaces (AA contrast).
+  /// Blue for text, links and icons on the page surfaces (AA contrast).
   final Color primaryInk;
   final Color primarySoft;
 
-  /// Communication: messages, unread indicators (the logo's "ping").
+  /// Electric blue for active states on navy (tab bar, hero chips).
+  final Color accent;
+
+  /// Communication: messages, unread indicators (the "ping").
   final Color comm;
   final Color commSoft;
 
@@ -88,15 +92,16 @@ class AppColors extends ThemeExtension<AppColors> {
       );
 
   static const light = AppColors(
-    navy: Color(0xFF0E162B),
-    navyTop: Color(0xFF16345A),
+    navy: Color(0xFF0B1630),
+    navyTop: Color(0xFF1A3A6E),
     onNavy: Color(0xFFFFFFFF),
-    primary: Color(0xFF02BBA9),
-    onPrimary: Color(0xFF0E162B),
-    primaryInk: Color(0xFF00796E),
-    primarySoft: Color(0xFFE0F6F3),
-    comm: Color(0xFF00897B),
-    commSoft: Color(0xFFE0F4F1),
+    primary: Color(0xFF1E40AF),
+    onPrimary: Color(0xFFFFFFFF),
+    primaryInk: Color(0xFF1D4ED8),
+    primarySoft: Color(0xFFE8EEFC),
+    accent: Color(0xFF6EA8FF),
+    comm: Color(0xFF2563EB),
+    commSoft: Color(0xFFE8EFFC),
     success: Color(0xFF1E8A4C),
     successSoft: Color(0xFFE6F5EC),
     warning: Color(0xFFA86A12),
@@ -108,33 +113,34 @@ class AppColors extends ThemeExtension<AppColors> {
     surface2: Color(0xFFECEFF4),
     border: Color(0xFFE1E5EC),
     inputBorder: Color(0xFFD0D6E0),
-    ink: Color(0xFF0E162B),
+    ink: Color(0xFF0B1630),
     slate: Color(0xFF4A5568),
     muted: Color(0xFF778196),
     skeleton: Color(0xFFE4E8EF),
   );
 
   static const dark = AppColors(
-    navy: Color(0xFF0E162B),
-    navyTop: Color(0xFF16345A),
+    navy: Color(0xFF0B1630),
+    navyTop: Color(0xFF1A3A6E),
     onNavy: Color(0xFFFFFFFF),
-    primary: Color(0xFF22D1BD),
-    onPrimary: Color(0xFF0A1120),
-    primaryInk: Color(0xFF3EDCC9),
-    primarySoft: Color(0xFF0E2E30),
-    comm: Color(0xFF3EDCC9),
-    commSoft: Color(0xFF0E2A2C),
+    primary: Color(0xFF2563EB),
+    onPrimary: Color(0xFFFFFFFF),
+    primaryInk: Color(0xFF8AB4FF),
+    primarySoft: Color(0xFF15264A),
+    accent: Color(0xFF7CB4FF),
+    comm: Color(0xFF6EA8FF),
+    commSoft: Color(0xFF14243F),
     success: Color(0xFF4CCB7E),
     successSoft: Color(0xFF10291C),
     warning: Color(0xFFF0B54A),
     warningSoft: Color(0xFF2D2310),
     danger: Color(0xFFF2766E),
     dangerSoft: Color(0xFF331719),
-    background: Color(0xFF09101E),
-    surface: Color(0xFF111B2E),
-    surface2: Color(0xFF17233A),
-    border: Color(0xFF223050),
-    inputBorder: Color(0xFF2D3C5C),
+    background: Color(0xFF070E1E),
+    surface: Color(0xFF0F1A31),
+    surface2: Color(0xFF16233F),
+    border: Color(0xFF213155),
+    inputBorder: Color(0xFF2C3D63),
     ink: Color(0xFFE8EDF5),
     slate: Color(0xFFAAB5C6),
     muted: Color(0xFF7F8BA0),
@@ -158,6 +164,7 @@ class AppColors extends ThemeExtension<AppColors> {
       onPrimary: l(onPrimary, other.onPrimary),
       primaryInk: l(primaryInk, other.primaryInk),
       primarySoft: l(primarySoft, other.primarySoft),
+      accent: l(accent, other.accent),
       comm: l(comm, other.comm),
       commSoft: l(commSoft, other.commSoft),
       success: l(success, other.success),
