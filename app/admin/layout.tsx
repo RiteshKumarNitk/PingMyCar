@@ -7,7 +7,7 @@ import { AdminMobileNav, AdminSidebarNav } from "@/components/admin/AdminNav";
 import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
-export const metadata = { title: "PingMyCar Admin" };
+export const metadata = { title: "OwnerPing Admin" };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   // ANALYTICS_READ is the minimum any admin page needs; pages with stricter

@@ -19,7 +19,7 @@ export function Hero() {
             <span className="block text-primary">They shouldn&apos;t need your phone number.</span>
           </h1>
           <p className="mt-5 max-w-xl text-lg text-muted-foreground">
-            Put a private PingMyCar QR sticker on your vehicle. Anyone who scans it can
+            Put a private OwnerPing QR sticker on your vehicle. Anyone who scans it can
             send you a message about your car — without seeing your phone number or
             needing an app.
           </p>
@@ -92,7 +92,7 @@ export function Hero() {
                   <p className="text-sm font-medium text-muted-foreground">
                     &ldquo;Your headlights are still on.&rdquo;
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">Sent privately through PingMyCar</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Sent privately through OwnerPing</p>
                 </div>
               </li>
             </ol>

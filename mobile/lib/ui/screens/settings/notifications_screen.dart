@@ -152,7 +152,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             (Icons.qr_code_scanner_outlined, 'A visitor scans your QR and sends a message.'),
             (Icons.notifications_outlined, 'Every device you\'re signed in on gets an alert.'),
             (Icons.touch_app_outlined, 'Tap the alert to open that conversation.'),
-            (Icons.phonelink_erase_outlined, 'Turning alerts off here affects this device only. To turn them off, use system settings → PingMyCar → Notifications.'),
+            (Icons.phonelink_erase_outlined, 'Turning alerts off here affects this device only. To turn them off, use system settings → OwnerPing → Notifications.'),
           ])
             Padding(
               padding: const EdgeInsets.only(bottom: Space.sm),

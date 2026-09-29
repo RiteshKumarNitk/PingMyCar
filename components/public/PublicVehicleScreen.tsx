@@ -72,7 +72,7 @@ export async function PublicVehicleScreen({
             </span>
           </div>
           <h1 className="mt-8 text-[1.625rem] font-semibold leading-tight tracking-tight">
-            Contact the owner of this vehicle
+            Connect with the vehicle owner
           </h1>
           <p className="mt-2 text-[0.9375rem] leading-relaxed text-white/70">
             Connect with the owner without sharing personal information. No app or login needed.
@@ -106,7 +106,7 @@ export async function PublicVehicleScreen({
           </p>
         </div>
 
-        <p className="meta mt-6 text-center">Messages are delivered privately through PingMyCar.</p>
+        <p className="meta mt-6 text-center">Messages are delivered privately through OwnerPing.</p>
       </main>
     </div>
   );

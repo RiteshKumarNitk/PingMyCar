@@ -28,7 +28,7 @@ class SettingsScreen extends ConsumerWidget {
                 Text(user?.email ?? '', style: t.bodyMedium),
                 const SizedBox(height: Space.sm),
                 Text(
-                  'You sign in with Google. PingMyCar never shows your name, email or phone number to visitors unless you choose to show your name on a vehicle page.',
+                  'You sign in with Google. OwnerPing never shows your name, email or phone number to visitors unless you choose to show your name on a vehicle page.',
                   style: t.bodySmall,
                 ),
               ],
@@ -56,7 +56,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: Space.xl),
-          Center(child: Text('PingMyCar · v0.1.0', style: t.bodySmall)),
+          Center(child: Text('OwnerPing · v0.1.0', style: t.bodySmall)),
         ],
       ),
     );

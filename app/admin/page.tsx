@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export const metadata = { title: "Admin Dashboard — PingMyCar" };
+export const metadata = { title: "Admin Dashboard — OwnerPing" };
 
 function startOfToday(): Date {
   const d = new Date();
@@ -80,7 +80,7 @@ export default async function AdminDashboardPage() {
     <div className="space-y-8">
       <PageHeader
         eyebrow="Super Admin"
-        title="PingMyCar Platform Overview"
+        title="OwnerPing Platform Overview"
         description="Live platform health, growth, and security signals."
       />
 

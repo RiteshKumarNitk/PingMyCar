@@ -109,7 +109,7 @@ export default async function AdminUserDetailPage({
             <AdminActionDialog
               label="Reactivate User"
               title="Reactivate this user?"
-              description="The user will regain access to their PingMyCar dashboard and vehicle operations."
+              description="The user will regain access to their OwnerPing dashboard and vehicle operations."
               confirmLabel="Reactivate User"
               action={(reason) => setUserSuspended(user.id, false, reason)}
             />

@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "PingMyCar — Contact a vehicle owner privately";
+export const alt = "OwnerPing — Connect Vehicle Owners";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -65,7 +65,7 @@ export default function OgImage() {
             >
               P
             </div>
-            <div style={{ fontSize: 40, fontWeight: 700 }}>PingMyCar</div>
+            <div style={{ fontSize: 40, fontWeight: 700 }}>OwnerPing</div>
           </div>
           <div
             style={{

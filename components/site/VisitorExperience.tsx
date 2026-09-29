@@ -25,7 +25,7 @@ export function VisitorExperience() {
             No app. No account. No phone number.
           </h2>
           <p className="mt-4 text-lg text-slate-300">
-            If someone sees your PingMyCar sticker, they can scan it with their phone
+            If someone sees your OwnerPing sticker, they can scan it with their phone
             camera and send you a message directly from their browser.
           </p>
         </div>

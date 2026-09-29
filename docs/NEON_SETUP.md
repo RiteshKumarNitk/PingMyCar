@@ -1,6 +1,6 @@
 # Neon Project Setup & Integration Guide
 
-This guide details the Neon Serverless Postgres, S3-compatible storage, Neon Auth, and Neon Functions configuration for **PingMyCar**.
+This guide details the Neon Serverless Postgres, S3-compatible storage, Neon Auth, and Neon Functions configuration for **OwnerPing**.
 
 ---
 

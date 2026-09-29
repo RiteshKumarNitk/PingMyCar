@@ -25,10 +25,10 @@ async function ensureAccount(email: string, password: string, name: string) {
 }
 
 async function main() {
-  const adminUser = await ensureAccount(ADMIN_EMAIL, ADMIN_PASSWORD, "PingMyCar Super Admin");
+  const adminUser = await ensureAccount(ADMIN_EMAIL, ADMIN_PASSWORD, "OwnerPing Super Admin");
   await prisma.user.update({
     where: { id: adminUser.id },
-    data: { adminRole: "SUPER_ADMIN", name: "PingMyCar Super Admin" },
+    data: { adminRole: "SUPER_ADMIN", name: "OwnerPing Super Admin" },
   });
 
   const user = await ensureAccount(DEMO_EMAIL, DEMO_PASSWORD, "Demo Owner");

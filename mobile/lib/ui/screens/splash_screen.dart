@@ -109,7 +109,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
         children: [
           // The illustration is decorative: one spoken summary for it.
           Semantics(
-            label: 'PingMyCar. Put the QR on your car so people can contact you privately.',
+            label: 'OwnerPing. Put the QR on your car so people can contact you privately.',
             hint: 'Double tap to skip',
             button: true,
             excludeSemantics: true,
@@ -381,7 +381,7 @@ class _PrivacyMessage extends StatelessWidget {
               child: Icon(Icons.lock_outline, size: 15, color: c.comm),
             ),
             const SizedBox(width: Space.xs),
-            Text('Connect privately.', style: t.titleLarge),
+            Text('Connect Vehicle Owners', style: t.titleLarge),
           ],
         ),
         const SizedBox(height: 6),

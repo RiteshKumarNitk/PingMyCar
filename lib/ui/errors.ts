@@ -14,7 +14,7 @@ export const ERROR_COPY: Record<ErrorKey, { title: string; description: string }
   "422": { title: "Check the details", description: "Some information isn't valid. Review the highlighted fields." },
   "429": { title: "Too many attempts", description: "Please wait a minute before trying again." },
   "500": { title: "Something went wrong", description: "That's on our side. Please try again in a moment." },
-  network: { title: "You're offline", description: "We couldn't reach PingMyCar. Check your connection and try again." },
+  network: { title: "You're offline", description: "We couldn't reach OwnerPing. Check your connection and try again." },
 };
 
 const KNOWN = new Set([401, 403, 404, 409, 422, 429]);

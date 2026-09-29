@@ -111,7 +111,7 @@ void main() {
       expect(tester.takeException(), isNull);
       await _shot(tester, 'splash-${beat.value}-${beat.key}');
     }
-    expect(find.text('Connect privately.'), findsOneWidget);
+    expect(find.text('Connect Vehicle Owners'), findsOneWidget);
     expect(find.text('No phone number required.'), findsOneWidget);
 
     await _advance(tester, const Duration(milliseconds: 1500)); // + page transition
@@ -149,7 +149,7 @@ void main() {
   testWidgets('reduced motion: short fade of the final composition, then continues', (tester) async {
     await _launch(tester, reducedMotion: true);
     await _advance(tester, const Duration(milliseconds: 500));
-    expect(find.text('Connect privately.'), findsOneWidget);
+    expect(find.text('Connect Vehicle Owners'), findsOneWidget);
     await _shot(tester, 'splash-reduced-motion');
     await _advance(tester, const Duration(milliseconds: 1500)); // + page transition
     expect(_onSplash(), isFalse);

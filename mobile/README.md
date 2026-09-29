@@ -1,4 +1,4 @@
-# PingMyCar mobile (owner app)
+# OwnerPing mobile (owner app)
 
 Flutter owner app: Google sign-in → owner APIs → vehicles / QR / messages / stickers + FCM notifications.
 

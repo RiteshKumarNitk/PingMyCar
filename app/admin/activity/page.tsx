@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollText, Search } from "lucide-react";
 
-export const metadata = { title: "Activity Logs — PingMyCar Admin" };
+export const metadata = { title: "Activity Logs — OwnerPing Admin" };
 
 const PAGE_SIZE = 25;
 

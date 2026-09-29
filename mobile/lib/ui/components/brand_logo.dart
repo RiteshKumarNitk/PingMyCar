@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
 
-/// The PingMyCar mark: a QR tile on midnight navy with a teal "ping" dot —
+/// The OwnerPing mark: a QR tile on midnight navy with a teal "ping" dot —
 /// the same mark as the web app.
 class BrandMark extends StatelessWidget {
   const BrandMark({super.key, this.size = 40, this.inverse = false});
@@ -18,7 +18,7 @@ class BrandMark extends StatelessWidget {
     // On dark backgrounds a navy tile vanishes — use the translucent style.
     final onDark = inverse || Theme.of(context).brightness == Brightness.dark;
     return Semantics(
-      label: 'PingMyCar',
+      label: 'OwnerPing',
       image: true,
       child: SizedBox(
         width: size,
@@ -72,7 +72,7 @@ class BrandLogo extends StatelessWidget {
         BrandMark(size: markSize, inverse: inverse),
         SizedBox(width: markSize * 0.3),
         Text(
-          'PingMyCar',
+          'OwnerPing',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: inverse ? c.onNavy : c.ink,
                 fontSize: markSize * 0.52,

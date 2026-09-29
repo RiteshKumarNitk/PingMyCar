@@ -3,7 +3,7 @@ import { PageCta } from "@/components/site/PageCta";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "Why PingMyCar exists — making vehicles easier to reach without making people easier to expose.",
+  description: "Why OwnerPing exists — making vehicles easier to reach without making people easier to expose.",
 };
 
 export default function AboutPage() {
@@ -31,7 +31,7 @@ export default function AboutPage() {
             unsaid, and the owner finds out hours later.
           </p>
           <p>
-            PingMyCar is a small fix for that gap: a QR sticker that gives your vehicle a
+            OwnerPing is a small fix for that gap: a QR sticker that gives your vehicle a
             contact channel of its own. Messages reach you; your phone number and email
             never leave your account. You decide what&apos;s visible, which message types
             you accept, and when the whole thing goes dark.

@@ -35,7 +35,7 @@ export default async function OnboardingReadyPage({
       </span>
       <h1 className="page-title mt-4">Your vehicle is ready</h1>
       <p className="supporting mt-2">
-        Your PingMyCar QR has been created and is active.
+        Your OwnerPing QR has been created and is active.
       </p>
 
       <div className="mt-6 rounded-xl border border-border bg-background p-5">

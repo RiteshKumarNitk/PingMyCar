@@ -74,7 +74,7 @@ export const auth = betterAuth({
       if (isTempEmail(user.email)) return;
       await sendEmail({
         to: user.email,
-        subject: "Verify your PingMyCar email",
+        subject: "Verify your OwnerPing email",
         text: `Confirm this email address: ${url}`,
       });
     },
@@ -112,7 +112,7 @@ export const auth = betterAuth({
         if (isTempEmail(user.email)) return;
         await sendEmail({
           to: user.email,
-          subject: "Your PingMyCar email was changed",
+          subject: "Your OwnerPing email was changed",
           text: `Your account email was changed to ${newEmail}. If this wasn't you, contact support immediately.`,
         });
       },

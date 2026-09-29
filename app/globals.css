@@ -5,7 +5,7 @@
 
 :root {
   /*
-   * PingMyCar design tokens — the ONLY place colors are defined.
+   * OwnerPing design tokens — the ONLY place colors are defined.
    * Midnight navy + electric blue brand, teal for communication, green only
    * for success/active, amber for pending/warning, red for danger. Components
    * use the semantic names below (bg-primary, text-comm, bg-success-bg …),

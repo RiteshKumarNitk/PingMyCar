@@ -34,7 +34,7 @@ export function ExampleMessages() {
               <div className="mt-4">
                 <Badge variant="secondary" className="gap-1.5">
                   <Lock className="h-3 w-3" aria-hidden />
-                  Sent privately through PingMyCar
+                  Sent privately through OwnerPing
                 </Badge>
               </div>
             </div>

@@ -15,7 +15,7 @@ export function StickerSvg({
   return (
     <div
       role="img"
-      aria-label="PingMyCar QR sticker"
+      aria-label="OwnerPing QR sticker"
       className={`${className} [&>svg]:h-auto [&>svg]:w-full drop-shadow-md`}
       dangerouslySetInnerHTML={{ __html: stickerSvgMarkup(publicUrl, variant, vehicleType) }}
     />

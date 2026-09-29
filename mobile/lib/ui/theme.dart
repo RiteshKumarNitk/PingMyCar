@@ -4,7 +4,7 @@ import 'theme/tokens.dart';
 
 export 'theme/tokens.dart';
 
-/// PingMyCar mobile theme, built entirely from [AppColors] tokens.
+/// OwnerPing mobile theme, built entirely from [AppColors] tokens.
 /// Light and dark variants share one builder so every component style is
 /// defined once.
 class AppTheme {

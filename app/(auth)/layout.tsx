@@ -4,7 +4,7 @@ import { Logo } from "@/components/shared/Logo";
 
 const POINTS = [
   { icon: QrCode, text: "A private QR code for each of your vehicles" },
-  { icon: MessageSquareLock, text: "People message you through PingMyCar" },
+  { icon: MessageSquareLock, text: "People message you through OwnerPing" },
   { icon: EyeOff, text: "Your phone number and email are never shown" },
 ];
 

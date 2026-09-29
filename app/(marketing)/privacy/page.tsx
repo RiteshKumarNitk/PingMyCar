@@ -8,11 +8,11 @@ import { PageCta } from "@/components/site/PageCta";
 export const metadata: Metadata = {
   title: "Privacy",
   description:
-    "How PingMyCar protects owner contact information: what visitors can do, what they never need, and what owners control.",
+    "How OwnerPing protects owner contact information: what visitors can do, what they never need, and what owners control.",
 };
 
 const VISITOR_CAN = ["Scan the QR", "View the vehicle contact page", "Send a message"];
-const VISITOR_NEED_NOT = ["A PingMyCar account", "The app", "A phone number", "An email address"];
+const VISITOR_NEED_NOT = ["A OwnerPing account", "The app", "A phone number", "An email address"];
 const OWNER_CONTROLS = [
   "Vehicle details",
   "QR status (active / inactive)",
@@ -97,7 +97,7 @@ export default function PrivacyPage() {
           <p aria-hidden className="text-center text-lg font-light text-primary">↓</p>
           <FlowNode label="Vehicle QR" sub="A code that identifies the vehicle, not you" />
           <p aria-hidden className="text-center text-lg font-light text-primary">↓</p>
-          <FlowNode label="PingMyCar" sub="Relays the message" accent />
+          <FlowNode label="OwnerPing" sub="Relays the message" accent />
           <p aria-hidden className="text-center text-lg font-light text-primary">↓</p>
           <FlowNode label="Private message" sub="Delivered with no contact details attached" />
           <p aria-hidden className="text-center text-lg font-light text-primary">↓</p>

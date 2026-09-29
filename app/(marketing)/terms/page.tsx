@@ -3,7 +3,7 @@ import { PageCta } from "@/components/site/PageCta";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "The terms that apply when you use PingMyCar.",
+  description: "The terms that apply when you use OwnerPing.",
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -26,7 +26,7 @@ export default function TermsPage() {
         <div className="mt-6">
           <Section title="The service">
             <p>
-              PingMyCar provides a QR-based contact channel for vehicles. Visitors send
+              OwnerPing provides a QR-based contact channel for vehicles. Visitors send
               messages to vehicle owners through the platform; owners manage their
               vehicles, QR codes, and conversations. The service is currently free.
             </p>
@@ -43,7 +43,7 @@ export default function TermsPage() {
 
           <Section title="Acceptable use">
             <p>
-              Don&apos;t use PingMyCar to harass, threaten, spam, or impersonate anyone;
+              Don&apos;t use OwnerPing to harass, threaten, spam, or impersonate anyone;
               don&apos;t register vehicles you have no relationship with; don&apos;t
               interfere with the service or other users. We may rate-limit, block, or
               remove accounts that abuse the service.
@@ -52,7 +52,7 @@ export default function TermsPage() {
 
           <Section title="Not for emergencies">
             <p>
-              PingMyCar is not an emergency service and makes no guarantee of delivery
+              OwnerPing is not an emergency service and makes no guarantee of delivery
               time. For emergencies, always contact your local emergency service.
             </p>
           </Section>

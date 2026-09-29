@@ -5,7 +5,7 @@ import { PageCta } from "@/components/site/PageCta";
 
 export const metadata: Metadata = {
   title: "FAQ",
-  description: "Frequently asked questions about PingMyCar — accounts, privacy, QR management, and misuse.",
+  description: "Frequently asked questions about OwnerPing — accounts, privacy, QR management, and misuse.",
 };
 
 const GROUPS = [
@@ -13,12 +13,12 @@ const GROUPS = [
     heading: "The service",
     items: [
       {
-        q: "Is PingMyCar free?",
-        a: "Yes — PingMyCar is currently free. Create an account, add your vehicles, and get your QR stickers at no cost. If paid plans are ever introduced, existing core features will be announced clearly first.",
+        q: "Is OwnerPing free?",
+        a: "Yes — OwnerPing is currently free. Create an account, add your vehicles, and get your QR stickers at no cost. If paid plans are ever introduced, existing core features will be announced clearly first.",
       },
       {
-        q: "Is PingMyCar for emergencies?",
-        a: "No. PingMyCar is for everyday vehicle situations — a flat battery, a blocked exit, possible damage. For emergencies or situations requiring immediate assistance, contact the appropriate local emergency service.",
+        q: "Is OwnerPing for emergencies?",
+        a: "No. OwnerPing is for everyday vehicle situations — a flat battery, a blocked exit, possible damage. For emergencies or situations requiring immediate assistance, contact the appropriate local emergency service.",
       },
       {
         q: "What happens when someone scans my QR?",

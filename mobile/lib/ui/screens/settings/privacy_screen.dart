@@ -15,7 +15,7 @@ class PrivacyScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(Space.page, Space.xs, Space.page, Space.xxl),
         children: [
-          Text('Visitors reach you through PingMyCar — never directly.', style: t.bodyLarge?.copyWith(color: c.slate)),
+          Text('Visitors reach you through OwnerPing — never directly.', style: t.bodyLarge?.copyWith(color: c.slate)),
           const SizedBox(height: Space.lg),
           _Group(
             title: 'What visitors can see',

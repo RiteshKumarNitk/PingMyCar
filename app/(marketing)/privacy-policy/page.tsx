@@ -4,7 +4,7 @@ import { PageCta } from "@/components/site/PageCta";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "What PingMyCar collects, why, and how your information is protected.",
+  description: "What OwnerPing collects, why, and how your information is protected.",
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

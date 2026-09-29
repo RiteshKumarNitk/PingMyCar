@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Get help with PingMyCar — email support.",
+  description: "Get help with OwnerPing — email support.",
 };
 
 export default function ContactPage() {

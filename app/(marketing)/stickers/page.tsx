@@ -9,14 +9,14 @@ import { PageCta } from "@/components/site/PageCta";
 export const metadata: Metadata = {
   title: "Stickers",
   description:
-    "PingMyCar sticker formats for your vehicle — and how to download and print your QR sticker yourself.",
+    "OwnerPing sticker formats for your vehicle — and how to download and print your QR sticker yourself.",
 };
 
 const FORMATS = [
   {
     title: "Square sticker",
     description:
-      "The full PingMyCar design with headline, QR, and privacy note — best on glass.",
+      "The full OwnerPing design with headline, QR, and privacy note — best on glass.",
     size: "36 × 56 mm",
   },
   {
@@ -44,7 +44,7 @@ export default function StickersPage() {
         <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
           <p className="eyebrow">Stickers</p>
           <h1 className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">
-            Put your PingMyCar QR where people can see it.
+            Put your OwnerPing QR where people can see it.
           </h1>
           <p className="mt-4 text-lg text-muted-foreground">
             Every vehicle&apos;s dashboard includes print-ready sticker files — download,

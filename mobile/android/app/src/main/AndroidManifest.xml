@@ -1,11 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- API calls to the PingMyCar backend -->
+    <!-- API calls to the OwnerPing backend -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Runtime notification permission on Android 13+ (requested via FCM). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
-        android:label="PingMyCar"
+        android:label="OwnerPing"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

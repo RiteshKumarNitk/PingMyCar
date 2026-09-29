@@ -34,7 +34,7 @@ export function Logo({
         />
       </span>
       {!compact && (
-        <span className={cn("text-[1.0625rem] font-semibold tracking-tight", inverse && "text-white")}>PingMyCar</span>
+        <span className={cn("text-[1.0625rem] font-semibold tracking-tight", inverse && "text-white")}>OwnerPing</span>
       )}
     </>
   );
@@ -44,7 +44,7 @@ export function Logo({
   }
 
   return (
-    <Link href={href} className="flex items-center gap-2 rounded-md" aria-label={compact ? "PingMyCar" : "PingMyCar home"}>
+    <Link href={href} className="flex items-center gap-2 rounded-md" aria-label={compact ? "OwnerPing" : "OwnerPing home"}>
       {inner}
     </Link>
   );

@@ -79,7 +79,7 @@ export function a4StickerSheetSvg(
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 210 297">
   <rect width="210" height="297" fill="#ffffff"/>
-  <text x="15" y="16" font-family="${FONT}" font-size="5.5" font-weight="800" fill="#0d1926">PingMyCar sticker pack</text>
+  <text x="15" y="16" font-family="${FONT}" font-size="5.5" font-weight="800" fill="#0d1926">OwnerPing sticker pack</text>
   <text x="15" y="23" font-family="${FONT}" font-size="3.4" fill="#0d1926">${escapeXml(vehicleName)}</text>
   <text x="15" y="29" font-family="${FONT}" font-size="3.2" font-weight="700" fill="#2563eb">PRINT AT 100% / ACTUAL SIZE. Do not “fit to page”.</text>
   <text x="15" y="35" font-family="${FONT}" font-size="3" fill="#555">Cut on the dashed vinyl edge. Crop marks show the finished size.</text>
@@ -97,7 +97,7 @@ ${stickers}
   <rect x="15" y="248" width="180" height="40" rx="3" fill="#f4f6fa" stroke="#d5dbe6" stroke-width="0.3"/>
   <text x="21" y="258" font-family="${FONT}" font-size="3.4" font-weight="700" fill="#0d1926">How a scan works</text>
   <text x="21" y="266" font-family="${FONT}" font-size="3" fill="#333">A visitor opens the QR in their phone browser. No app. No phone number is shown.</text>
-  <text x="21" y="272" font-family="${FONT}" font-size="3" fill="#333">They pick a reason and send a private message. You reply from PingMyCar.</text>
+  <text x="21" y="272" font-family="${FONT}" font-size="3" fill="#333">They pick a reason and send a private message. You reply from OwnerPing.</text>
   <text x="21" y="278" font-family="${FONT}" font-size="3" fill="#333">If you regenerate this QR, reprint the pack — old stickers will stop working.</text>
   <text x="21" y="284" font-family="${FONT}" font-size="2.8" fill="#666">This is not an emergency service. For a genuine emergency, call local emergency numbers.</text>
 </svg>`;

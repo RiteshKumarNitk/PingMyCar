@@ -2,7 +2,7 @@ import { create } from "qrcode";
 import { qrModuleRects } from "@/lib/qr/matrix";
 
 /**
- * A4 print sheet (210 × 297 mm) for one PingMyCar sticker at its real
+ * A4 print sheet (210 × 297 mm) for one OwnerPing sticker at its real
  * physical size. Single source of the sheet geometry; the SVG and PDF
  * generators both render from this so the two outputs are identical.
  *
@@ -88,14 +88,14 @@ export function buildSheetLayout(publicUrl: string, vehicleName: string): SheetL
 
   const cx = SHEET_WIDTH_MM / 2;
   const texts: SheetText[] = [
-    { text: "PINGMYCAR STICKER - A4 PRINT SHEET", xMm: cx, yMm: 16, sizeMm: 2.5, bold: true, trackingEm: 0.06, color: NAVY, opacity: 1, align: "center" },
+    { text: "OWNERPING STICKER - A4 PRINT SHEET", xMm: cx, yMm: 16, sizeMm: 2.5, bold: true, trackingEm: 0.06, color: NAVY, opacity: 1, align: "center" },
     { text: `Print at 100% / Actual size - Disable "Fit to page" / "Shrink to fit" - ${vehicleName}`, xMm: cx, yMm: 23, sizeMm: 2, bold: false, trackingEm: 0, color: NAVY, opacity: 0.65, align: "center" },
 
     { text: "NEED TO CONTACT", xMm: cx, yMm: STICKER_Y_MM + MM(26 + 24), sizeMm: MM(26), bold: true, trackingEm: 0.12, color: NAVY, opacity: 1, align: "center" },
     { text: "THIS VEHICLE?", xMm: cx, yMm: STICKER_Y_MM + MM(26 + 24 + 32), sizeMm: MM(26), bold: true, trackingEm: 0.12, color: NAVY, opacity: 1, align: "center" },
 
     { text: "SCAN HERE", xMm: cx, yMm: STICKER_Y_MM + MM(66) + qrOuter + MM(42), sizeMm: MM(22), bold: true, trackingEm: 0.35, color: BLUE, opacity: 1, align: "center" },
-    { text: "PingMyCar", xMm: cx, yMm: STICKER_Y_MM + STICKER_H_MM - MM(66) + MM(4), sizeMm: MM(20), bold: true, trackingEm: 0.02, color: NAVY, opacity: 1, align: "center" },
+    { text: "OwnerPing", xMm: cx, yMm: STICKER_Y_MM + STICKER_H_MM - MM(66) + MM(4), sizeMm: MM(20), bold: true, trackingEm: 0.02, color: NAVY, opacity: 1, align: "center" },
     { text: "Your contact info stays private", xMm: cx, yMm: STICKER_Y_MM + STICKER_H_MM - MM(66) + MM(20) + MM(4), sizeMm: MM(10), bold: false, trackingEm: 0, color: NAVY, opacity: 0.5, align: "center" },
 
     { text: `Recommended size: ${STICKER_W_MM} x ${STICKER_H_MM} mm (print at 100% - the QR must stay at this size to scan reliably)`, xMm: cx, yMm: STICKER_Y_MM + STICKER_H_MM + 22, sizeMm: 1.9, bold: false, trackingEm: 0, color: NAVY, opacity: 0.75, align: "center" },

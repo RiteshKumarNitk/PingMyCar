@@ -8,7 +8,7 @@ import { changeUserRole } from "@/lib/admin/actions";
 import { ASSIGNABLE_ROLES } from "@/lib/admin/permissions";
 import { UserCog } from "lucide-react";
 
-export const metadata = { title: "Admin Users — PingMyCar Admin" };
+export const metadata = { title: "Admin Users — OwnerPing Admin" };
 
 const STAFF_ROLES = ["SUPPORT", "MODERATOR", "OPERATIONS", "ANALYST", "ADMIN", "SUPER_ADMIN"] as const;
 

@@ -50,7 +50,7 @@ class QrPreviewCard extends StatelessWidget {
               color: c.navy,
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: Space.md),
               child: Text(
-                'SCAN TO CONTACT THE OWNER',
+                'SCAN TO CONNECT',
                 textAlign: TextAlign.center,
                 style: t.labelSmall?.copyWith(color: c.onNavy, letterSpacing: 2, fontSize: 11.5),
               ),

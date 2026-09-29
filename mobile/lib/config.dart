@@ -1,4 +1,4 @@
-/// Environment configuration for the PingMyCar mobile app.
+/// Environment configuration for the OwnerPing mobile app.
 ///
 /// Nothing here may ever contain server secrets — only public, app-side
 /// values. Real deployments inject these at build time (--dart-define)

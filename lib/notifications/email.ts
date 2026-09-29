@@ -6,7 +6,7 @@ import { Resend } from "resend";
  */
 export async function sendEmail({ to, subject, text }: { to: string; subject: string; text: string }) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.ALERT_EMAIL_FROM ?? "PingMyCar <onboarding@resend.dev>";
+  const from = process.env.ALERT_EMAIL_FROM ?? "OwnerPing <onboarding@resend.dev>";
 
   if (!apiKey) {
     console.log(`[dev email] to=${to} subject="${subject}"\n${text}`);

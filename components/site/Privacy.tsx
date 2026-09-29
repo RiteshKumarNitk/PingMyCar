@@ -37,13 +37,13 @@ export function Privacy() {
           </p>
           <p aria-hidden className="flow-chain text-center text-[10px] text-slate-400">QR scan</p>
 
-          {/* PingMyCar */}
+          {/* OwnerPing */}
           <div className="flex items-center gap-5 rounded-xl border border-primary/30 bg-primary/10 p-6">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
               <ScanLine className="h-6 w-6" aria-hidden />
             </span>
             <div>
-              <p className="font-semibold">PingMyCar</p>
+              <p className="font-semibold">OwnerPing</p>
               <p className="text-sm text-slate-300">
                 Delivers the message through the platform — contact details never leave the owner&apos;s account.
               </p>

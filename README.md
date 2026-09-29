@@ -1,4 +1,4 @@
-# PingMyCar
+# OwnerPing
 
 A customizable **private contact profile** for every vehicle. A QR sticker is only the entry point. Visitors never see the owner's phone number or email, and they never install an app.
 

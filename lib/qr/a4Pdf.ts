@@ -102,7 +102,7 @@ function drawInstructions(
   const left = 15 * MM;
   let y = A4.hMm - 14 * MM;
 
-  page.drawText("PingMyCar sticker pack", {
+  page.drawText("OwnerPing sticker pack", {
     x: left,
     y,
     size: 16,
@@ -142,7 +142,7 @@ function drawPlacementGuide(
   // Stickers + captions end at 172 mm from the top; the guide lives below.
   let y = 178 * MM;
 
-  page.drawText("Where should I place my PingMyCar sticker?", {
+  page.drawText("Where should I place my OwnerPing sticker?", {
     x: left,
     y,
     size: 12,
@@ -183,7 +183,7 @@ function drawPlacementGuide(
   by -= 5.5 * MM;
   const scanLines = [
     "A visitor scans the QR and opens the page in their phone browser. No app, no account.",
-    "They pick a reason and send a private message. You reply from your PingMyCar dashboard.",
+    "They pick a reason and send a private message. You reply from your OwnerPing dashboard.",
     "Neither side sees a phone number. If you regenerate this QR, reprint the pack.",
     "This is not an emergency service. For a genuine emergency, call local emergency numbers.",
   ];
@@ -219,7 +219,7 @@ export async function buildA4StickerPackPdf(
   stickerPngs: { variant: StickerVariant; bytes: Uint8Array }[]
 ): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
-  pdf.setTitle(`PingMyCar sticker pack — ${vehicleName}`);
+  pdf.setTitle(`OwnerPing sticker pack — ${vehicleName}`);
   pdf.setSubject("Print at 100% / actual size");
 
   const page = pdf.addPage([A4_POINTS.w, A4_POINTS.h]);

@@ -13,10 +13,10 @@ export const metadata: Metadata = { title: "Log In" };
 const LOGIN_ERRORS: Record<string, string> = {
   access_denied: "Google sign-in was cancelled.",
   account_not_linked:
-    "This email already has a PingMyCar account that isn't linked to Google. Contact support to link it.",
+    "This email already has a OwnerPing account that isn't linked to Google. Contact support to link it.",
   unable_to_link_account:
-    "This email already has a PingMyCar account that isn't linked to Google. Contact support to link it.",
-  email_not_found: "Your Google account didn't share an email address, which PingMyCar needs.",
+    "This email already has a OwnerPing account that isn't linked to Google. Contact support to link it.",
+  email_not_found: "Your Google account didn't share an email address, which OwnerPing needs.",
   state_not_found: "Your sign-in session expired. Please try again.",
   state_mismatch: "Your sign-in session expired. Please try again.",
 };
@@ -40,7 +40,7 @@ export default async function LoginPage({
 
   return (
     <div>
-      <h1 className="page-title">Sign in to PingMyCar</h1>
+      <h1 className="page-title">Sign in to OwnerPing</h1>
       <p className="supporting mt-1.5">Vehicle owners sign in with Google to manage vehicles, QR codes, and messages.</p>
 
       {errorCode && (
@@ -64,7 +64,7 @@ export default async function LoginPage({
       </div>
 
       <div className="mt-7 border-t border-border pt-6 text-center">
-        <p className="text-sm text-muted-foreground">New to PingMyCar?</p>
+        <p className="text-sm text-muted-foreground">New to OwnerPing?</p>
         <Button asChild variant="outline" className="mt-3 w-full">
           <Link href="/signup">Get Your Free QR</Link>
         </Button>

@@ -47,7 +47,7 @@ export default async function VehicleQrPage({ params }: { params: Promise<{ id: 
         {/* Print sheet: only this prints */}
         <div className="print-sheet overflow-hidden rounded-2xl border border-border bg-card text-center shadow-raised [print-color-adjust:exact]">
           <p className="bg-navy px-4 py-3.5 text-[0.8125rem] font-semibold tracking-[0.18em] text-white">
-            SCAN TO CONTACT THE OWNER
+            SCAN TO CONNECT
           </p>
           <div className="px-8 pt-7 pb-6">
             <QrSvg publicUrl={publicUrl} className="mx-auto aspect-square w-52" />
@@ -58,7 +58,7 @@ export default async function VehicleQrPage({ params }: { params: Promise<{ id: 
           </div>
           <p className="flex items-center justify-center gap-1.5 border-t border-border py-2.5 text-xs text-muted-foreground">
             <Lock className="size-3" aria-hidden />
-            Private messaging by PingMyCar
+            Private messaging by OwnerPing
           </p>
         </div>
 
@@ -86,7 +86,7 @@ export default async function VehicleQrPage({ params }: { params: Promise<{ id: 
 
           <section aria-labelledby="qr-sticker" className="surface p-5">
             <h2 id="qr-sticker" className="section-title">Sticker</h2>
-            <p className="meta mt-0.5">The print-ready PingMyCar sticker with your QR embedded.</p>
+            <p className="meta mt-0.5">The print-ready OwnerPing sticker with your QR embedded.</p>
             <div className="mt-4 flex flex-wrap items-start gap-5">
               <StickerSvg publicUrl={publicUrl} vehicleType={vehicle.type} className="w-44 max-w-none shrink-0" />
               <div className="flex flex-col gap-2">

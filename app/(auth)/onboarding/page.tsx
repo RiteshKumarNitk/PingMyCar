@@ -19,7 +19,7 @@ export default async function OnboardingPage() {
   return (
     <div className="w-full">
       <div className="mb-6 text-center">
-        <p className="eyebrow">Welcome to PingMyCar 👋</p>
+        <p className="eyebrow">Welcome to OwnerPing 👋</p>
         <CardTitle className="page-title mt-2">
           Let&apos;s connect your first vehicle.
         </CardTitle>

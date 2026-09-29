@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// PingMyCar design tokens — the ONLY place colors, spacing, radii and
+/// OwnerPing design tokens — the ONLY place colors, spacing, radii and
 /// elevation are defined. Screens read them through [AppColors.of] /
 /// Theme.of(context); no screen hardcodes a color.
 ///

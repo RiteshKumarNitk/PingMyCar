@@ -1,4 +1,4 @@
-/// PingMyCar UI component library — import this, not individual files.
+/// OwnerPing UI component library — import this, not individual files.
 library;
 
 export '../theme.dart';

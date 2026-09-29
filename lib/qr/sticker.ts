@@ -4,7 +4,7 @@ import { VEHICLE_TYPE_LABELS } from "@/lib/validation/vehicle";
 import { qrModuleRects } from "@/lib/qr/matrix";
 
 /**
- * Print-ready PingMyCar vinyl sticker SVGs.
+ * Print-ready OwnerPing vinyl sticker SVGs.
  * Layouts mimic die-cut car stickers (window, bumper strip, license-plate
  * sticker, round badge, arrow badge).
  */
@@ -66,8 +66,8 @@ function styleFor(variant: Exclude<StickerVariant, "round" | "plate" | "arrow">)
       pad: 26,
       qr: 240,
       gap: 14,
-      line1: "NEED TO CONTACT",
-      line2: "THIS VEHICLE?",
+      line1: "CONNECT WITH",
+      line2: "VEHICLE OWNER",
     };
   }
   return {
@@ -79,8 +79,8 @@ function styleFor(variant: Exclude<StickerVariant, "round" | "plate" | "arrow">)
     pad: 24,
     qr: 190,
     gap: 12,
-    line1: "NEED TO CONTACT",
-    line2: "THIS VEHICLE?",
+    line1: "CONNECT WITH",
+    line2: "VEHICLE OWNER",
   };
 }
 
@@ -111,7 +111,7 @@ export function stickerSvgMarkup(
     t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const typeLine = vehicleType ? VEHICLE_TYPE_LABELS[vehicleType] : null;
   const titleWeight = "font-weight=\"800\" letter-spacing=\"0.12em\"";
-  const bodyLine = "Send a private message to the vehicle owner.";
+  const bodyLine = "Scan to connect with the vehicle owner.";
 
   // Each sticker's QR encodes the visitor URL tagged with its own variant
   // (?s=plate) — that's how per-sticker scan analytics work. Old stickers
@@ -127,13 +127,13 @@ export function stickerSvgMarkup(
   <circle cx="${cx}" cy="${cx}" r="204" fill="#c5ccd6"/>
   <circle cx="${cx}" cy="${cx}" r="198" fill="#ffffff"/>
   <circle cx="${cx}" cy="${cx}" r="188" fill="none" stroke="${NAVY}" stroke-opacity="0.28" stroke-width="1.5" stroke-dasharray="5 4"/>
-  <text x="${cx}" y="72" text-anchor="middle" font-family="${font}" font-size="15" font-weight="800" letter-spacing="0.18em" fill="${NAVY}">NEED TO REACH ME?</text>
+  <text x="${cx}" y="72" text-anchor="middle" font-family="${font}" font-size="15" font-weight="800" letter-spacing="0.18em" fill="${NAVY}">CONNECT WITH OWNER</text>
   <g transform="translate(${(S - qr) / 2}, 88)">
     ${qrPanelMarkup(qrUrl, qr, 10)}
   </g>
   <text x="${cx}" y="318" text-anchor="middle" font-family="${font}" font-size="16" font-weight="700" letter-spacing="0.3em" fill="${BLUE}">SCAN HERE</text>
   ${typeLine ? `<text x="${cx}" y="340" text-anchor="middle" font-family="${font}" font-size="12" fill="${NAVY}" fill-opacity="0.8">${esc(typeLine)}</text>` : ""}
-  <text x="${cx}" y="362" text-anchor="middle" font-family="${font}" font-size="13" font-weight="800" fill="${NAVY}">PingMyCar</text>
+  <text x="${cx}" y="362" text-anchor="middle" font-family="${font}" font-size="13" font-weight="800" fill="${NAVY}">OwnerPing</text>
   <text x="${cx}" y="380" text-anchor="middle" font-family="${font}" font-size="10" fill="${NAVY}" fill-opacity="0.6">Number stays private</text>
 </svg>`;
   }
@@ -148,14 +148,14 @@ export function stickerSvgMarkup(
   <circle cx="${cx}" cy="${cx}" r="204" fill="${BLUE}"/>
   <circle cx="${cx}" cy="${cx}" r="197" fill="#ffffff"/>
   <circle cx="${cx}" cy="${cx}" r="187" fill="none" stroke="${NAVY}" stroke-opacity="0.28" stroke-width="1.5" stroke-dasharray="5 4"/>
-  <text x="${cx}" y="76" text-anchor="middle" font-family="${font}" font-size="13.5" font-weight="800" letter-spacing="0.12em" fill="${NAVY}">NEED TO CONTACT THE OWNER?</text>
+  <text x="${cx}" y="76" text-anchor="middle" font-family="${font}" font-size="13.5" font-weight="800" letter-spacing="0.12em" fill="${NAVY}">CONNECT WITH VEHICLE OWNER</text>
   <path d="M 58 148 L 116 191 L 58 234" fill="none" stroke="${BLUE}" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
   <g transform="translate(146, 102)">
     ${qrPanelMarkup(qrUrl, qr, 10)}
   </g>
   <text x="${cx}" y="328" text-anchor="middle" font-family="${font}" font-size="16" font-weight="700" letter-spacing="0.3em" fill="${BLUE}">SCAN HERE</text>
   ${typeLine ? `<text x="${cx}" y="349" text-anchor="middle" font-family="${font}" font-size="12" fill="${NAVY}" fill-opacity="0.8">${esc(typeLine)}</text>` : ""}
-  <text x="${cx}" y="370" text-anchor="middle" font-family="${font}" font-size="13" font-weight="800" fill="${NAVY}">PingMyCar</text>
+  <text x="${cx}" y="370" text-anchor="middle" font-family="${font}" font-size="13" font-weight="800" fill="${NAVY}">OwnerPing</text>
   <text x="${cx}" y="388" text-anchor="middle" font-family="${font}" font-size="10" fill="${NAVY}" fill-opacity="0.6">Number stays private</text>
 </svg>`;
   }
@@ -181,7 +181,7 @@ export function stickerSvgMarkup(
   <text x="262" y="${qrY + 62}" font-family="${font}" font-size="46" font-weight="900" letter-spacing="0.06em" fill="${NAVY}">SCAN ME</text>
   <text x="262" y="${qrY + 94}" font-family="${font}" font-size="13" fill="${NAVY}" fill-opacity="0.75">Point a camera — message the owner.</text>
   ${typeLine ? `<text x="262" y="${qrY + 118}" font-family="${font}" font-size="12" font-weight="700" fill="${BLUE}">${esc(typeLine)}</text>` : ""}
-  <text x="262" y="${H - 26}" font-family="${font}" font-size="12" font-weight="800" fill="${NAVY}">PingMyCar</text>
+  <text x="262" y="${H - 26}" font-family="${font}" font-size="12" font-weight="800" fill="${NAVY}">OwnerPing</text>
   <text x="${W - 18}" y="${H - 26}" text-anchor="end" font-family="${font}" font-size="11" fill="${NAVY}" fill-opacity="0.6">Your number stays private</text>
 </svg>`;
   }
@@ -207,7 +207,7 @@ export function stickerSvgMarkup(
   ${typeLine ? `<text x="${cx}" y="${s.pad + 66 + s.qr + 66}" text-anchor="middle" font-family="${s.font}" font-size="${s.bodySize + 1}" fill="${NAVY}" fill-opacity="0.8">${esc(typeLine)}</text>` : ""}
   <text x="${cx}" y="${s.pad + 66 + s.qr + (typeLine ? 88 : 76)}" text-anchor="middle" font-family="${s.font}" font-size="${s.bodySize}" fill="${NAVY}" fill-opacity="0.65">${bodyLine}</text>
   <rect x="${(W - 56) / 2}" y="${H - 66}" width="56" height="3" rx="1.5" fill="${BLUE}"/>
-  <text x="${cx}" y="${H - 36}" text-anchor="middle" font-family="${s.font}" font-size="${s.brandSize}" font-weight="800" letter-spacing="0.02em" fill="${NAVY}">PingMyCar</text>
+  <text x="${cx}" y="${H - 36}" text-anchor="middle" font-family="${s.font}" font-size="${s.brandSize}" font-weight="800" letter-spacing="0.02em" fill="${NAVY}">OwnerPing</text>
   <text x="${cx}" y="${H - 16}" text-anchor="middle" font-family="${s.font}" font-size="10" fill="${NAVY}" fill-opacity="0.6">Your contact info stays private</text>
 </svg>`;
   }
@@ -228,6 +228,6 @@ export function stickerSvgMarkup(
   <text x="${textX}" y="${qrY + 106}" font-family="${s.font}" font-size="${s.scanSize}" font-weight="700" letter-spacing="0.32em" fill="${BLUE}">SCAN HERE</text>
   <text x="${textX}" y="${qrY + 130}" font-family="${s.font}" font-size="${s.bodySize}" fill="${NAVY}" fill-opacity="0.65">${bodyLine}</text>
   ${typeLine ? `<text x="${textX}" y="${qrY + 150}" font-family="${s.font}" font-size="${s.bodySize + 1}" fill="${NAVY}" fill-opacity="0.8">${esc(typeLine)}</text>` : ""}
-  <text x="${textX}" y="${H - s.pad - 6}" font-family="${s.font}" font-size="${s.brandSize}" font-weight="800" fill="${NAVY}">PingMyCar</text>
+  <text x="${textX}" y="${H - s.pad - 6}" font-family="${s.font}" font-size="${s.brandSize}" font-weight="800" fill="${NAVY}">OwnerPing</text>
 </svg>`;
 }

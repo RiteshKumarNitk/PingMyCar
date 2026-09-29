@@ -3,7 +3,7 @@ import "@fontsource-variable/inter";
 import "./globals.css";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3100";
-const title = "PingMyCar — Contact a Vehicle Owner Privately";
+const title = "OwnerPing — Connect Vehicle Owners";
 const description =
   "Put a private QR sticker on your vehicle and let people contact you without revealing your phone number.";
 
@@ -11,13 +11,13 @@ export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
   title: {
     default: title,
-    template: "%s — PingMyCar",
+    template: "%s — OwnerPing",
   },
   description,
   openGraph: {
     type: "website",
     url: appUrl,
-    siteName: "PingMyCar",
+    siteName: "OwnerPing",
     title,
     description,
   },

@@ -30,16 +30,16 @@ Future<void> main() async {
   // Restore session from the stored bearer token, if any.
   unawaited(container.read(authControllerProvider.notifier).restoreSession());
 
-  runApp(UncontrolledProviderScope(container: container, child: const PingMyCarApp()));
+  runApp(UncontrolledProviderScope(container: container, child: const OwnerPingApp()));
 }
 
-class PingMyCarApp extends ConsumerWidget {
-  const PingMyCarApp({super.key});
+class OwnerPingApp extends ConsumerWidget {
+  const OwnerPingApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
-      title: 'PingMyCar',
+      title: 'OwnerPing',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),

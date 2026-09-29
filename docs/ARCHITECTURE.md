@@ -1,4 +1,4 @@
-# PingMyCar — MVP Architecture
+# OwnerPing — MVP Architecture
 
 A privacy-first **vehicle contact profile**. The QR sticker is only the physical entry point. The product is owner-controlled public information + anonymous messaging.
 
@@ -11,7 +11,7 @@ This document is the source of truth for Phases 1–14. Flutter (Phase 15) is ou
 | Topic | Tension | Decision |
 |---|---|---|
 | Auth | Owners need an account; visitors must not. | **Better Auth**, owners are **Google-only** ("Continue with Google"). No phone/OTP, email OTP, magic link, or public email/password sign-up. Visitors (guests) use the public QR + visitor-token flow with no account. Email stays on `User` for alerts and is **never public**. |
-| Product name | Repo is PingMyCar; landing currently says CarPing. | **PingMyCar** is the product name. Unify marketing copy in Phase 2. |
+| Product name | Repo is OwnerPing; landing currently says CarPing. | **OwnerPing** is the product name. Unify marketing copy in Phase 2. |
 | Public IDs | Spec forbids database IDs in public URLs. Dashboard uses `/dashboard/messages/[id]`. | Public: `/v/[publicToken]`, `/c/[visitorToken]`. Owner dashboard IDs are session-gated UUIDs, never given to visitors. |
 | Visitor token storage | Spec lists `visitorToken` on Conversation. Storing raw tokens in Postgres leaks conversation URLs if the DB is dumped. | Store **SHA-256 hash only** (`visitorTokenHash`). Raw token is shown once to the visitor. |
 | Rate limiting | Spec wants limits without Redis. | In-process limiter (single Node instance). Configurable via env. Revisit Redis only if we run multiple app instances. |

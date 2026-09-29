@@ -6,7 +6,7 @@ const STEPS = [
   {
     icon: UserRoundPlus,
     title: "Create your account",
-    text: "Create your free PingMyCar account with your phone or Google.",
+    text: "Create your free OwnerPing account with your phone or Google.",
   },
   {
     icon: CarFront,
@@ -21,12 +21,12 @@ const STEPS = [
   {
     icon: Sticker,
     title: "Place the sticker",
-    text: "Print it or use a PingMyCar sticker and place it somewhere visible.",
+    text: "Print it or use a OwnerPing sticker and place it somewhere visible.",
   },
   {
     icon: BellRing,
     title: "Receive private messages",
-    text: "Someone scans the QR and contacts you through PingMyCar — your number stays yours.",
+    text: "Someone scans the QR and contacts you through OwnerPing — your number stays yours.",
   },
 ];
 

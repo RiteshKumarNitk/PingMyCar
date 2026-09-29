@@ -39,7 +39,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final c = AppColors.of(context);
     final t = Theme.of(context).textTheme;
     final user = ref.watch(authControllerProvider).user;
-    final name = user?.hasRealName == true ? user!.name : 'PingMyCar owner';
+    final name = user?.hasRealName == true ? user!.name : 'OwnerPing owner';
     final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
 
     return Scaffold(
