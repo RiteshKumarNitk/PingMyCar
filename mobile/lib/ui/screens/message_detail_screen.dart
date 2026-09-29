@@ -337,7 +337,7 @@ class _Bubble extends StatelessWidget {
             ),
             child: Text(
               message.body,
-              style: t.bodyLarge?.copyWith(fontSize: 15, color: mine ? Colors.white : c.ink, height: 1.4),
+              style: t.bodyLarge?.copyWith(fontSize: 15, color: mine ? c.onPrimary : c.ink, height: 1.4),
             ),
           ),
         ),

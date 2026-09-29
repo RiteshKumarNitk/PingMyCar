@@ -11,6 +11,7 @@ import 'screens/vehicle_detail_screen.dart';
 import 'screens/vehicle_form_screen.dart';
 import 'screens/vehicle_qr_screen.dart';
 import 'screens/stickers_screen.dart';
+import 'screens/sticker_designer_screen.dart';
 import 'screens/sticker_preview_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/settings/settings_screen.dart';
@@ -140,8 +141,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/stickers', builder: (context, state) => const StickersScreen()),
       GoRoute(
+        // Vehicle → QR sticker → choose one of the website's five designs.
         path: '/stickers/:vehicleId',
-        builder: (context, state) => StickerPreviewScreen(vehicleId: state.pathParameters['vehicleId']!),
+        builder: (context, state) => StickerDesignerScreen(
+          vehicleId: state.pathParameters['vehicleId']!,
+          initialDesign: state.uri.queryParameters['design'],
+        ),
+        routes: [
+          GoRoute(
+            // Server-generated vector A4 sheet (all five designs, actual size).
+            path: 'print',
+            builder: (context, state) => StickerPreviewScreen(vehicleId: state.pathParameters['vehicleId']!),
+          ),
+        ],
       ),
       GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
       GoRoute(path: '/settings/notifications', builder: (context, state) => const NotificationsScreen()),

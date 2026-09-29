@@ -47,25 +47,47 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(Space.page, Space.xs, Space.page, Space.xxl),
         children: [
-          AppCard(
+          // Google account on the brand gradient (logo tile colours).
+          Container(
+            padding: const EdgeInsets.all(Space.lg),
+            decoration: BoxDecoration(
+              gradient: c.brandGradient,
+              borderRadius: BorderRadius.circular(Radii.xl),
+              boxShadow: Shadows.raised(context),
+            ),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: c.primarySoft,
-                  foregroundImage: user?.image != null ? NetworkImage(user!.image!) : null,
-                  child: Text(initial, style: t.headlineSmall?.copyWith(color: c.primary)),
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: c.primary, width: 2)),
+                  child: CircleAvatar(
+                    radius: 30,
+                    backgroundColor: c.primary,
+                    foregroundImage: user?.image != null ? NetworkImage(user!.image!) : null,
+                    child: Text(initial, style: t.headlineSmall?.copyWith(color: c.onPrimary)),
+                  ),
                 ),
                 const SizedBox(width: Space.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: t.titleMedium),
+                      Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: t.titleMedium?.copyWith(color: c.onNavy)),
                       const SizedBox(height: 2),
-                      Text(user?.email ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: t.bodyMedium),
+                      Text(
+                        user?.email ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: t.bodyMedium?.copyWith(color: c.onNavy.withValues(alpha: 0.72)),
+                      ),
                       const SizedBox(height: Space.xs),
-                      const StatusBadge(StatusKind.verified, label: 'Signed in with Google'),
+                      Row(
+                        children: [
+                          Icon(Icons.verified_outlined, size: 16, color: c.primary),
+                          const SizedBox(width: 6),
+                          Text('Signed in with Google', style: t.labelMedium?.copyWith(color: c.primary)),
+                        ],
+                      ),
                     ],
                   ),
                 ),

@@ -42,7 +42,7 @@ class _StickerPreviewScreenState extends ConsumerState<StickerPreviewScreen> {
     try {
       final bytes = await _fetchPdf();
       final dir = await getTemporaryDirectory();
-      final path = '${dir.path}/pingmycar-sticker-a4.pdf';
+      final path = '${dir.path}/ownerping-sticker-a4.pdf';
       await File(path).writeAsBytes(bytes, flush: true);
       await Share.shareXFiles([XFile(path)]);
     } catch (e) {
@@ -82,7 +82,7 @@ class _StickerPreviewScreenState extends ConsumerState<StickerPreviewScreen> {
             decoration: BoxDecoration(color: c.primarySoft, borderRadius: BorderRadius.circular(Radii.md)),
             child: Row(
               children: [
-                Icon(Icons.straighten_outlined, size: 18, color: c.primary),
+                Icon(Icons.straighten_outlined, size: 18, color: c.primaryInk),
                 const SizedBox(width: Space.xs),
                 Expanded(
                   child: Text(
@@ -101,7 +101,7 @@ class _StickerPreviewScreenState extends ConsumerState<StickerPreviewScreen> {
               canChangeOrientation: false,
               canDebug: false,
               build: (format) => _fetchPdf(),
-              pdfFileName: 'pingmycar-sticker-a4.pdf',
+              pdfFileName: 'ownerping-sticker-a4.pdf',
               loadingWidget: const Center(child: CircularProgressIndicator()),
               onError: (context, error) => ErrorState(
                 error: ApiException(ApiErrorKind.unknown, error.toString().replaceFirst('Exception: ', '')),

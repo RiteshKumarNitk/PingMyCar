@@ -45,7 +45,7 @@ class PrivacyScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.qr_code_2_outlined, color: c.primary),
+                    Icon(Icons.qr_code_2_outlined, color: c.primaryInk),
                     const SizedBox(width: Space.sm),
                     Text('About the QR code', style: t.titleSmall),
                   ],

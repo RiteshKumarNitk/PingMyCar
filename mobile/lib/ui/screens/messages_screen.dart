@@ -142,10 +142,10 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                 const SizedBox(width: Space.xs),
                 Flexible(
                   child: ActionChip(
-                    avatar: Icon(Icons.directions_car_outlined, size: 18, color: filter != null ? c.primary : c.slate),
+                    avatar: Icon(Icons.directions_car_outlined, size: 18, color: filter != null ? c.primaryInk : c.slate),
                     label: Text(filter?.name ?? 'All vehicles', overflow: TextOverflow.ellipsis),
-                    labelStyle: t.labelMedium?.copyWith(color: filter != null ? c.primary : c.slate),
-                    side: BorderSide(color: filter != null ? c.primary.withValues(alpha: 0.4) : c.border),
+                    labelStyle: t.labelMedium?.copyWith(color: filter != null ? c.primaryInk : c.slate),
+                    side: BorderSide(color: filter != null ? c.primaryInk.withValues(alpha: 0.4) : c.border),
                     backgroundColor: filter != null ? c.primarySoft : c.surface,
                     onPressed: _vehicles == null ? null : _pickVehicle,
                     tooltip: 'Filter by vehicle',

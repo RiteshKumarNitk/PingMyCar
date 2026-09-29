@@ -85,7 +85,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _content(BuildContext context, DashboardSummary s) {
-    final c = AppColors.of(context);
     final vehicles = _vehicles ?? const <Vehicle>[];
     final hasVehicles = s.vehicleCount > 0;
 
@@ -93,7 +92,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(Space.page, Space.md, Space.page, Space.xl),
       children: [
-        _Header(),
+        _BrandHero(summary: s, hasVehicles: hasVehicles),
         const SizedBox(height: Space.lg),
         if (!hasVehicles)
           AppCard(
@@ -108,39 +107,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           )
         else ...[
-          Row(
-            children: [
-              Expanded(
-                child: StatTile(
-                  icon: Icons.mark_chat_unread_outlined,
-                  label: 'Unread',
-                  value: s.unreadMessageCount,
-                  tone: c.comm,
-                  onTap: () => context.go('/messages'),
-                ),
-              ),
-              const SizedBox(width: Space.sm),
-              Expanded(
-                child: StatTile(
-                  icon: Icons.directions_car_outlined,
-                  label: 'Vehicles',
-                  value: s.vehicleCount,
-                  onTap: () => context.go('/vehicles'),
-                ),
-              ),
-              const SizedBox(width: Space.sm),
-              Expanded(
-                child: StatTile(
-                  icon: Icons.qr_code_2_outlined,
-                  label: 'Active QR',
-                  value: s.activeQrCount,
-                  tone: c.success,
-                  onTap: () => context.go('/vehicles'),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: Space.md),
           Row(
             children: [
               Expanded(
@@ -216,7 +182,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-class _Header extends ConsumerWidget {
+/// Brand hero in the logo's colours: navy gradient tile (glow at the top),
+/// white type, teal ping accents, and the three live counts.
+class _BrandHero extends ConsumerWidget {
+  const _BrandHero({required this.summary, required this.hasVehicles});
+
+  final DashboardSummary summary;
+  final bool hasVehicles;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = AppColors.of(context);
@@ -224,42 +197,150 @@ class _Header extends ConsumerWidget {
     final user = ref.watch(authControllerProvider).user;
     final first = (user?.hasRealName ?? false) ? user!.name.trim().split(RegExp(r'\s+')).first : '';
     final initial = first.isNotEmpty ? first[0].toUpperCase() : '?';
+    final onNavySoft = c.onNavy.withValues(alpha: 0.72);
 
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      padding: const EdgeInsets.fromLTRB(Space.lg, Space.lg, Space.lg, Space.lg),
+      decoration: BoxDecoration(
+        gradient: c.brandGradient,
+        borderRadius: BorderRadius.circular(Radii.xl),
+        boxShadow: Shadows.raised(context),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Text(greetingFor(DateTime.now()), style: t.bodyLarge?.copyWith(color: c.slate)),
-              const SizedBox(height: 2),
+              const BrandMark(size: 28, inverse: true),
+              const SizedBox(width: Space.xs),
+              Text('OwnerPing', style: t.titleSmall?.copyWith(color: c.onNavy, letterSpacing: 0.2)),
+              const Spacer(),
               Semantics(
-                header: true,
-                child: Text(
-                  first.isEmpty ? 'Welcome back' : first,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: t.headlineMedium,
+                button: true,
+                label: 'Profile',
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () => context.go('/profile'),
+                  child: CircleAvatar(
+                    radius: 18,
+                    backgroundColor: c.primary,
+                    foregroundImage: user?.image != null ? NetworkImage(user!.image!) : null,
+                    child: Text(initial, style: t.titleSmall?.copyWith(color: c.onPrimary)),
+                  ),
                 ),
               ),
             ],
           ),
-        ),
-        Semantics(
-          button: true,
-          label: 'Profile',
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: () => context.go('/profile'),
-            child: CircleAvatar(
-              radius: 22,
-              backgroundColor: c.primarySoft,
-              foregroundImage: user?.image != null ? NetworkImage(user!.image!) : null,
-              child: Text(initial, style: t.titleMedium?.copyWith(color: c.primary)),
+          const SizedBox(height: Space.lg),
+          Text(greetingFor(DateTime.now()), style: t.bodyLarge?.copyWith(color: onNavySoft)),
+          const SizedBox(height: 2),
+          Semantics(
+            header: true,
+            child: Text(
+              first.isEmpty ? 'Welcome back' : first,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: t.headlineMedium?.copyWith(color: c.onNavy),
+            ),
+          ),
+          if (hasVehicles) ...[
+            const SizedBox(height: Space.lg),
+            Row(
+              children: [
+                Expanded(
+                  child: _HeroStat(
+                    icon: Icons.mark_chat_unread_outlined,
+                    label: 'Unread',
+                    value: summary.unreadMessageCount,
+                    highlight: summary.unreadMessageCount > 0,
+                    onTap: () => context.go('/messages'),
+                  ),
+                ),
+                const SizedBox(width: Space.xs),
+                Expanded(
+                  child: _HeroStat(
+                    icon: Icons.directions_car_outlined,
+                    label: 'Vehicles',
+                    value: summary.vehicleCount,
+                    onTap: () => context.go('/vehicles'),
+                  ),
+                ),
+                const SizedBox(width: Space.xs),
+                Expanded(
+                  child: _HeroStat(
+                    icon: Icons.qr_code_2_outlined,
+                    label: 'Active QR',
+                    value: summary.activeQrCount,
+                    onTap: () => context.go('/vehicles'),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            const SizedBox(height: Space.xs),
+            Text('Connect Vehicle Owners — privately.', style: t.bodyMedium?.copyWith(color: onNavySoft)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Glass stat chip on the navy hero; teal when it needs attention.
+class _HeroStat extends StatelessWidget {
+  const _HeroStat({required this.icon, required this.label, required this.value, required this.onTap, this.highlight = false});
+
+  final IconData icon;
+  final String label;
+  final int value;
+  final VoidCallback onTap;
+  final bool highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final t = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      label: '$label: $value',
+      excludeSemantics: true,
+      child: Material(
+        color: highlight ? c.primary : c.onNavy.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(Radii.md),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(Radii.md),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(Space.sm, Space.sm, Space.xs, Space.sm),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(Radii.md),
+              border: highlight ? null : Border.all(color: c.onNavy.withValues(alpha: 0.12)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, size: 18, color: highlight ? c.onPrimary : c.primary),
+                const SizedBox(height: Space.xs),
+                Text(
+                  '$value',
+                  style: t.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    height: 1,
+                    color: highlight ? c.onPrimary : c.onNavy,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: t.bodySmall?.copyWith(color: highlight ? c.onPrimary : c.onNavy.withValues(alpha: 0.72)),
+                ),
+              ],
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -298,7 +379,7 @@ class _VehicleRow extends StatelessWidget {
             ),
             IconButton(
               tooltip: 'QR code for ${vehicle.name}',
-              icon: Icon(Icons.qr_code_2_outlined, color: c.primary),
+              icon: Icon(Icons.qr_code_2_outlined, color: c.primaryInk),
               onPressed: () => context.push('/vehicles/${vehicle.id}/qr'),
             ),
           ],

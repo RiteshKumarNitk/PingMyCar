@@ -38,7 +38,7 @@ class QrActions {
       await ref.read(vehicleRepositoryProvider).downloadQrPng(
             v.id,
             v.publicToken,
-            toPath: '${docs.path}/pingmycar-qr-${v.publicToken}.png',
+            toPath: '${docs.path}/ownerping-qr-${v.publicToken}.png',
           );
       _toast('QR saved to this device.');
     } on ApiException catch (e) {

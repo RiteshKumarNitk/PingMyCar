@@ -36,9 +36,9 @@ class AppTheme {
     final scheme = ColorScheme(
       brightness: brightness,
       primary: c.primary,
-      onPrimary: Colors.white,
+      onPrimary: c.onPrimary,
       primaryContainer: c.primarySoft,
-      onPrimaryContainer: c.primary,
+      onPrimaryContainer: c.primaryInk,
       secondary: c.comm,
       onSecondary: Colors.white,
       secondaryContainer: c.commSoft,
@@ -114,9 +114,9 @@ class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: c.primary,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: c.primary.withValues(alpha: 0.45),
-          disabledForegroundColor: Colors.white.withValues(alpha: 0.9),
+          foregroundColor: c.onPrimary,
+          disabledBackgroundColor: c.primary.withValues(alpha: 0.4),
+          disabledForegroundColor: c.onPrimary.withValues(alpha: 0.6),
           minimumSize: buttonSize,
           textStyle: text.labelLarge,
           shape: buttonShape,
@@ -135,7 +135,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: c.primary,
+          foregroundColor: c.primaryInk,
           minimumSize: const Size(48, kMinTouch),
           textStyle: text.labelLarge?.copyWith(fontSize: 14),
           shape: buttonShape,
@@ -154,7 +154,7 @@ class AppTheme {
         errorBorder: inputBorder(c.danger),
         focusedErrorBorder: inputBorder(c.danger, 1.6),
         labelStyle: text.bodyMedium,
-        floatingLabelStyle: text.bodyMedium?.copyWith(color: c.primary, fontWeight: FontWeight.w500),
+        floatingLabelStyle: text.bodyMedium?.copyWith(color: c.primaryInk, fontWeight: FontWeight.w500),
         hintStyle: text.bodyMedium?.copyWith(color: c.muted),
         helperStyle: text.bodySmall,
         errorStyle: text.bodySmall?.copyWith(color: c.danger),
@@ -167,12 +167,12 @@ class AppTheme {
         height: 68,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         iconTheme: WidgetStateProperty.resolveWith(
-          (s) => IconThemeData(size: 24, color: s.contains(WidgetState.selected) ? c.primary : c.muted),
+          (s) => IconThemeData(size: 24, color: s.contains(WidgetState.selected) ? c.primaryInk : c.muted),
         ),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (s) => text.labelMedium?.copyWith(
             fontSize: 12,
-            color: s.contains(WidgetState.selected) ? c.primary : c.muted,
+            color: s.contains(WidgetState.selected) ? c.primaryInk : c.muted,
             fontWeight: s.contains(WidgetState.selected) ? FontWeight.w600 : FontWeight.w500,
           ),
         ),
@@ -192,7 +192,7 @@ class AppTheme {
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: SegmentedButton.styleFrom(
           selectedBackgroundColor: c.primarySoft,
-          selectedForegroundColor: c.primary,
+          selectedForegroundColor: c.primaryInk,
           foregroundColor: c.slate,
           side: BorderSide(color: c.border),
           textStyle: text.labelMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -228,11 +228,11 @@ class AppTheme {
         ),
         textStyle: text.bodyLarge?.copyWith(fontSize: 15),
       ),
-      progressIndicatorTheme: ProgressIndicatorThemeData(color: c.primary),
+      progressIndicatorTheme: ProgressIndicatorThemeData(color: c.primaryInk),
       dividerTheme: DividerThemeData(color: c.border, space: 1, thickness: 1),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: c.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: c.onPrimary,
         // Flat, like every other surface — no heavy drop shadow.
         elevation: 0,
         focusElevation: 0,

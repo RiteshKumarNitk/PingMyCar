@@ -37,10 +37,13 @@ class AppButton extends StatelessWidget {
     final c = AppColors.of(context);
     final enabled = onPressed != null && !loading;
     final size = Size(expand ? double.infinity : 64, compact ? 44 : 52);
+    // Compact buttons sit in pairs; tighter side padding keeps labels whole at 360px.
+    final padding = compact ? const EdgeInsets.symmetric(horizontal: 16) : null;
 
     final Color spinnerColor = switch (variant) {
-      AppButtonVariant.primary || AppButtonVariant.success || AppButtonVariant.danger => Colors.white,
-      _ => c.primary,
+      AppButtonVariant.primary => c.onPrimary,
+      AppButtonVariant.success || AppButtonVariant.danger => Colors.white,
+      _ => c.primaryInk,
     };
 
     final Widget leading = loading
@@ -61,27 +64,27 @@ class AppButton extends StatelessWidget {
     final Widget button = switch (variant) {
       AppButtonVariant.primary => FilledButton(
           onPressed: action,
-          style: FilledButton.styleFrom(minimumSize: size),
+          style: FilledButton.styleFrom(minimumSize: size, padding: padding),
           child: child,
         ),
       AppButtonVariant.success => FilledButton(
           onPressed: action,
-          style: FilledButton.styleFrom(minimumSize: size, backgroundColor: c.success),
+          style: FilledButton.styleFrom(minimumSize: size, padding: padding, backgroundColor: c.success),
           child: child,
         ),
       AppButtonVariant.danger => FilledButton(
           onPressed: action,
-          style: FilledButton.styleFrom(minimumSize: size, backgroundColor: c.danger),
+          style: FilledButton.styleFrom(minimumSize: size, padding: padding, backgroundColor: c.danger),
           child: child,
         ),
       AppButtonVariant.secondary => OutlinedButton(
           onPressed: action,
-          style: OutlinedButton.styleFrom(minimumSize: size),
+          style: OutlinedButton.styleFrom(minimumSize: size, padding: padding),
           child: child,
         ),
       AppButtonVariant.ghost => TextButton(
           onPressed: action,
-          style: TextButton.styleFrom(minimumSize: size, foregroundColor: c.slate),
+          style: TextButton.styleFrom(minimumSize: size, padding: padding, foregroundColor: c.slate),
           child: child,
         ),
     };

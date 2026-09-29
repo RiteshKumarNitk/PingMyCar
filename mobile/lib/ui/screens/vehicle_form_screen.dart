@@ -197,13 +197,13 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                       children: [
                         for (final (value, label, icon) in _types)
                           ChoiceChip(
-                            avatar: Icon(icon, size: 18, color: _type == value ? c.primary : c.slate),
+                            avatar: Icon(icon, size: 18, color: _type == value ? c.primaryInk : c.slate),
                             label: Text(label),
                             selected: _type == value,
                             showCheckmark: false,
                             selectedColor: c.primarySoft,
-                            side: BorderSide(color: _type == value ? c.primary : c.border),
-                            labelStyle: t.labelMedium?.copyWith(color: _type == value ? c.primary : c.ink),
+                            side: BorderSide(color: _type == value ? c.primaryInk : c.border),
+                            labelStyle: t.labelMedium?.copyWith(color: _type == value ? c.primaryInk : c.ink),
                             onSelected: (_) => setState(() => _type = value),
                           ),
                       ],

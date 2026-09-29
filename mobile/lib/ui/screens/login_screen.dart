@@ -146,7 +146,7 @@ class _GoogleButton extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(7)),
               child: loading
-                  ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: c.primary))
+                  ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: c.primaryInk))
                   : const _GoogleG(),
             ),
             const SizedBox(width: Space.sm),

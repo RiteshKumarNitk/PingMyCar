@@ -70,13 +70,22 @@ Future<void> _pumpApp(
       ),
     ),
   );
-  router.go(path);
-  for (var i = 0; i < 12; i++) {
+  // Let the brand splash finish and hand off first (reduced motion: ~0.9 s),
+  // otherwise its own navigation would replace the screen under test.
+  for (var i = 0; i < 20; i++) {
     await tester.pump(const Duration(milliseconds: 100));
   }
-  // Let the splash hand-off timer (1.4s) fire so no timers are left pending.
-  await tester.pump(const Duration(seconds: 2));
-  await tester.pump(const Duration(milliseconds: 100));
+  router.go(path);
+  for (var i = 0; i < 15; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+  // Guard against the harness silently testing the wrong screen.
+  final at = router.routerDelegate.currentConfiguration.uri;
+  final expected = Uri.parse(path);
+  final redirected = status != AuthStatus.authenticated; // guests are sent to /login
+  if (!redirected && at.path != expected.path) {
+    throw StateError('Layout harness is on ${at.path}, expected ${expected.path}');
+  }
 }
 
 Future<void> _shot(WidgetTester tester, String name) async {
@@ -110,6 +119,8 @@ void main() {
     'vehicle-new': '/vehicles/new',
     'vehicle-edit': '/vehicles/v1/edit',
     'stickers': '/stickers',
+    'sticker-designer': '/stickers/v1',
+    'sticker-designer-round': '/stickers/v1?design=round',
     'profile': '/profile',
     'account': '/settings',
     'notifications': '/settings/notifications',

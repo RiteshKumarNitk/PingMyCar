@@ -26,7 +26,7 @@ class VehicleAvatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(color: c.primarySoft, borderRadius: radius),
-      child: Icon(vehicleTypeIcon(vehicle.type), color: c.primary, size: size * 0.5),
+      child: Icon(vehicleTypeIcon(vehicle.type), color: c.primaryInk, size: size * 0.5),
     );
     final url = vehicle.photoUrl;
     if (url == null || url.isEmpty) return fallback;

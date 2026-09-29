@@ -42,7 +42,7 @@ class EmptyState extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(color: c.primarySoft, borderRadius: BorderRadius.circular(Radii.lg)),
-            child: Icon(icon, color: c.primary, size: 28),
+            child: Icon(icon, color: c.primaryInk, size: 28),
           ),
           const SizedBox(height: Space.md),
           Text(title, textAlign: TextAlign.center, style: t.titleMedium),
@@ -291,7 +291,7 @@ class StatTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final t = Theme.of(context).textTheme;
-    final accent = tone ?? c.primary;
+    final accent = tone ?? c.primaryInk;
     return Semantics(
       button: onTap != null,
       label: '$label: $value',

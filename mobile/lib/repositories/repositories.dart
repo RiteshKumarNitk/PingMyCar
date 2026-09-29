@@ -137,7 +137,7 @@ class VehicleRepository {
   /// Downloads the vehicle's real QR PNG (same token/URL as web).
   Future<File> downloadQrPng(String id, String publicToken, {String? toPath}) async {
     final path = toPath ??
-        '${Directory.systemTemp.path}/pingmycar-qr-$publicToken.png';
+        '${Directory.systemTemp.path}/ownerping-qr-$publicToken.png';
     await _client.download('/api/vehicles/$id/qr.png', path);
     return File(path);
   }
@@ -145,7 +145,7 @@ class VehicleRepository {
   /// Downloads the vector A4 print sheet PDF.
   Future<File> downloadStickerPdf(String id, String publicToken, {String? toPath}) async {
     final path = toPath ??
-        '${Directory.systemTemp.path}/pingmycar-sticker-a4-$publicToken.pdf';
+        '${Directory.systemTemp.path}/ownerping-sticker-a4-$publicToken.pdf';
     await _client.download('/api/vehicles/$id/sticker-a4', path);
     return File(path);
   }
